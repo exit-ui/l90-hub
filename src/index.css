@@ -1,0 +1,780 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter/opsz.css";
+@import "@fontsource-variable/inter/opsz-italic.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ------------------------------------------------------------------
+   Hub tokens. All colour, radius and font values live in this file.
+   One theme: a night city under liquid glass.
+
+   Two materials:
+   - glass   : the navigation layer only (tab bar, top bar, floating
+               action, menus, the active pill). It bends the backdrop
+               at the rim in Chromium and blurs it everywhere.
+   - content : cards. Dark, calm, no lens, so data stays legible.
+------------------------------------------------------------------- */
+:root {
+  --hub-bg-from: #05060a;
+  --hub-bg-to: #0a0d14;
+  --hub-surface: #0e1016;
+  --hub-surface-raised: #171a22;
+  --hub-primary: #f3f5f9;
+  --hub-primary-end: #c7ccd6;
+  --hub-accent: #8fb2ff;
+  --hub-accent-end: #5d84df;
+  --hub-accent-text: #aac5ff;
+  --hub-positive: #6fe0b8;
+  --hub-positive-end: #3fb48f;
+  --hub-danger: #ff7a6e;
+  --hub-amber: #f0b45a;
+  --hub-ink: #07080c;
+  --hub-text: rgb(246 247 251 / 0.95);
+  --hub-label: rgb(214 219 232 / 0.8);
+  --hub-label-strong: rgb(226 230 240 / 0.9);
+  --hub-hairline: rgb(255 255 255 / 0.08);
+  --hub-track: rgb(255 255 255 / 0.09);
+  --hub-inset: rgb(255 255 255 / 0.045);
+  --hub-glass: rgb(255 255 255 / 0.05);
+  --hub-glass-edge: rgb(255 255 255 / 0.12);
+  --hub-bar-fill: rgb(255 255 255 / 0.9);
+
+  /* The content material: modules and the chart card. No backdrop filter. */
+  --hub-material: rgb(14 16 22 / 0.78);
+  --hub-material-rim: rgb(255 255 255 / 0.06);
+  /* The expanded view and the scrim behind it. */
+  --hub-material-solid: rgb(14 16 22 / 0.96);
+  /* The rim of a module that is done. */
+  --hub-positive-rim: rgb(111 224 184 / 0.55);
+  --hub-overlay: rgb(5 6 10 / 0.6);
+  --hub-glint: rgb(255 255 255 / 0.55);
+
+  /* The motion chart. */
+  --hub-chart-bar: rgb(200 212 240 / 0.34);
+  --hub-chart-bar-today: rgb(255 255 255 / 0.92);
+  --hub-chart-label-bg: rgb(14 16 22 / 0.92);
+  --hub-chart-bar-future: rgb(255 255 255 / 0.1);
+  --hub-chart-mean: var(--hub-accent);
+  --hub-chart-target: rgb(214 219 232 / 0.7);
+  --hub-chart-grid: rgb(255 255 255 / 0.07);
+  --hub-chart-today: rgb(255 255 255 / 0.32);
+
+  /* The night city: base, haze, fog and the scrim at the top. */
+  --hub-city-sky-top: #05060a;
+  --hub-city-sky-bottom: #0a0d14;
+  --hub-city-haze: rgb(150 92 52 / 0.3);
+  --hub-city-sky-glow: rgb(60 80 140 / 0.24);
+  --hub-city-fog: rgb(140 150 170 / 0.06);
+  --hub-city-tower-far: #1e2738;
+  --hub-city-tower-mid: #111723;
+  --hub-city-tower-near: #07090e;
+  --hub-city-window-warm: rgb(238 182 112 / 0.75);
+  --hub-city-window-cold: rgb(170 196 240 / 0.6);
+  --hub-city-road: #07080b;
+  --hub-city-car: #020203;
+  --hub-city-car-rim: rgb(220 226 240 / 0.35);
+  --hub-city-tail: rgb(214 40 52 / 0.9);
+  --hub-city-lamp: rgb(255 190 120 / 0.95);
+  --hub-city-sodium: rgb(214 128 58);
+  --hub-city-blue: rgb(70 98 190);
+  --hub-city-red: rgb(176 48 58);
+  --hub-city-white: rgb(236 240 248);
+  --hub-city-noise: rgb(255 255 255 / 0.018);
+  --hub-scrim-top: rgb(0 0 0 / 0.55);
+  --hub-photo-shade: rgb(0 0 0);
+
+  --hub-grad-primary: linear-gradient(180deg, #ffffff 0%, #e4e8ef 100%);
+  --hub-grad-secondary: linear-gradient(180deg, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.08));
+  --hub-grad-data: linear-gradient(135deg, var(--hub-positive), var(--hub-positive-end));
+
+  /* Glass recipe. Only the navigation layer, menus and sheets use glass. */
+  --glass-tint: rgb(44 49 64 / 0.4);
+  --glass-tint-strong: rgb(30 34 46 / 0.66);
+  --glass-rim-hi: rgb(255 255 255 / 0.6);
+  --glass-rim-mid: rgb(255 255 255 / 0.1);
+  --glass-rim-lo: rgb(255 255 255 / 0.3);
+  --glass-shade: rgb(0 0 0 / 0.55);
+  --glass-sheen: rgb(255 255 255 / 0.16);
+  --scrim: rgb(4 5 8 / 0.72);
+
+  /* shadcn variables */
+  --background: var(--hub-bg-from);
+  --foreground: var(--hub-text);
+  --card: var(--hub-surface);
+  --card-foreground: var(--hub-text);
+  --popover: #12141b;
+  --popover-foreground: var(--hub-text);
+  --primary: var(--hub-primary);
+  --primary-foreground: var(--hub-ink);
+  --secondary: var(--hub-surface-raised);
+  --secondary-foreground: var(--hub-text);
+  --muted: var(--hub-surface-raised);
+  --muted-foreground: var(--hub-label);
+  --accent: var(--hub-surface-raised);
+  --accent-foreground: var(--hub-text);
+  --destructive: var(--hub-danger);
+  --border: var(--hub-hairline);
+  --input: rgb(255 255 255 / 0.14);
+  --ring: #aac5ff;
+  --radius: 0.75rem;
+  --sidebar: var(--hub-surface);
+  --sidebar-foreground: var(--hub-text);
+  --sidebar-primary: var(--hub-primary);
+  --sidebar-primary-foreground: var(--hub-ink);
+  --sidebar-accent: var(--hub-surface-raised);
+  --sidebar-accent-foreground: var(--hub-text);
+  --sidebar-border: var(--hub-hairline);
+  --sidebar-ring: var(--ring);
+
+  /* Bklit chart variables */
+  --chart-1: var(--hub-primary);
+  --chart-2: var(--hub-accent);
+  --chart-3: var(--hub-positive);
+  --chart-4: var(--hub-primary-end);
+  --chart-5: var(--hub-accent-end);
+  --chart-positive: var(--hub-positive);
+  --chart-negative: var(--hub-danger);
+  --chart-background: #090b10;
+  --chart-foreground: var(--hub-text);
+  --chart-foreground-muted: var(--hub-label);
+  --chart-line-primary: var(--chart-1);
+  --chart-line-secondary: var(--chart-2);
+  --chart-crosshair: rgb(255 255 255 / 0.3);
+  --chart-grid: rgb(255 255 255 / 0.06);
+  --chart-brush-border: var(--chart-grid);
+  --chart-tooltip-background: #f3f5f9;
+  --chart-tooltip-foreground: #07080c;
+  --chart-tooltip-muted: rgb(7 8 12 / 0.66);
+  --chart-marker-background: #171a22;
+  --chart-marker-border: var(--hub-hairline);
+  --chart-marker-foreground: var(--hub-text);
+  --chart-label: var(--hub-label);
+  --chart-scale-mix: #090b10;
+  --chart-scale-01: var(--hub-track);
+  --chart-scale-02: color-mix(in oklab, var(--hub-accent) 30%, var(--chart-scale-mix));
+  --chart-scale-03: color-mix(in oklab, var(--hub-accent) 52%, var(--chart-scale-mix));
+  --chart-scale-04: color-mix(in oklab, var(--hub-accent) 76%, var(--chart-scale-mix));
+  --chart-scale-05: var(--hub-accent-text);
+  --chart-scale-pattern-color: #07080c;
+  --chart-indicator-color: var(--hub-text);
+  --chart-indicator-secondary-color: var(--hub-label);
+  --chart-marker-badge-background: #f3f5f9;
+  --chart-marker-badge-foreground: #07080c;
+  --chart-segment-background: rgb(255 255 255 / 0.04);
+  --chart-segment-line: rgb(255 255 255 / 0.22);
+  --legend: #0e1016;
+  --legend-foreground: var(--hub-text);
+  --legend-muted: #171a22;
+  --legend-muted-foreground: var(--hub-label);
+  --legend-track: var(--hub-track);
+}
+
+@theme {
+  /*
+    The type scale. The T-shirt names keep tailwind-merge correct.
+    xs 13 label · sm 15 body · base 16 input · lg 17 daily line · xl 20 section
+    2xl/3xl 28 page title · 4xl 40 module number · 6xl 64 Outreach number.
+    No text is smaller than 13 px.
+  */
+  --text-xs: 13px;
+  --text-xs--line-height: 18px;
+  --text-sm: 15px;
+  --text-sm--line-height: 20px;
+  --text-base: 16px;
+  --text-base--line-height: 22px;
+  --text-lg: 17px;
+  --text-lg--line-height: 24px;
+  --text-xl: 20px;
+  --text-xl--line-height: 26px;
+  --text-xl--letter-spacing: -0.015em;
+  --text-2xl: 28px;
+  --text-2xl--line-height: 34px;
+  --text-2xl--letter-spacing: -0.02em;
+  --text-3xl: 28px;
+  --text-3xl--line-height: 34px;
+  --text-3xl--letter-spacing: -0.02em;
+  --text-4xl: 40px;
+  --text-4xl--line-height: 44px;
+  --text-4xl--letter-spacing: -0.02em;
+  --text-6xl: 64px;
+  --text-6xl--line-height: 64px;
+  --text-6xl--letter-spacing: -0.03em;
+
+}
+
+@theme inline {
+  --color-hub-glass: var(--hub-glass);
+  --color-hub-glass-edge: var(--hub-glass-edge);
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-sans);
+
+  --color-hub-bg-from: var(--hub-bg-from);
+  --color-hub-bg-to: var(--hub-bg-to);
+  --color-hub-surface: var(--hub-surface);
+  --color-hub-raised: var(--hub-surface-raised);
+  --color-hub-primary: var(--hub-primary);
+  --color-hub-primary-end: var(--hub-primary-end);
+  --color-hub-accent: var(--hub-accent);
+  --color-hub-accent-end: var(--hub-accent-end);
+  --color-hub-accent-text: var(--hub-accent-text);
+  --color-hub-positive: var(--hub-positive);
+  --color-hub-positive-end: var(--hub-positive-end);
+  --color-hub-danger: var(--hub-danger);
+  --color-hub-amber: var(--hub-amber);
+  --color-hub-ink: var(--hub-ink);
+  --color-hub-text: var(--hub-text);
+  --color-hub-label: var(--hub-label);
+  --color-hub-hairline: var(--hub-hairline);
+  --color-hub-track: var(--hub-track);
+  --color-hub-inset: var(--hub-inset);
+  --color-hub-label-strong: var(--hub-label-strong);
+  --color-hub-bar-fill: var(--hub-bar-fill);
+  --color-hub-shade: var(--hub-photo-shade);
+  --color-hub-scrim-top: var(--hub-scrim-top);
+  --color-hub-material: var(--hub-material);
+  --color-hub-material-solid: var(--hub-material-solid);
+  --color-hub-overlay: var(--hub-overlay);
+
+  /* Concentric radii: module 28 = control 12 + padding 16. Sheets 32. Nothing else. */
+  --radius-card: 28px;
+  --radius-control: 12px;
+  --radius-sheet: 32px;
+
+  --ease-hub: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.25);
+  --radius-2xl: calc(var(--radius) * 1.5);
+  --radius-3xl: calc(var(--radius) * 2);
+  --radius-4xl: calc(var(--radius) * 2.5);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-positive: var(--chart-positive);
+  --color-chart-negative: var(--chart-negative);
+  --color-chart-background: var(--chart-background);
+  --color-chart-foreground: var(--chart-foreground);
+  --color-chart-foreground-muted: var(--chart-foreground-muted);
+  --color-chart-line-primary: var(--chart-line-primary);
+  --color-chart-line-secondary: var(--chart-line-secondary);
+  --color-chart-crosshair: var(--chart-crosshair);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-brush-border: var(--chart-brush-border);
+  --color-chart-tooltip-background: var(--chart-tooltip-background);
+  --color-chart-tooltip-foreground: var(--chart-tooltip-foreground);
+  --color-chart-tooltip-muted: var(--chart-tooltip-muted);
+  --color-chart-marker-background: var(--chart-marker-background);
+  --color-chart-marker-border: var(--chart-marker-border);
+  --color-chart-marker-foreground: var(--chart-marker-foreground);
+  --color-chart-marker-badge-background: var(--chart-marker-badge-background);
+  --color-chart-marker-badge-foreground: var(--chart-marker-badge-foreground);
+  --color-chart-label: var(--chart-label);
+  --color-chart-scale-mix: var(--chart-scale-mix);
+  --color-chart-scale-01: var(--chart-scale-01);
+  --color-chart-scale-02: var(--chart-scale-02);
+  --color-chart-scale-03: var(--chart-scale-03);
+  --color-chart-scale-04: var(--chart-scale-04);
+  --color-chart-scale-05: var(--chart-scale-05);
+  --color-chart-scale-pattern-color: var(--chart-scale-pattern-color);
+  --color-chart-indicator-color: var(--chart-indicator-color);
+  --color-chart-indicator-secondary-color: var(--chart-indicator-secondary-color);
+  --color-chart-segment-background: var(--chart-segment-background);
+  --color-chart-segment-line: var(--chart-segment-line);
+  --color-legend: var(--legend);
+  --color-legend-foreground: var(--legend-foreground);
+  --color-legend-muted: var(--legend-muted);
+  --color-legend-muted-foreground: var(--legend-muted-foreground);
+  --color-legend-track: var(--legend-track);
+}
+
+@utility bg-grad-primary {
+  background-image: var(--hub-grad-primary);
+}
+@utility bg-grad-secondary {
+  background-image: var(--hub-grad-secondary);
+}
+@utility bg-grad-data {
+  background-image: var(--hub-grad-data);
+}
+
+/* The rim of a glass shape: bright at the top left, a faint return at the bottom right. */
+@utility glass-rim {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      155deg,
+      var(--glass-rim-hi) 0%,
+      var(--glass-rim-mid) 28%,
+      var(--glass-rim-mid) 64%,
+      var(--glass-rim-lo) 100%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+}
+
+/* Liquid glass for the navigation layer. --lens holds an SVG lens in Chromium. */
+@utility glass {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 90% at 50% -20%, rgb(255 255 255 / 0.1), transparent 60%),
+    var(--glass-tint);
+  -webkit-backdrop-filter: blur(16px) saturate(190%) brightness(1.08);
+  backdrop-filter: var(--lens,) blur(10px) saturate(190%) brightness(1.08);
+  box-shadow:
+    inset 0 1px 0.5px rgb(255 255 255 / 0.32),
+    inset 0 -1px 1px rgb(255 255 255 / 0.06),
+    inset 0 0 18px rgb(255 255 255 / 0.05),
+    0 1px 2px rgb(0 0 0 / 0.4),
+    0 16px 36px -12px var(--glass-shade);
+  @apply glass-rim;
+}
+
+/* A thicker glass for menus and sheets that hold text. */
+@utility glass-thick {
+  @apply glass;
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgb(255 255 255 / 0.08), transparent 60%),
+    var(--glass-tint-strong);
+  -webkit-backdrop-filter: blur(28px) saturate(170%) brightness(0.95);
+  backdrop-filter: var(--lens,) blur(28px) saturate(170%) brightness(0.95);
+}
+
+/* The selected pill inside a glass bar. Its radius is concentric with the bar. */
+@utility glass-pill {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.09));
+  box-shadow:
+    inset 0 1px 0.5px rgb(255 255 255 / 0.45),
+    inset 0 -1px 1px rgb(255 255 255 / 0.08),
+    0 4px 12px -6px rgb(0 0 0 / 0.7);
+}
+
+/* A light that follows the pointer and grows on press. Needs --mx and --my. */
+@utility sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background: radial-gradient(
+      circle 90px at var(--mx, 50%) var(--my, 0%),
+      var(--glass-sheen),
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 180ms ease-out;
+    pointer-events: none;
+  }
+  &:hover::before {
+    opacity: 0.7;
+  }
+  &:active::before {
+    opacity: 1;
+  }
+}
+
+/* The content material: modules and cards. A flat fill and a 1px inner rim. No backdrop filter. */
+@utility surface-card {
+  position: relative;
+  isolation: isolate;
+  background: var(--hub-material);
+  border: 0;
+  border-radius: var(--radius-card);
+  box-shadow:
+    inset 0 0 0 1px var(--hub-material-rim),
+    0 24px 48px -32px rgb(0 0 0 / 0.9);
+}
+
+/* A group inside a card. 12px radius is concentric with a 28px card and 16px padding. */
+@utility surface-inset {
+  background: var(--hub-inset);
+  border-radius: var(--radius-control);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04);
+}
+
+/* One rim glint: a light sweeps along the border one time, in 400 ms. */
+@utility rim-glint {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    var(--hub-glint) 50%,
+    transparent 70%
+  );
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: hub-glint 400ms var(--ease-hub) 1 both;
+}
+
+@keyframes hub-glint {
+  from {
+    background-position: 100% 0;
+    opacity: 1;
+  }
+  to {
+    background-position: 0% 0;
+    opacity: 0;
+  }
+}
+
+
+@utility glow-primary {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -1px 1px rgb(0 0 0 / 0.12),
+    0 8px 24px -10px rgb(200 214 255 / 0.45);
+}
+@utility glow-secondary {
+  box-shadow:
+    inset 0 1px 0.5px rgb(255 255 255 / 0.45),
+    inset 0 -1px 1px rgb(255 255 255 / 0.08),
+    0 4px 12px -6px rgb(0 0 0 / 0.7);
+}
+@utility glow-data {
+  box-shadow: 0 8px 22px -12px color-mix(in srgb, var(--hub-positive) 55%, transparent);
+}
+@utility drop-glow-primary {
+  filter: drop-shadow(0 0 10px rgb(220 230 255 / 0.18));
+}
+@utility drop-glow-secondary {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--hub-accent) 30%, transparent));
+}
+@utility drop-glow-data {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--hub-positive) 24%, transparent));
+}
+/*
+  The type scale (spec 7.2). One family: Inter Variable with the optical-size axis.
+  The 390 px values are below; from 1024 px up the size tokens change in the media query after :root.
+*/
+@utility type-title {
+  font-size: var(--text-3xl);
+  line-height: var(--text-3xl--line-height);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+/* Numbers: one weight (600) with tight tracking; the optical-size axis gives the display cut. */
+@utility type-hero {
+  font-size: var(--text-6xl);
+  line-height: var(--text-6xl--line-height);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+@utility type-number {
+  font-size: var(--text-4xl);
+  line-height: var(--text-4xl--line-height);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+@utility type-section {
+  font-size: var(--text-xl);
+  line-height: var(--text-xl--line-height);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+@utility type-name {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+@utility type-body {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+@utility type-line {
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+@utility type-label {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+/* Tabular figures for every number that can change, so its width never moves. */
+@utility num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "cv11";
+}
+@utility tap {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: dark;
+    background-color: var(--hub-bg-from);
+    min-height: 100%;
+  }
+  body {
+    @apply text-foreground;
+    min-height: 100dvh;
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    letter-spacing: -0.005em;
+    font-optical-sizing: auto;
+    font-feature-settings: "cv11";
+    background: var(--hub-bg-from);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  /* The backdrop sits in the root stacking context, under all content. */
+  #root {
+    position: relative;
+    isolation: isolate;
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 3px;
+  }
+  ::selection {
+    background-color: color-mix(in srgb, var(--hub-accent) 30%, transparent);
+  }
+}
+
+/* From 1024 px: the right-hand column of the type scale in spec 7.2. */
+@media (min-width: 1024px) {
+  :root {
+    --text-sm: 16px;
+    --text-sm--line-height: 22px;
+    --text-lg: 18px;
+    --text-lg--line-height: 26px;
+    --text-2xl: 32px;
+    --text-2xl--line-height: 38px;
+    --text-3xl: 32px;
+    --text-3xl--line-height: 38px;
+    --text-6xl: 72px;
+    --text-6xl--line-height: 72px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-tint: rgb(22 25 34 / 0.96);
+    --glass-tint-strong: rgb(22 25 34 / 0.98);
+    --hub-material: rgb(14 16 22 / 0.96);
+    --hub-overlay: rgb(5 6 10 / 0.85);
+    --hub-overlay-blur: 0px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* A light tile for one number, inside a module. Same shape as an inset group. */
+@utility surface-tile {
+  position: relative;
+  border-radius: var(--radius-control);
+  background: var(--hub-inset);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05);
+}
+
+
+/* Press feedback for every button and link that looks like a control. */
+@utility press {
+  transition: transform 100ms ease-out;
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+/* Fine film grain, so the dark gradients do not band. It is a layer of the backdrop. */
+@utility grain-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* A 1px hairline rim inside a control. */
+@utility rim-hairline {
+  box-shadow: inset 0 0 0 1px var(--hub-hairline);
+}
+
+/* Safe-area spacing. The values come from the spacing scale plus the inset of the device. */
+@utility pb-sheet {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+}
+@utility pt-shell {
+  padding-top: calc(env(safe-area-inset-top) + 24px);
+}
+@utility pb-shell {
+  /* The tab bar never covers content: 112 px plus the inset. */
+  padding-bottom: calc(env(safe-area-inset-bottom) + 112px);
+}
+@utility bottom-shell {
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+}
+@utility h-top-edge {
+  height: calc(env(safe-area-inset-top) + 16px);
+}
+
+/* Thick glass for a sheet. It keeps the fixed position that the glass utility would reset. */
+@utility glass-sheet {
+  @apply glass-thick;
+  position: fixed;
+}
+
+/* The user's photo: less colour and a light blur, so the modules stay calm on top. */
+@utility photo-filter {
+  filter: saturate(0.7) blur(2px);
+  transform: scale(1.02);
+}
+
+/* The empty check circle: a 2px ring in the label colour. */
+@utility ring-check {
+  box-shadow: inset 0 0 0 2px var(--hub-label);
+}
+
+/* A grid of 44 px day targets that wraps to the width of the card. */
+@utility grid-day-cells {
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+}
+
+/* The scrim behind an expanded view. It dims and blurs; it is not glass. */
+@utility overlay-scrim {
+  background: var(--hub-overlay);
+  -webkit-backdrop-filter: blur(var(--hub-overlay-blur, 12px));
+  backdrop-filter: blur(var(--hub-overlay-blur, 12px));
+}
+
+/* The expanded view: the solid content material and the same 1px rim. No backdrop filter. */
+@utility surface-solid {
+  background: var(--hub-material-solid);
+  box-shadow:
+    inset 0 0 0 1px var(--hub-material-rim),
+    0 32px 64px -24px rgb(0 0 0 / 0.8);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+/* The expanded view: a sheet that covers the tab bar on a phone, a centred panel from 768 px. */
+@utility max-h-sheet {
+  max-height: calc(100dvh - env(safe-area-inset-top) - 16px);
+}
+@utility pb-panel {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+}
+@utility w-panel {
+  width: min(720px, 100vw - 64px);
+}
+@utility max-h-panel {
+  max-height: calc(100dvh - 96px);
+}
+
+/* The right-hand column of the type scale (spec 7.2) from 1024 px, set on each role as well. */
+@media (min-width: 1024px) {
+  .type-title {
+    font-size: 32px;
+    line-height: 38px;
+  }
+  .type-hero {
+    font-size: 72px;
+    line-height: 72px;
+  }
+  .type-name,
+  .type-body {
+    font-size: 16px;
+    line-height: 22px;
+  }
+  .type-line {
+    font-size: 18px;
+    line-height: 26px;
+  }
+}
+
+/* A module that is done: a calm green rim. "Done" with a check carries the meaning too. */
+@utility rim-positive {
+  box-shadow:
+    inset 0 0 0 1px var(--hub-positive-rim),
+    0 24px 48px -32px rgb(0 0 0 / 0.9);
+}
+
+/* The update message sits above the floating tab bar and the home indicator. */
+@utility bottom-toast {
+  bottom: calc(env(safe-area-inset-bottom) + 96px);
+}
+
+/* A home-screen app does not bounce the whole page, and does not scroll it sideways. */
+html,
+body {
+  overscroll-behavior: none;
+}

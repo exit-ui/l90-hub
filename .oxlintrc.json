@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "typescript/no-explicit-any": "error",
+    "typescript/ban-ts-comment": "error"
+  },
+  "ignorePatterns": [
+    "dist",
+    "src/components/ui/**",
+    "src/components/charts/*.ts",
+    "src/components/charts/*.tsx",
+    "src/components/charts/heatmap/**",
+    "src/components/charts/legend/**",
+    "src/components/charts/patterns/**",
+    "src/components/charts/tooltip/**"
+  ]
+}

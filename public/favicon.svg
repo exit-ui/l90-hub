@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>L90</title>
+  <rect width="512" height="512" fill="#0b0e15"/>
+  <g transform="translate(-13 0)">
+  <g fill="none" stroke="#f3f5f9" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M130 188 V316 H190"/>
+    <circle cx="262" cy="224" r="36"/>
+    <path d="M298 224 V316"/>
+    <rect x="336" y="188" width="72" height="128" rx="36"/>
+  </g>
+  <rect x="115" y="352" width="252" height="10" rx="5" fill="#6fe0b8"/>
+  </g>
+</svg>
