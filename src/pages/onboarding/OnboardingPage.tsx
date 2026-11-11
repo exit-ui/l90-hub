@@ -147,7 +147,7 @@ export function OnboardingPage() {
         tone="secondary"
       />
 
-      <section className="surface-card mt-8 p-4 md:p-6">
+      <section className="surface-card mt-8 p-5 lg:p-6">
         <AnimatePresence initial={false} mode="wait">
           <motion.div
             animate={{ opacity: 1, y: 0 }}

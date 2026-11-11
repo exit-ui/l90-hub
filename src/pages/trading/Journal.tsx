@@ -107,7 +107,7 @@ export function Journal() {
     <div>
       <Card>
         <CardTitle>Add a trade</CardTitle>
-        <form className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" noValidate onSubmit={submit}>
+        <form className="mt-4 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 lg:grid-cols-4" noValidate onSubmit={submit}>
           <TextField error={dateError} label="Date" onChange={setDate} type="date" value={date} />
           <SelectField label="Market" onChange={setMarket} options={MARKETS} value={market} />
           <TextField
@@ -140,7 +140,7 @@ export function Journal() {
             onChange={setFollowedRules}
           />
           <PressButton
-            className="sm:col-span-2 lg:col-span-4 lg:justify-self-start"
+            className="col-span-full justify-self-end"
             tone="secondary"
             type="submit"
           >

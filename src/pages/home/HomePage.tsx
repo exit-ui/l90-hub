@@ -22,7 +22,7 @@ import { lineForDay } from '@/lib/summary';
 import { cn } from '@/lib/utils';
 import { levelProgress, totalXp } from '@/lib/xp';
 import { useHub, useHubActions } from '@/store/useHub';
-import { OutreachControls } from './OutreachControls';
+import { DmButtons } from '@/components/shared/DmControls';
 import { PillarModule } from './PillarModule';
 import { cardHeight } from './expand/cardHeights';
 import { ExpandedLayer, type ViewEntry } from './expand/ExpandedLayer';
@@ -242,7 +242,7 @@ export function HomePage() {
         return (
           <PillarModule
             {...common}
-            beside={<OutreachControls date={today} primary={!signOffPrimary} />}
+            beside={<DmButtons date={today} primary={!signOffPrimary} />}
             subline={<p className="type-body text-hub-label-strong">{module.note}</p>}
             extraRows={<WeekStrip days={view.recentDms} />}
             hero

@@ -21,6 +21,7 @@ function WeekdayField({ weekday, label }: WeekdayFieldProps) {
   return (
     <div className="surface-inset grid content-start gap-3 p-4">
       <TextAreaField
+        autosave
         hint={`Tasks: ${stored?.length ?? 0}`}
         label={label}
         onChange={(next) => {

@@ -13,7 +13,7 @@ export function OutreachPage() {
 
   return (
     <>
-      <PageHeader detail="The main quest: send the DMs each day." title="Outreach" />
+      <PageHeader title="Outreach" />
       <PillTabs
         label="Outreach sections"
         onChange={setTab}

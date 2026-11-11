@@ -336,7 +336,7 @@ export function MotionChart({
               <g key={`tick-${value.toFixed(3)}`}>
                 <line stroke="var(--hub-chart-grid)" x1={MARGIN.left} x2={MARGIN.left + innerWidth} y1={y(value)} y2={y(value)} />
                 <text
-                  className="fill-hub-label type-label num"
+                  className="fill-hub-label type-caption num"
                   dominantBaseline="middle"
                   textAnchor="end"
                   x={MARGIN.left - 8}
@@ -413,23 +413,6 @@ export function MotionChart({
                   y1={y(reference.value)}
                   y2={y(reference.value)}
                 />
-                <rect
-                  fill="var(--hub-chart-label-bg)"
-                  height={20}
-                  rx={10}
-                  width={reference.label.length * 7 + 16}
-                  x={MARGIN.left + innerWidth - (reference.label.length * 7 + 16)}
-                  y={y(reference.value) - 10}
-                />
-                <text
-                  className="fill-hub-label-strong type-label font-medium"
-                  dominantBaseline="central"
-                  textAnchor="middle"
-                  x={MARGIN.left + innerWidth - (reference.label.length * 7 + 16) / 2}
-                  y={y(reference.value)}
-                >
-                  {reference.label}
-                </text>
               </g>
             ) : null}
             {todayIndex >= x0 && todayIndex <= x1 && todayIndex < Math.round(to.x1) ? (
@@ -452,20 +435,28 @@ export function MotionChart({
               />
             ) : null}
             <line stroke="var(--hub-chart-grid)" x1={MARGIN.left} x2={MARGIN.left + innerWidth} y1={zeroY} y2={zeroY} />
-            <text className="fill-hub-label type-label" x={MARGIN.left} y={height - 4}>
+            <text className="fill-hub-label type-caption" x={MARGIN.left} y={height - 4}>
               {formatShort(keyOf(Math.round(to.x0)))}
             </text>
-            <text className="fill-hub-label type-label" textAnchor="end" x={MARGIN.left + innerWidth} y={height - 4}>
+            <text className="fill-hub-label type-caption" textAnchor="end" x={MARGIN.left + innerWidth} y={height - 4}>
               {formatShort(keyOf(Math.round(to.x1)))}
             </text>
             {yAxisLabel ? (
-              <text className="fill-hub-label type-label" textAnchor="middle" x={MARGIN.left + innerWidth / 2} y={height - 4}>
+              <text className="fill-hub-label type-caption" textAnchor="middle" x={MARGIN.left + innerWidth / 2} y={height - 4}>
                 {yAxisLabel}
               </text>
             ) : null}
           </svg>
         ) : null}
       </div>
+      {reference ? (
+        <p aria-hidden="true" className="type-caption mt-2 flex items-center gap-2 text-hub-label">
+          <svg height="8" width="20">
+            <line stroke="var(--hub-chart-target)" strokeDasharray="4 4" strokeWidth="1.5" x1="0" x2="20" y1="4" y2="4" />
+          </svg>
+          {reference.label}
+        </p>
+      ) : null}
     </div>
   );
 }

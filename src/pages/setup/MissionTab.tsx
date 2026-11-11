@@ -32,6 +32,7 @@ function StartDateCard({ className }: { className?: string }) {
     <Card aria-labelledby={`${id}-title`} className={className}>
       <CardTitle id={`${id}-title`}>Mission dates</CardTitle>
       <TextField
+      autosave
         fieldClassName="mt-4"
         hint="Day 1 of the mission."
         label="Start date"
@@ -69,6 +70,7 @@ function SettingInput({ field }: { field: SettingField }) {
   const [text, setText] = useDraft(String(stored));
   return (
     <TextField
+      autosave
       error={settingError(text, field.minimum)}
       hint={field.hint}
       inputMode="numeric"

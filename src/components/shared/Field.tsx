@@ -1,22 +1,71 @@
-import { type ComponentProps, type ReactNode, useId } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Check, ChevronDown, CircleAlert } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+  type ComponentProps,
+  type FocusEvent,
+  type ReactNode,
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FADE } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
-/** The size and shape of each text control: 44px high with a 12px radius. 16px text stops the zoom on iOS. */
-export const CONTROL_CLASS = 'h-11 w-full rounded-control bg-hub-inset px-3 text-base md:text-base';
-export const TEXTAREA_CLASS = 'min-h-24 w-full rounded-control bg-hub-inset px-3 py-3 text-base md:text-base';
+/**
+ * The field system (spec 7.6): a filled inset surface with a soft inner edge, 48 px tall,
+ * 16 px text (no zoom on iOS), 16 px side padding, radius 12. The focus ring is the global one.
+ */
+export const FIELD_CLASS = 'field-surface h-12 w-full min-w-0 px-4';
+export const TEXTAREA_CLASS = 'field-surface block w-full min-w-0 resize-none px-4 py-3';
+/** Kept for older call sites: the same as FIELD_CLASS. */
+export const CONTROL_CLASS = FIELD_CLASS;
 export const CHECKBOX_CLASS =
   'size-6 rounded-full data-checked:border-hub-positive data-checked:bg-hub-positive data-checked:text-hub-ink dark:data-checked:bg-hub-positive';
+
+/** A quiet "Saved" with a tick, shown for a moment after a field saves on blur. */
+export function SavedTick({ show }: { show: boolean }) {
+  return (
+    <AnimatePresence>
+      {show ? (
+        <motion.span
+          animate={{ opacity: 1 }}
+          className="type-caption inline-flex items-center gap-1 text-hub-positive"
+          exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }}
+          role="status"
+          transition={FADE}
+        >
+          <Check aria-hidden="true" className="size-3.5" strokeWidth={2.5} />
+          Saved
+        </motion.span>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
+const SAVED_MS = 1600;
+
+/** Shows "Saved" after a blur when the value changed while the field had focus. */
+function useSavedTick(value: string, enabled: boolean) {
+  const [shown, setShown] = useState(false);
+  const atFocus = useRef(value);
+  const timer = useRef(0);
+  const onFocus = useCallback(() => {
+    atFocus.current = value;
+  }, [value]);
+  const onBlur = useCallback(() => {
+    if (!enabled || atFocus.current === value) {
+      return;
+    }
+    setShown(true);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setShown(false), SAVED_MS);
+  }, [enabled, value]);
+  return { shown, onFocus, onBlur };
+}
 
 interface FieldProps {
   label: string;
@@ -25,25 +74,70 @@ interface FieldProps {
   hint?: string;
   /** What is wrong and how to correct it. */
   error?: string;
+  /** Shown on the right of the label, for example the "Saved" tick. */
+  aside?: ReactNode;
   children: ReactNode;
   className?: string;
 }
 
-/** A label above one control, with an optional hint and an optional error. */
-export function Field({ label, htmlFor, hint, error, children, className }: FieldProps) {
+/** A label above one control (8 px gap), an optional hint below, and an error with an icon. */
+export function Field({ label, htmlFor, hint, error, aside, children, className }: FieldProps) {
   return (
-    <div className={cn('grid min-w-0 gap-2', className)}>
-      <Label className="type-label text-hub-label" htmlFor={htmlFor}>
-        {label}
-      </Label>
+    <div className={cn('grid min-w-0 content-start gap-2', className)}>
+      <div className="flex min-h-5 items-center justify-between gap-2">
+        <label className="type-caption text-hub-label-strong" htmlFor={htmlFor}>
+          {label}
+        </label>
+        {aside}
+      </div>
       {children}
-      {hint ? <p className="type-label text-hub-label">{hint}</p> : null}
+      {hint ? <p className="type-caption text-hub-label">{hint}</p> : null}
       {error ? (
-        <p className="type-label font-medium text-hub-danger" role="alert">
-          Error: {error}
+        <p className="type-label flex items-center gap-2 text-hub-danger" role="alert">
+          <CircleAlert aria-hidden="true" className="size-4 shrink-0" />
+          {error}
         </p>
       ) : null}
     </div>
+  );
+}
+
+type NativeInputProps = Omit<ComponentProps<'input'>, 'className'> & { className?: string };
+
+/** One field control without a label, for a label that lives elsewhere. */
+export function FieldInput({ className, ...props }: NativeInputProps) {
+  return <input className={cn(FIELD_CLASS, className)} {...props} />;
+}
+
+type NativeTextareaProps = Omit<ComponentProps<'textarea'>, 'className' | 'rows'> & {
+  className?: string;
+  /** The rows to show first. The area grows with the text. */
+  rows?: number;
+};
+
+/** A text area that starts at 2 lines and grows with the text. */
+export function FieldTextarea({ className, rows = 2, value, onInput, ...props }: NativeTextareaProps) {
+  const area = useRef<HTMLTextAreaElement>(null);
+  const grow = () => {
+    const element = area.current;
+    if (element) {
+      element.style.height = 'auto';
+      element.style.height = `${element.scrollHeight}px`;
+    }
+  };
+  useLayoutEffect(grow, [value]);
+  return (
+    <textarea
+      className={cn(TEXTAREA_CLASS, className)}
+      onInput={(event) => {
+        grow();
+        onInput?.(event);
+      }}
+      ref={area}
+      rows={rows}
+      value={value}
+      {...props}
+    />
   );
 }
 
@@ -56,6 +150,8 @@ interface TextFieldProps extends InputProps {
   onChange?: (value: string) => void;
   hint?: string;
   error?: string;
+  /** The field saves as the user types: show "Saved" after the blur. */
+  autosave?: boolean;
   fieldClassName?: string;
 }
 
@@ -66,18 +162,37 @@ export function TextField({
   onChange,
   hint,
   error,
+  autosave = false,
   className,
   fieldClassName,
+  onBlur,
+  onFocus,
   ...props
 }: TextFieldProps) {
   const id = useId();
+  const saved = useSavedTick(value, autosave && !error);
   return (
-    <Field className={fieldClassName} error={error} hint={hint} htmlFor={id} label={label}>
-      <Input
+    <Field
+      aside={<SavedTick show={saved.shown} />}
+      className={fieldClassName}
+      error={error}
+      hint={hint}
+      htmlFor={id}
+      label={label}
+    >
+      <FieldInput
         aria-invalid={error ? true : undefined}
-        className={cn(CONTROL_CLASS, className)}
+        className={className}
         id={id}
+        onBlur={(event: FocusEvent<HTMLInputElement>) => {
+          saved.onBlur();
+          onBlur?.(event);
+        }}
         onChange={onChange ? (event) => onChange(event.target.value) : undefined}
+        onFocus={(event: FocusEvent<HTMLInputElement>) => {
+          saved.onFocus();
+          onFocus?.(event);
+        }}
         value={value}
         {...props}
       />
@@ -85,31 +200,39 @@ export function TextField({
   );
 }
 
-interface TextAreaFieldProps
-  extends Omit<ComponentProps<'textarea'>, 'onChange' | 'value' | 'id'> {
+interface TextAreaFieldProps extends Omit<ComponentProps<'textarea'>, 'onChange' | 'value' | 'id' | 'rows'> {
   label: string;
   value: string;
   onChange: (value: string) => void;
   hint?: string;
+  autosave?: boolean;
+  rows?: number;
   fieldClassName?: string;
 }
 
+/** A labelled text area that grows from 2 lines. */
 export function TextAreaField({
   label,
   value,
   onChange,
   hint,
+  autosave = false,
   className,
   fieldClassName,
+  rows,
   ...props
 }: TextAreaFieldProps) {
   const id = useId();
+  const saved = useSavedTick(value, autosave);
   return (
-    <Field className={fieldClassName} hint={hint} htmlFor={id} label={label}>
-      <Textarea
-        className={cn(TEXTAREA_CLASS, className)}
+    <Field aside={<SavedTick show={saved.shown} />} className={fieldClassName} hint={hint} htmlFor={id} label={label}>
+      <FieldTextarea
+        className={className}
         id={id}
+        onBlur={saved.onBlur}
         onChange={(event) => onChange(event.target.value)}
+        onFocus={saved.onFocus}
+        rows={rows}
         value={value}
         {...props}
       />
@@ -125,40 +248,34 @@ interface SelectFieldProps<T extends string> {
   fieldClassName?: string;
 }
 
-/** A labelled select for a short list of text options. */
-export function SelectField<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-  fieldClassName,
-}: SelectFieldProps<T>) {
+/** A labelled native select with the field look and a chevron. iOS shows its own picker wheel. */
+export function SelectField<T extends string>({ label, value, options, onChange, fieldClassName }: SelectFieldProps<T>) {
   const id = useId();
   return (
     <Field className={fieldClassName} htmlFor={id} label={label}>
-      <Select
-        onValueChange={(next) => {
-          const match = options.find((option) => option === next);
-          if (match !== undefined) {
-            onChange(match);
-          }
-        }}
-        value={value}
-      >
-        <SelectTrigger
-          className={cn(CONTROL_CLASS, 'data-[size=default]:h-11 cursor-pointer')}
+      <div className="relative">
+        <select
+          className={cn(FIELD_CLASS, 'cursor-pointer appearance-none pr-12')}
           id={id}
+          onChange={(event) => {
+            const match = options.find((option) => option === event.target.value);
+            if (match !== undefined) {
+              onChange(match);
+            }
+          }}
+          value={value}
         >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="rounded-control">
           {options.map((option) => (
-            <SelectItem className="min-h-11 type-body" key={option} value={option}>
+            <option key={option} value={option}>
               {option}
-            </SelectItem>
+            </option>
           ))}
-        </SelectContent>
-      </Select>
+        </select>
+        <ChevronDown
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-hub-label-strong"
+        />
+      </div>
     </Field>
   );
 }
@@ -177,7 +294,7 @@ export function CheckField({ label, checked, onChange, strike = false, className
   const id = useId();
   return (
     <label
-      className={cn('flex min-h-11 min-w-0 cursor-pointer items-center gap-3 py-2', className)}
+      className={cn('flex min-h-12 min-w-0 cursor-pointer items-center gap-3 py-2', className)}
       htmlFor={id}
     >
       <Checkbox
@@ -188,7 +305,7 @@ export function CheckField({ label, checked, onChange, strike = false, className
       />
       <span
         className={cn(
-          'min-w-0 type-body break-words transition-colors',
+          'type-body min-w-0 break-words transition-colors',
           strike && checked ? 'text-hub-label-strong' : 'text-hub-text',
         )}
       >

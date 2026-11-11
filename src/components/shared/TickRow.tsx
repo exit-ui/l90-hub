@@ -25,7 +25,7 @@ export function TickRow({ task, cue, action, done, isNext = false, onToggle }: T
       aria-label={task}
       aria-pressed={done}
       className={cn(
-        'group/tick relative flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-control px-1 py-1 text-left transition-colors hover:bg-hub-inset',
+        'group/tick relative flex min-h-11 w-full cursor-pointer items-center gap-4 rounded-control px-1 py-1 text-left transition-colors hover:bg-hub-inset',
       )}
       data-next={isNext ? 'true' : undefined}
       onClick={() => {

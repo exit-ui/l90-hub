@@ -1,7 +1,7 @@
 import { Camera } from 'lucide-react';
 import { useMemo } from 'react';
 import { AllocationRing } from '@/components/charts/hub/AllocationRing';
-import { HubAreaChart } from '@/components/charts/hub/HubAreaChart';
+import { MotionChart } from '@/components/charts/hub/MotionChart';
 import { RollingNumber } from '@/components/shared/RollingNumber';
 import { Card } from '@/components/shared/Card';
 import { CardTitle } from '@/components/shared/Controls';
@@ -10,8 +10,8 @@ import { PressButton } from '@/components/shared/PressButton';
 import { useToday } from '@/hooks/useToday';
 import { monthKey } from '@/lib/dates';
 import { formatGbp } from '@/lib/format';
-import { portfolioValue } from '@/lib/trading';
-import { allocationItems, snapshotPoints, trancheLabel } from '@/lib/tradingView';
+import { portfolioValue, snapshotSeries } from '@/lib/trading';
+import { allocationItems, trancheLabel } from '@/lib/tradingView';
 import { useHub, useHubActions } from '@/store/useHub';
 
 /** The wallet value, the tranche decision, the value over time and the allocation. */
@@ -23,7 +23,11 @@ export function CryptoOverview() {
   const { saveSnapshot, toggleTranche } = useHubActions();
 
   const total = useMemo(() => portfolioValue(coins), [coins]);
-  const points = useMemo(() => snapshotPoints(snapshots), [snapshots]);
+  const points = useMemo(() => snapshotSeries(snapshots), [snapshots]);
+  const lines = useMemo(
+    () => [{ key: 'wallet', points, color: 'var(--hub-positive)', area: true }],
+    [points],
+  );
   const items = useMemo(() => allocationItems(coins), [coins]);
 
   return (
@@ -78,13 +82,15 @@ export function CryptoOverview() {
             There are no snapshots. Save a snapshot to start the chart.
           </p>
         ) : (
-          <HubAreaChart
-            className="mt-4"
-            data={points}
-            formatValue={formatGbp}
-            label="The wallet value in GBP for each snapshot"
-            tone="data"
-          />
+          <div className="mt-4">
+            <MotionChart
+              formatValue={(value) => formatGbp(value, true)}
+              height={200}
+              label={`The wallet value in GBP for each day. The last value is ${formatGbp(points.at(-1)?.value ?? 0, true)}.`}
+              lines={lines}
+              today={today}
+            />
+          </div>
         )}
       </Card>
     </div>

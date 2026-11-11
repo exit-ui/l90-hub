@@ -1,25 +1,21 @@
-import { buzz } from '@/lib/haptics';
-import { ArrowRight, BookOpen, Minus, Plus, Sparkles } from 'lucide-react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { type ReactNode, useEffect, useId, useMemo, useState } from 'react';
-import { MotionChart } from '@/components/charts/hub/MotionChart';
+import { ArrowRight, BookOpen, Sparkles } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
+import { type ReactNode, useEffect, useId, useState } from 'react';
 import { DoneBadge } from '@/components/shared/DoneBadge';
-import { CONTROL_CLASS } from '@/components/shared/Field';
+import { DmAdjust, DmButtons } from '@/components/shared/DmControls';
+import { TextField } from '@/components/shared/Field';
 import { MissionStats } from '@/components/shared/MissionStats';
 import { PressButton } from '@/components/shared/PressButton';
-import { ChartTable, ProgressChart } from '@/components/shared/ProgressChart';
+import { MetricChart } from '@/components/shared/MetricChart';
+import { ProgressChart } from '@/components/shared/ProgressChart';
 import { ProgressBar } from '@/components/shared/ProgressBar';
 import { RollingNumber } from '@/components/shared/RollingNumber';
 import { TickRow } from '@/components/shared/TickRow';
-import { Input } from '@/components/ui/input';
-import { chartModel, chartValueFormat } from '@/lib/chartModel';
-import { parseWhole } from '@/lib/format';
 import type { ModuleView, TickView } from '@/lib/moduleView';
 import {
   CONTENT_IN,
   COUNT_START_S,
   COUNT_STEP_S,
-  DISCLOSE,
   EXPAND_OPEN,
   FADE,
   staggerDelay,
@@ -128,52 +124,6 @@ function ViewTicks({ ticks, onToggle }: { ticks: readonly TickView[]; onToggle: 
   );
 }
 
-/** The last 14 days of the pillar metric, with its summary, its table and one insight. */
-function History({ module, today }: { module: ModuleView; today: DateKey }) {
-  const days = useHub((state) => state.days);
-  const weekTemplate = useHub((state) => state.weekTemplate);
-  const startDate = useHub((state) => state.startDate);
-  const fitness = useHub((state) => state.fitness);
-  const learning = useHub((state) => state.learning);
-  const trades = useHub((state) => state.trades);
-  const dmTarget = useHub((state) => state.dmTarget);
-  const fitTarget = useHub((state) => state.fitTarget);
-  const learnTarget = useHub((state) => state.learnTarget);
-  const metric = pillarMetric(module.id);
-  const series = useMemo(
-    () => ({ days, weekTemplate, startDate, fitness, learning, trades }),
-    [days, weekTemplate, startDate, fitness, learning, trades],
-  );
-  const settings = useMemo(() => ({ dmTarget, fitTarget, learnTarget }), [dmTarget, fitTarget, learnTarget]);
-  const model = useMemo(
-    () => chartModel(series, settings, { metric, range: 14, compare: [] }, today),
-    [series, settings, metric, today],
-  );
-  const insight = useMemo(
-    () => chartModel(series, settings, { metric, range: 30, compare: [] }, today).insights[0] ?? null,
-    [series, settings, metric, today],
-  );
-  const format = useMemo(() => chartValueFormat(metric, false), [metric]);
-  return (
-    <section aria-label="Last 14 days">
-      <h3 className="type-section text-hub-text">Last 14 days</h3>
-      <div className="mt-4">
-        <MotionChart
-          bars={model.bars}
-          formatValue={format}
-          height={120}
-          label={model.summary}
-          lines={model.lines}
-          reference={model.reference}
-          today={today}
-        />
-      </div>
-      <ChartTable columns={model.columns} format={format} rows={model.rows} summary={model.summary} />
-      {insight ? <p className="type-body mt-4 text-hub-label-strong">{insight.text}</p> : null}
-    </section>
-  );
-}
-
 function PageLink({ page, segments = [], children }: { page: PageId; segments?: string[]; children: string }) {
   return (
     <a
@@ -183,70 +133,6 @@ function PageLink({ page, segments = [], children }: { page: PageId; segments?: 
       {children}
       <ArrowRight aria-hidden="true" className="size-4" />
     </a>
-  );
-}
-
-/** −1 DM and the exact count, behind "Adjust". */
-function Adjust({ today, dm }: { today: DateKey; dm: number }) {
-  const { addDm, setDm } = useHubActions();
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<string | null>(null);
-  const panelId = useId();
-  const fieldId = useId();
-  return (
-    <div>
-      <button
-        aria-controls={panelId}
-        aria-expanded={open}
-        className="tap press type-label inline-flex cursor-pointer items-center rounded-full px-3 text-hub-label-strong hover:bg-hub-inset hover:text-hub-text"
-        onClick={() => setOpen((value) => !value)}
-        type="button"
-      >
-        {open ? 'Close adjust' : 'Adjust'}
-      </button>
-      <AnimatePresence initial={false}>
-        {open ? (
-          <motion.div
-            animate={{ height: 'auto', opacity: 1 }}
-            className="-mx-2 -mb-2 overflow-hidden px-2 pb-2"
-            exit={{ height: 0, opacity: 0 }}
-            id={panelId}
-            initial={{ height: 0, opacity: 0 }}
-            transition={DISCLOSE}
-          >
-            <div className="flex items-end gap-3 pt-2">
-              <PressButton
-                aria-label="Remove 1 DM"
-                disabled={dm === 0}
-                iconOnly
-                onClick={() => addDm(today, -1)}
-                tone="secondary"
-              >
-                <Minus aria-hidden="true" className="size-5" />
-              </PressButton>
-              <div className="grid min-w-0 flex-1 gap-1">
-                <label className="type-label text-hub-label" htmlFor={fieldId}>
-                  Exact count
-                </label>
-                <Input
-                  className={cn(CONTROL_CLASS, 'num')}
-                  id={fieldId}
-                  inputMode="numeric"
-                  onBlur={() => setDraft(null)}
-                  onChange={(event) => {
-                    setDraft(event.target.value);
-                    if (event.target.value.trim() !== '') {
-                      setDm(today, parseWhole(event.target.value.replace(/[^\d]/g, '')));
-                    }
-                  }}
-                  value={draft ?? String(dm)}
-                />
-              </div>
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-    </div>
   );
 }
 
@@ -270,17 +156,11 @@ const PAGE_LINKS: Readonly<Record<ModuleView['id'], { page: PageId; segments?: s
 
 /** The expanded view of a pillar module (spec 10.1). */
 export function PillarView({ module, today, cardsDue, onToggle, format, whole }: PillarViewProps) {
-  const dm = useHub((state) => state.days[today]?.dm ?? 0);
   const book = useHub((state) => state.books.find((item) => item.status === 'current'));
   const checks = useHub((state) => state.days[today]?.chartChecks ?? 0);
   const limit = useHub((state) => state.chartCheckLimit);
-  const { addDm, addChartCheck } = useHubActions();
+  const { addChartCheck } = useHubActions();
   const link = PAGE_LINKS[module.id];
-
-  const add = (amount: number) => {
-    addDm(today, amount);
-    buzz();
-  };
 
   return (
     <>
@@ -299,16 +179,9 @@ export function PillarView({ module, today, cardsDue, onToggle, format, whole }:
         )}
 
         {module.id === 'outreach' ? (
-          <div className="grid gap-2">
-            <div className="flex items-center gap-3">
-              <PressButton aria-label="Add 1 DM" className="flex-1" onClick={() => add(1)} tone="primary">
-                <Plus aria-hidden="true" className="size-5" strokeWidth={2.5} />1 DM
-              </PressButton>
-              <PressButton aria-label="Add 5 DMs" className="px-4" onClick={() => add(5)} tone="secondary">
-                +5
-              </PressButton>
-            </div>
-            <Adjust dm={dm} today={today} />
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <DmAdjust date={today} />
+            <DmButtons date={today} />
           </div>
         ) : null}
 
@@ -343,7 +216,7 @@ export function PillarView({ module, today, cardsDue, onToggle, format, whole }:
           </div>
         ) : null}
 
-        <History module={module} today={today} />
+        <MetricChart insight metric={pillarMetric(module.id)} range={14} title="Last 14 days" />
         <PageLink page={link.page} segments={link.segments}>
           {link.text}
         </PageLink>
@@ -370,7 +243,6 @@ export function SignOffView({ module, today, signedOff, headline, onToggle, onSi
   const fitness = useHub((state) => state.fitness);
   const learning = useHub((state) => state.learning);
   const { setWin } = useHubActions();
-  const winId = useId();
   const headlineId = useId();
   const data = { days, dmTarget, startDate, weekTemplate, fitness, learning };
   // After "Sign off the day" the button goes away; the focus moves to the summary heading.
@@ -421,18 +293,13 @@ export function SignOffView({ module, today, signedOff, headline, onToggle, onSi
               {highlight}
             </p>
           ) : null}
-          <div className="grid gap-2">
-            <label className="type-label text-hub-label" htmlFor={winId}>
-              One win today (you can leave this empty)
-            </label>
-            <Input
-              className={CONTROL_CLASS}
-              id={winId}
-              onChange={(event) => setWin(today, event.target.value)}
-              placeholder="Write one thing that moved forward."
-              value={days[today]?.win ?? ''}
-            />
-          </div>
+          <TextField
+            autosave
+            label="One win today (you can leave this empty)"
+            onChange={(text) => setWin(today, text)}
+            placeholder="Write one thing that moved forward."
+            value={days[today]?.win ?? ''}
+          />
           {tomorrow ? (
             <p className="type-body text-hub-label-strong">
               <span className="font-semibold text-hub-text">Tomorrow:</span> {tomorrow}

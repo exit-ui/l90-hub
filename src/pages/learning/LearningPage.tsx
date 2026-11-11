@@ -15,7 +15,7 @@ export function LearningPage() {
 
   return (
     <>
-      <PageHeader detail="Linux, Python, flashcards and books." title="Learning" />
+      <PageHeader title="Learning" />
       <PillTabs
         label="Learning sections"
         onChange={setTab}

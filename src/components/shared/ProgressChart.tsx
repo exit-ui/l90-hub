@@ -297,7 +297,7 @@ export function ProgressChart({
   return (
     <motion.section
       aria-labelledby={titleId}
-      className={cn('surface-card flex min-w-0 flex-col p-4 md:p-6', className)}
+      className={cn('surface-card flex min-w-0 flex-col p-5 lg:p-6', className)}
       layoutId={onOpen ? 'card-progress' : undefined}
       ref={card}
       style={{ borderRadius: CARD_RADIUS }}

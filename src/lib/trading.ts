@@ -1,4 +1,5 @@
 import type { Coin, DateKey, Payout, Setup, Snapshot, Trade } from '@/store/types';
+import { rangeOfDays } from './dates';
 
 export interface TradeStats {
   count: number;
@@ -119,4 +120,23 @@ export function setupProgress(setups: readonly Setup[]): { count: number; goal: 
     goal: SETUP_GOAL,
     fraction: Math.min(1, setups.length / SETUP_GOAL),
   };
+}
+
+/**
+ * The wallet value for each day from the first snapshot to the last. A day without a snapshot
+ * keeps the last known value, so the chart line has no gaps.
+ */
+export function snapshotSeries(snapshots: readonly Snapshot[]): { date: DateKey; value: number | null }[] {
+  const sorted = [...snapshots].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const first = sorted[0];
+  const last = sorted.at(-1);
+  if (!first || !last) {
+    return [];
+  }
+  const byDate = new Map(sorted.map((snapshot) => [snapshot.date, snapshot.valueGbp]));
+  let value = first.valueGbp;
+  return rangeOfDays(first.date, last.date).map((date) => {
+    value = byDate.get(date) ?? value;
+    return { date, value };
+  });
 }

@@ -1,12 +1,8 @@
-import { BadgeCheck, ChevronDown, Minus, PenLine, Plus } from 'lucide-react';
+import { BadgeCheck, ChevronDown } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { type ReactNode, useId, useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToday } from '@/hooks/useToday';
 import { dayNumber, formatLong } from '@/lib/dates';
-import { parseWhole } from '@/lib/format';
 import { dmStatusText } from '@/lib/homeText';
 import { DISCLOSE, SPRING } from '@/lib/motion';
 import { MISSION_DAYS, phaseOfDay } from '@/lib/phases';
@@ -19,8 +15,8 @@ import type { DateKey } from '@/store/types';
 import { useHub, useHubActions } from '@/store/useHub';
 import { RollingNumber } from './RollingNumber';
 import { Card } from './Card';
-import { CONTROL_CLASS, TEXTAREA_CLASS } from './Field';
-import { PressButton } from './PressButton';
+import { DmAdjust, DmButtons } from './DmControls';
+import { TextAreaField } from './Field';
 import { ProgressBar } from './ProgressBar';
 import { TickRow } from './TickRow';
 
@@ -77,95 +73,27 @@ interface DmCounterProps {
   className?: string;
 }
 
-/** The DM count for one date and the buttons that change it. +1 DM is the main action. */
+/** The DM count for one date: the number, the "+5" and round "+" buttons, the bar and "Adjust". */
 export function DmCounter({ date, hero = false, heading, className }: DmCounterProps) {
-  const record = useHub((state) => state.days[date]) ?? emptyDay();
+  const dm = useHub((state) => state.days[date]?.dm ?? 0);
   const target = useHub((state) => state.dmTarget);
-  const { setDm, addDm } = useHubActions();
-  const fieldId = useId();
-  const [editing, setEditing] = useState(false);
 
   return (
     <div className={cn('flex flex-col', className)}>
-      <div className="flex items-start justify-between gap-3">
-        {heading ?? <p className="type-label text-hub-label">DMs sent</p>}
-        <PressButton
-          aria-controls={`${fieldId}-edit`}
-          aria-expanded={editing}
-          className="-mt-3 -mr-2 px-3 type-label font-medium text-hub-label-strong"
-          onClick={() => setEditing((open) => !open)}
-          tone="ghost"
-        >
-          <PenLine aria-hidden="true" className="size-4" />
-          {editing ? 'Done' : 'Edit'}
-        </PressButton>
+      {heading ?? <p className="type-label text-hub-label">DMs sent</p>}
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <p className="flex items-baseline gap-2">
+          <RollingNumber className={cn('text-hub-text', hero ? 'type-hero' : 'type-number')} value={dm} />
+          <span className="type-body text-hub-label">/ {target}</span>
+        </p>
+        <DmButtons date={date} />
       </div>
-      <p className="flex items-baseline gap-2">
-        <RollingNumber className={cn('text-hub-text', hero ? 'type-hero num' : 'type-number num')} value={record.dm} />
-        <span className="type-body text-hub-label">/ {target} DMs</span>
+      <p aria-live="polite" className="type-body mt-2 text-hub-label-strong">
+        {dmStatusText(dm, target)}
       </p>
-      <p aria-live="polite" className="mt-2 type-body text-hub-label-strong">
-        {dmStatusText(record.dm, target)}
-      </p>
-      <ProgressBar
-        className="mt-4"
-        fraction={fractionOf(record.dm, target)}
-        label={`${record.dm} of ${target} DMs`}
-        tone="primary"
-      />
-
-      <AnimatePresence initial={false}>
-        {editing ? (
-          <motion.div
-            animate={{ height: 'auto', opacity: 1 }}
-            className="-mx-2 -mb-2 overflow-hidden px-2 pb-2"
-            exit={{ height: 0, opacity: 0 }}
-            id={`${fieldId}-edit`}
-            initial={{ height: 0, opacity: 0 }}
-            transition={DISCLOSE}
-          >
-            <div className="flex items-center justify-between gap-3 pt-4">
-              <Label className="type-body text-hub-text" htmlFor={`${fieldId}-dm`}>
-                Exact count
-              </Label>
-              <Input
-                className={cn(CONTROL_CLASS, 'w-24 text-center')}
-                id={`${fieldId}-dm`}
-                inputMode="numeric"
-                min={0}
-                onChange={(event) => setDm(date, parseWhole(event.target.value))}
-                type="number"
-                value={record.dm}
-              />
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
-      <div className="mt-4 flex items-center gap-2">
-        <PressButton
-          aria-label="Remove 1 DM"
-          className={hero ? 'size-14' : undefined}
-          disabled={record.dm === 0}
-          iconOnly
-          onClick={() => addDm(date, -1)}
-        >
-          <Minus aria-hidden="true" className="size-5" />
-        </PressButton>
-        <PressButton
-          className="flex-1"
-          onClick={() => addDm(date, 1)}
-          tone="primary"
-        >
-          <Plus aria-hidden="true" className="size-5" strokeWidth={2.5} />1 DM
-        </PressButton>
-        <PressButton
-          aria-label="Add 5 DMs"
-          className="px-4"
-          onClick={() => addDm(date, 5)}
-        >
-          +5
-        </PressButton>
+      <ProgressBar className="mt-4" fraction={fractionOf(dm, target)} label={`${dm} of ${target} DMs`} tone="primary" />
+      <div className="mt-4">
+        <DmAdjust date={date} />
       </div>
     </div>
   );
@@ -257,29 +185,19 @@ export function DayNotes({ date, className }: { date: DateKey; className?: strin
             initial={{ height: 0, opacity: 0 }}
             transition={DISCLOSE}
           >
-            <div className="grid gap-4 pt-3">
-              <div className="grid gap-2">
-                <Label className="type-label text-hub-label" htmlFor={`${fieldId}-win`}>
-                  One thing that moved forward today
-                </Label>
-                <Textarea
-                  className={TEXTAREA_CLASS}
-                  id={`${fieldId}-win`}
-                  onChange={(event) => setWin(date, event.target.value)}
-                  value={record.win}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label className="type-label text-hub-label" htmlFor={`${fieldId}-next`}>
-                  The first action tomorrow
-                </Label>
-                <Textarea
-                  className={TEXTAREA_CLASS}
-                  id={`${fieldId}-next`}
-                  onChange={(event) => setNext(date, event.target.value)}
-                  value={record.next}
-                />
-              </div>
+            <div className="grid gap-4 pt-4">
+              <TextAreaField
+                autosave
+                label="One thing that moved forward today"
+                onChange={(text) => setWin(date, text)}
+                value={record.win}
+              />
+              <TextAreaField
+                autosave
+                label="The first action tomorrow"
+                onChange={(text) => setNext(date, text)}
+                value={record.next}
+              />
             </div>
           </motion.div>
         ) : null}

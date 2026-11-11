@@ -251,8 +251,16 @@ Outer radius = inner radius + padding. Modules 28; controls inside a 16 px padde
 ### 7.5 Density
 
 - Max 8 distinct cards on Home (6 modules + chart + 1 notice).
-- First viewport at 390×844 (above the tab bar) shows: the header, the full Outreach module including the +1 DM button, and the top of row 2. Home total height at 390 px with `?sample=1` ≤ 1,800 px.
+- First viewport at 390×844 (above the tab bar) shows: the header, the full Outreach module including the +1 DM button, and the top of row 2. Home total height at 390 px with `?sample=1` ≤ 1,900 px (round 5: raised from 1,800 for the 16 px body floor and 20 px card padding).
 - Max 4 ticks visible per module, max 2 insight lines per card, max 1 notice, max 1 prose sentence (the daily line).
+
+### 7.6 Round 5: type floor, spacing and the field system
+
+- Type floor: body and list rows 16 / 24 (`.type-body`, `.type-name`), secondary text 14 / 20 (`.type-label`), captions 13 / 18 (`.type-caption`) only for chart axes and the reference legend. Headings use a 1.2 line height (section 20 / 24, title 28 / 34 → 32 / 38). Tight tracking only on numbers and titles. A script audit of every page and view at 390 px finds no readable text below 14 px outside captions.
+- Spacing: cards and modules use 20 px padding below 1024 px and 24 px from 1024 px (20 joins the token list for card padding only). Tick rows have 16 px between the check and the text. Each page has one title, then content; page subtitles that repeat the title are removed.
+- Fields (`src/components/shared/Field.tsx`): one system for every input, select, date, number and text area. A filled inset surface (`field-surface`, `--hub-field`) with a soft 1 px inner edge, no hard border, radius 12, 48 px tall, 16 px text, 16 px side padding, dark colour scheme. Label 13 px medium above with an 8 px gap; hint 13 px below; error in the danger colour with an icon. Focus: the global ring and a lighter fill, no layout shift. Selects are native (iOS picker) with a chevron; dates are native with the calendar icon. Text areas start at 2 lines and grow. Fields that save as you type show a quiet "Saved" tick after the blur. Short fields sit 2 per row from 380 px; the submit is a compact pill aligned right.
+- DM controls (`DmControls.tsx`): every screen that changes the DM count uses the same "+5" pill and round "+" button and the same "Adjust" ghost pill (−1 and the exact count). There is no full-width "+1 DM" bar anywhere.
+- Charts: every line or bar chart is the motion chart (`MotionChart`, `ProgressChart`, `MetricChart`) with 13 px axes. The target label is a legend line under the chart, never a pill on the bars.
 
 ## 8. Background and atmosphere
 
@@ -502,7 +510,7 @@ Accessibility, copy, build
 43. Every interactive element on Today, Progress and every expanded view is ≥ 44 × 44 px.
 44. Every control shows a visible focus ring; Today and every expanded view work with the keyboard alone.
 45. No page and no expanded view scrolls sideways at 360 px.
-46. Home height at 390 px with `?sample=1` is ≤ 1,800 px.
+46. Home height at 390 px with `?sample=1` is ≤ 1,900 px.
 47. All new UI copy is STE: ≤ 20 words per sentence, active voice, instructions start with a verb.
 48. `npm run build`, `npm test` and the linter pass with no new warnings.
 
@@ -546,7 +554,7 @@ Round 3 (user feedback)
 79. Today has no full-width +1 DM bar: Outreach has a round 44 px "+" ("Add 1 DM", the one primary) and a small "+5" pill ("Add 5 DMs"); "Adjust" is only in the Outreach view.
 80. "+1 check" and "Sign off" are small pills; the chart card has no "Open full view" button (its "Progress" title opens the view, with a chevron); level and phase share one chip.
 81. Numbers, titles, labels and body follow one weight system (600 / 600 / 500 / 400); no light or bold text.
-82. Home height at 390 px with `?sample=1` is lower than in round 2 (≤ 1,740 px).
+82. Round 3: Home height at 390 px was lower than in round 2 (1,726 px). Round 5 raises it with the type floor (item 46).
 
 Round 4 (home-screen app)
 83. The build has a valid `manifest.webmanifest` (14.3) and `manifestProblems` returns no problem (test passes).
@@ -556,4 +564,12 @@ Round 4 (home-screen app)
 87. Inputs are 16 px or larger on phones; pinch-zoom is not locked.
 88. Setup → Backup shows the home-screen data line; the app asks for persistent storage one time.
 89. `vite.config.ts` uses `base: './'`; the built app loads its chunks, fonts and service worker from a subpath.
+
+Round 5 (polish)
+90. Every input, select, date, number and text area uses the shared field system (7.6); no page has its own input styling.
+91. No screen shows a full-width "+1 DM" bar; "+5" and the round "+" are the same everywhere; "Adjust" is a ghost pill with an icon and a 44 px target.
+92. A font-size audit of every page and view at 390 px finds no text below 14 px outside captions and chart axes.
+93. Cards and modules use 20 px padding below 1024 px and 24 px from 1024 px; tick rows keep 16 px between the check and the text.
+94. Every line or bar chart on every page is the motion chart; the target label is a legend line under the chart.
+95. Each page shows one title, then content (no subtitle that repeats the title).
 

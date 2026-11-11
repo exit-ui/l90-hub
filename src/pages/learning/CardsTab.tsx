@@ -133,7 +133,7 @@ function AddCardForm() {
       <form className="mt-4 grid gap-4" onSubmit={submit}>
         <TextField error={error} label="Question" onChange={setQuestion} value={question} />
         <TextAreaField label="Answer" onChange={setAnswer} value={answer} />
-        <PressButton className="sm:justify-self-start" tone="soft" type="submit">
+        <PressButton className="justify-self-end" tone="secondary" type="submit">
           <Plus aria-hidden="true" className="size-4" />
           Add the card
         </PressButton>

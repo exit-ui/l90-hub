@@ -1,17 +1,15 @@
 import { CalendarCheck, Flame, Gauge, Send, TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';
-import { HubAreaChart } from '@/components/charts/hub/HubAreaChart';
-import { Spark } from '@/components/charts/hub/Spark';
+import { ProgressChart } from '@/components/shared/ProgressChart';
 import { RollingNumber } from '@/components/shared/RollingNumber';
 import { Card } from '@/components/shared/Card';
-import { CardTitle } from '@/components/shared/Controls';
 import { Notice } from '@/components/shared/Notice';
 import { ProgressBar } from '@/components/shared/ProgressBar';
 import { StatCard } from '@/components/shared/StatCard';
 import { DmCounter } from '@/components/shared/TaskCard';
 import { useToday } from '@/hooks/useToday';
 import { formatDecimal, formatInteger } from '@/lib/format';
-import { outreachOverview, OVERVIEW_CHART_DAYS } from '@/lib/outreachView';
+import { outreachOverview } from '@/lib/outreachView';
 import { momentum } from '@/lib/streak';
 import { useHub } from '@/store/useHub';
 
@@ -48,30 +46,13 @@ export function OverviewTab() {
             }
           />
         </Card>
-        <Card aria-labelledby="dm-chart-title" className="lg:col-span-7 lg:self-start">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <CardTitle id="dm-chart-title">DMs for each day</CardTitle>
-            <p className="type-label text-hub-label">
-              The last {OVERVIEW_CHART_DAYS} days. The target is {view.target}.
-            </p>
-          </div>
-          <HubAreaChart
-            className="mt-4"
-            data={view.series}
-            formatValue={formatInteger}
-            label={`DMs for each of the last ${OVERVIEW_CHART_DAYS} days, with the target line at ${view.target}`}
-            target={dmTarget}
-            targetLabel="Target"
-            tone="primary"
-          />
-        </Card>
+        <ProgressChart className="lg:col-span-7 lg:self-start" today={today} variant="compact" />
       </div>
       <section
         aria-label="Outreach numbers"
         className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5"
       >
         <StatCard
-          chart={<Spark data={view.spark} label="DMs for each of the last 14 days" tone="primary" />}
           className="col-span-2 md:col-span-1"
           detail="DMs in the hub"
           icon={Send}

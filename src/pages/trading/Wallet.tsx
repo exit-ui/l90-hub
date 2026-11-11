@@ -1,6 +1,5 @@
 import { Plus } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
-import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -11,12 +10,11 @@ import {
 } from '@/components/ui/table';
 import { Card } from '@/components/shared/Card';
 import { CardTitle, RemoveButton, TableShell } from '@/components/shared/Controls';
-import { CONTROL_CLASS, TextField } from '@/components/shared/Field';
+import { FieldInput, TextField } from '@/components/shared/Field';
 import { Notice } from '@/components/shared/Notice';
 import { PressButton } from '@/components/shared/PressButton';
 import { formatGbp } from '@/lib/format';
 import { coinValue, portfolioValue } from '@/lib/trading';
-import { cn } from '@/lib/utils';
 import type { Coin } from '@/store/types';
 import { useHub, useHubActions } from '@/store/useHub';
 import { useNumberText } from './useNumberText';
@@ -33,9 +31,9 @@ interface NumberCellProps {
 function NumberCell({ label, value, step, onSave }: NumberCellProps) {
   const field = useNumberText(value, onSave);
   return (
-    <Input
+    <FieldInput
       aria-label={label}
-      className={cn(CONTROL_CLASS, 'min-w-28 text-right num')}
+      className="num min-w-28 text-right"
       inputMode="decimal"
       min={0}
       onBlur={field.onBlur}
@@ -135,17 +133,17 @@ export function Wallet() {
 
       <Card>
         <CardTitle>Add a coin</CardTitle>
-        <form className="mt-4 flex flex-wrap items-start gap-3" noValidate onSubmit={submit}>
+        <form className="mt-4 flex flex-wrap items-end gap-3" noValidate onSubmit={submit}>
           <TextField
             autoCapitalize="characters"
             error={error}
-            fieldClassName="w-full sm:w-56"
+            fieldClassName="min-w-40 flex-1"
             label="Symbol"
             onChange={setSymbol}
             placeholder="BTC"
             value={symbol}
           />
-          <PressButton className="sm:mt-6" tone="secondary" type="submit">
+          <PressButton tone="secondary" type="submit">
             <Plus aria-hidden="true" className="size-4" />
             Add the coin
           </PressButton>

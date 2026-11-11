@@ -88,7 +88,7 @@ export function ProgressPage() {
 
   return (
     <>
-      <PageHeader detail="The data of the mission. Filter it, compare it and find the next fix." title="Progress" />
+      <PageHeader title="Progress" />
       <PillTabs
         label="Progress sections"
         onChange={(next) => (next === DAYS_TAB ? navigate('progress', DAYS_TAB) : navigate('progress'))}

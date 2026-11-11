@@ -104,3 +104,21 @@ describe('trading view', () => {
     expect(numberText(Number.NaN)).toBe('0');
   });
 });
+
+describe('snapshotSeries', () => {
+  it('gives one value for each day and keeps the last known value', async () => {
+    const { snapshotSeries } = await import('./trading');
+    expect(snapshotSeries([])).toEqual([]);
+    expect(
+      snapshotSeries([
+        { date: '2026-10-23', valueGbp: 120 },
+        { date: '2026-10-20', valueGbp: 100 },
+      ]),
+    ).toEqual([
+      { date: '2026-10-20', value: 100 },
+      { date: '2026-10-21', value: 100 },
+      { date: '2026-10-22', value: 100 },
+      { date: '2026-10-23', value: 120 },
+    ]);
+  });
+});

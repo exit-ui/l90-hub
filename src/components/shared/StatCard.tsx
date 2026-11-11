@@ -8,53 +8,34 @@ interface StatCardProps {
   value: ReactNode;
   /** A short line below the value. */
   detail?: ReactNode;
-  /** One small chart or bar. */
-  chart: ReactNode;
+  /** One small chart or bar below the value. */
+  chart?: ReactNode;
+  /** Kept for older call sites. Stat cards show no icon: the label carries the meaning. */
   icon?: LucideIcon;
   /** With a link, the full card opens the page. */
   href?: string;
-  /** Where the chart goes: below the value, or at the side of the value. */
+  /** Kept for older call sites. The chart always sits below the value. */
   chartPlacement?: 'below' | 'side';
   className?: string;
 }
 
-/** A label, one large value, and one small chart or bar. */
-export function StatCard({
-  label,
-  value,
-  detail,
-  chart,
-  icon: Icon,
-  href,
-  chartPlacement = 'below',
-  className,
-}: StatCardProps) {
-  const side = chartPlacement === 'side';
+/** A stat on the content material: a label, one number, a short detail and an optional bar. */
+export function StatCard({ label, value, detail, chart, href, className }: StatCardProps) {
   const body = (
-    <div className="flex h-full flex-col gap-3">
-      <p className="type-label text-hub-label flex items-center gap-2">
-        {Icon ? <Icon aria-hidden="true" className="size-4 shrink-0" /> : null}
-        <span className="truncate">{label}</span>
-      </p>
-      <div className={cn('flex flex-1 gap-3', side ? 'items-center justify-between' : 'flex-col')}>
-        <div className="min-w-0">
-          <p className="type-number num text-hub-text">{value}</p>
-          {detail ? <p className="mt-1 type-label text-hub-label">{detail}</p> : null}
-        </div>
-        <div className={cn(side ? 'shrink-0' : 'mt-auto w-full')}>{chart}</div>
-      </div>
+    <div className="flex h-full flex-col">
+      <p className="type-label text-hub-label">{label}</p>
+      <p className="type-number num mt-2 break-words text-hub-text">{value}</p>
+      {detail ? <p className="type-label mt-1 text-hub-label">{detail}</p> : null}
+      {chart ? <div className="mt-auto pt-4">{chart}</div> : null}
     </div>
   );
-
+  const shell = cn('surface-card block min-w-0 p-5 lg:p-6', className);
   if (href) {
     return (
-      <a
-        className={cn('surface-card press block min-w-0 p-4 no-underline md:p-6', className)}
-        href={href}
-      >
+      <a className={cn(shell, 'press no-underline')} href={href}>
         {body}
       </a>
     );
   }
-  return <div className={cn('surface-card min-w-0 p-4 md:p-6', className)}>{body}</div>;
+  return <div className={shell}>{body}</div>;
 }

@@ -15,7 +15,7 @@ export function SetupPage() {
   const [tab, setTab] = useTabRoute('setup', TAB_IDS);
   return (
     <>
-      <PageHeader detail="The settings, the week, the rewards and the record of the mission." title="Setup" />
+      <PageHeader title="Setup" />
       <PillTabs
         label="Setup sections"
         onChange={setTab}

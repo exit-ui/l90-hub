@@ -12,7 +12,7 @@ export function MethodPage() {
   const [tab, setTab] = useTabRoute('method', TAB_IDS);
   return (
     <>
-      <PageHeader detail="Each method has a source label." title="Method" />
+      <PageHeader title="Method" />
       <PillTabs
         label="Method sections"
         onChange={setTab}

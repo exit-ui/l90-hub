@@ -70,7 +70,7 @@ export function Payouts() {
 
       <Card className="lg:col-span-8">
         <CardTitle>Add a payout</CardTitle>
-        <form className="mt-4 grid gap-4 sm:grid-cols-3" noValidate onSubmit={submit}>
+        <form className="mt-4 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 lg:grid-cols-3" noValidate onSubmit={submit}>
           <TextField error={dateError} label="Date" onChange={setDate} type="date" value={date} />
           <TextField error={firmError} label="Firm" onChange={setFirm} value={firm} />
           <TextField
@@ -83,7 +83,7 @@ export function Payouts() {
             type="number"
             value={amount}
           />
-          <PressButton className="sm:col-span-3 sm:justify-self-start" tone="secondary" type="submit">
+          <PressButton className="col-span-full justify-self-end" tone="secondary" type="submit">
             <Plus aria-hidden="true" className="size-4" />
             Add the payout
           </PressButton>

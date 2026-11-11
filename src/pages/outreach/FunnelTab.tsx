@@ -22,6 +22,7 @@ function StageField({ stage, label, value }: StageFieldProps) {
 
   return (
     <TextField
+      autosave
       inputMode="numeric"
       label={label}
       min={0}
@@ -62,6 +63,7 @@ export function FunnelTab() {
           {stages.map((stage) =>
             stage.key === 'contacted' ? (
               <TextField
+            autosave
                 className="text-hub-label"
                 hint="The hub calculates this value."
                 key={stage.key}
@@ -95,6 +97,7 @@ export function FunnelTab() {
         <Card aria-labelledby="week-fix-title">
           <CardTitle id="week-fix-title">Fix for the week</CardTitle>
           <TextField
+            autosave
             fieldClassName="mt-3"
             hint="Write one change that you make this week."
             label="The one fix this week"

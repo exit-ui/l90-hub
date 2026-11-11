@@ -81,6 +81,7 @@ function RewardCard({ status }: { status: RewardStatus }) {
       </ul>
 
       <TextField
+        autosave
         label={`Reward for phase ${status.phase}`}
         onChange={(text) => setReward(status.index, text)}
         value={reward}

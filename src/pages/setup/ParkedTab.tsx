@@ -44,7 +44,7 @@ export function ParkedTab() {
             }}
             value={text}
           />
-          <PressButton className="justify-self-start" tone="primary" type="submit">
+          <PressButton className="justify-self-end" tone="secondary" type="submit">
             Park the idea
           </PressButton>
         </form>

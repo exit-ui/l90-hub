@@ -1,9 +1,8 @@
 import { Activity, ListChecks, Plus, Scale, Sigma, Target, TrendingDown } from 'lucide-react';
 import { useMemo } from 'react';
-import { HubAreaChart } from '@/components/charts/hub/HubAreaChart';
-import { HubBarChart } from '@/components/charts/hub/HubBarChart';
 import { HubGauge } from '@/components/charts/hub/HubGauge';
 import { Card } from '@/components/shared/Card';
+import { MetricChart } from '@/components/shared/MetricChart';
 import { CardTitle } from '@/components/shared/Controls';
 import { Notice } from '@/components/shared/Notice';
 import { PressButton } from '@/components/shared/PressButton';
@@ -11,7 +10,7 @@ import { ProgressBar } from '@/components/shared/ProgressBar';
 import { useToday } from '@/hooks/useToday';
 import { formatCount, formatR, formatRate } from '@/lib/format';
 import { tradeStats } from '@/lib/trading';
-import { aboveCheckLimit, cumulativePoints, LAST_TRADES, lastTradePoints } from '@/lib/tradingView';
+import { aboveCheckLimit, cumulativePoints } from '@/lib/tradingView';
 import { useHub, useHubActions } from '@/store/useHub';
 import { StatTile } from './StatTile';
 
@@ -27,7 +26,6 @@ export function DayOverview() {
 
   const stats = useMemo(() => tradeStats(trades), [trades]);
   const cumulative = useMemo(() => cumulativePoints(trades), [trades]);
-  const last = useMemo(() => lastTradePoints(trades, LAST_TRADES), [trades]);
   const above = aboveCheckLimit(checks, limit);
 
   return (
@@ -80,19 +78,14 @@ export function DayOverview() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <Card aria-labelledby="cumulative-r-title" className="lg:col-span-8">
-          <CardTitle id="cumulative-r-title">Cumulative R</CardTitle>
+        <Card aria-label="Cumulative R" className="lg:col-span-8">
           {cumulative.length === 0 ? (
-            <p className="mt-3 type-body text-hub-label">{EMPTY_LINE}</p>
+            <>
+              <CardTitle>Cumulative R</CardTitle>
+              <p className="mt-4 type-body text-hub-label">{EMPTY_LINE}</p>
+            </>
           ) : (
-            <HubAreaChart
-              className="mt-4"
-              data={cumulative}
-              formatLabel={(label) => `Trade ${label}`}
-              formatValue={formatR}
-              label="Cumulative R after each trade in date order"
-              tone="data"
-            />
+            <MetricChart metric="r" range={30} title="Cumulative R, last 30 days" />
           )}
         </Card>
 
@@ -121,19 +114,6 @@ export function DayOverview() {
           </div>
         </Card>
 
-        <Card aria-labelledby="last-trades-title" className="lg:col-span-12">
-          <CardTitle id="last-trades-title">The last {LAST_TRADES} trades in R</CardTitle>
-          {last.length === 0 ? (
-            <p className="mt-3 type-body text-hub-label">{EMPTY_LINE}</p>
-          ) : (
-            <HubBarChart
-              className="mt-4"
-              data={last}
-              formatValue={formatR}
-              label={`The result in R for each of the last ${LAST_TRADES} trades`}
-            />
-          )}
-        </Card>
       </div>
     </div>
   );

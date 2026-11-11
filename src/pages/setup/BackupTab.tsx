@@ -2,13 +2,11 @@ import { CircleCheck, ClipboardCopy, OctagonAlert, Upload } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Card } from '@/components/shared/Card';
 import { CardTitle } from '@/components/shared/Controls';
-import { Field, TEXTAREA_CLASS, TextAreaField } from '@/components/shared/Field';
+import { Field, FieldTextarea, TextAreaField } from '@/components/shared/Field';
 import { Notice } from '@/components/shared/Notice';
 import { PressButton } from '@/components/shared/PressButton';
-import { Textarea } from '@/components/ui/textarea';
 import { dataOnly } from '@/lib/setupBackup';
 import { parseBackup, serializeBackup } from '@/lib/storage';
-import { cn } from '@/lib/utils';
 import { useHub, useHubActions } from '@/store/useHub';
 
 function Success({ children }: { children: string }) {
@@ -63,8 +61,8 @@ function CopyCard({ className }: { className?: string }) {
               The browser did not allow the copy. Select the text below and copy it.
             </Failure>
             <Field htmlFor={`${id}-record`} label="Record">
-              <Textarea
-                className={cn(TEXTAREA_CLASS, 'h-56 font-mono text-base md:text-base')}
+              <FieldTextarea
+                className="h-56 font-mono"
                 id={`${id}-record`}
                 onFocus={(event) => event.target.select()}
                 readOnly

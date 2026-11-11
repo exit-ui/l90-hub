@@ -57,7 +57,7 @@ export function SessionLog({ list, types, typeLabel, addButton, className }: Ses
     <div className={className}>
       <Card>
         <CardTitle>Add a session</CardTitle>
-        <form className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" onSubmit={submit}>
+        <form className="mt-4 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2" onSubmit={submit}>
           <TextField error={error} label="Date" onChange={setDate} type="date" value={date} />
           <SelectField label={typeLabel} onChange={setType} options={types} value={type} />
           <TextField
@@ -69,7 +69,7 @@ export function SessionLog({ list, types, typeLabel, addButton, className }: Ses
             value={minutes}
           />
           <TextField label="Note" onChange={setNote} value={note} />
-          <PressButton className="sm:col-span-2 lg:col-span-4 lg:justify-self-start" tone="secondary" type="submit">
+          <PressButton className="col-span-full justify-self-end" tone="secondary" type="submit">
             <Plus aria-hidden="true" className="size-4" />
             {addButton}
           </PressButton>

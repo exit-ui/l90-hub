@@ -2,10 +2,8 @@ import { ArrowRight, Bell, Play } from 'lucide-react';
 import { type FormEvent, useId, useState } from 'react';
 import { Card } from '@/components/shared/Card';
 import { CardTitle, RemoveButton } from '@/components/shared/Controls';
-import { CONTROL_CLASS } from '@/components/shared/Field';
+import { TextField } from '@/components/shared/Field';
 import { PressButton } from '@/components/shared/PressButton';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useHub, useHubActions } from '@/store/useHub';
 import { Statement } from './Statement';
 
@@ -53,34 +51,16 @@ function PlanBuilder({ className }: { className?: string }) {
     <Card aria-labelledby={`${id}-title`} className={className}>
       <CardTitle id={`${id}-title`}>New plan</CardTitle>
       <form className="mt-4 grid gap-4" noValidate onSubmit={submit}>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
-          <Label className="type-body font-semibold text-hub-text" htmlFor={`${id}-cue`}>
-            If
-            <span className="sr-only"> (the cue)</span>
-          </Label>
-          <Input
-            className={CONTROL_CLASS}
-            id={`${id}-cue`}
-            onChange={(event) => setCue(event.target.value)}
-            value={cue}
-          />
-          <Label className="type-body font-semibold text-hub-text" htmlFor={`${id}-action`}>
-            Then
-            <span className="sr-only"> (the action)</span>
-          </Label>
-          <Input
-            className={CONTROL_CLASS}
-            id={`${id}-action`}
-            onChange={(event) => setAction(event.target.value)}
-            value={action}
-          />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <TextField label="If (the cue)" onChange={setCue} placeholder="I stand at the bus stop" value={cue} />
+          <TextField label="Then (the action)" onChange={setAction} placeholder="I send the drafted DMs." value={action} />
         </div>
         {error ? (
           <p className="type-label font-medium text-hub-danger" role="alert">
             Error: The plan is not complete. Write the cue and the action.
           </p>
         ) : null}
-        <PressButton className="justify-self-start" tone="primary" type="submit">
+        <PressButton className="justify-self-end" tone="secondary" type="submit">
           Add the plan
         </PressButton>
       </form>

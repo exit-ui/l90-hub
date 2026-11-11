@@ -54,7 +54,7 @@ function BookRow({ book, index, count }: BookRowProps) {
   };
 
   return (
-    <li className="grid gap-3 rounded-control border border-hub-hairline bg-hub-raised p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+    <li className="surface-inset grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
       <div className="min-w-0">
         <p className="type-body font-semibold break-words text-hub-text">{book.title}</p>
         {book.author ? (
@@ -79,6 +79,7 @@ function BookRow({ book, index, count }: BookRowProps) {
       </div>
       <div className="flex flex-wrap items-end gap-2">
         <TextField
+          autosave
           aria-label={`Chapters in ${book.title}`}
           fieldClassName="w-24"
           inputMode="numeric"
@@ -173,7 +174,7 @@ export function AddBookForm({ className }: { className?: string }) {
   return (
     <Card aria-labelledby="add-book-title" className={className}>
       <CardTitle id="add-book-title">Add a book</CardTitle>
-      <form className="mt-4 grid gap-4 sm:grid-cols-2" onSubmit={submit}>
+      <form className="mt-4 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2" onSubmit={submit}>
         <TextField error={error} label="Title" onChange={setTitle} value={title} />
         <TextField label="Author" onChange={setAuthor} value={author} />
         <SelectField label="Tag" onChange={setTag} options={BOOK_TAGS} value={tag} />
@@ -186,7 +187,7 @@ export function AddBookForm({ className }: { className?: string }) {
           type="number"
           value={chapters}
         />
-        <PressButton className="sm:col-span-2 sm:justify-self-start" tone="soft" type="submit">
+        <PressButton className="col-span-full justify-self-end" tone="secondary" type="submit">
           <Plus aria-hidden="true" className="size-4" />
           Add the book
         </PressButton>

@@ -98,11 +98,13 @@ export function NewestNoteCard({ className }: { className?: string }) {
       </p>
       <div className="mt-4 grid gap-4">
         <TextAreaField
+          autosave
           label="The main idea in my own words."
           onChange={(idea) => updateChapterNote(index, { idea })}
           value={item.idea}
         />
         <TextAreaField
+          autosave
           label="One action for today."
           onChange={(action) => updateChapterNote(index, { action })}
           value={item.action}
