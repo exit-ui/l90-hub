@@ -4,6 +4,9 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { PressButton } from '@/components/shared/PressButton';
 import { FADE, SHEET_SPRING } from '@/lib/motion';
 
+/** How often the app checks for a new version while it stays open. */
+const UPDATE_CHECK_MS = 60 * 60 * 1000;
+
 /**
  * Registers the service worker. When a new version is ready, a small glass toast asks for a reload.
  * The app never reloads by itself, so no typed text is lost.
@@ -13,7 +16,21 @@ export function UpdateToast() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
-  } = useRegisterSW();
+  } = useRegisterSW({
+    onRegisteredSW(_url, registration) {
+      if (!registration) {
+        return;
+      }
+      // iOS resumes a home-screen app without a reload, so check again when the app comes back and each hour.
+      const check = () => {
+        if (document.visibilityState === 'visible' && navigator.onLine) {
+          registration.update().catch(() => undefined);
+        }
+      };
+      document.addEventListener('visibilitychange', check);
+      window.setInterval(check, UPDATE_CHECK_MS);
+    },
+  });
 
   return (
     <AnimatePresence>
