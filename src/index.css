@@ -38,6 +38,11 @@
   /* Brand: active pills, primary buttons, the centre tab button. */
   --hub-brand: #0f3d24;
   --hub-on-brand: #ffffff;
+  /* The brand colour as text or a mark on the page. */
+  --hub-brand-ink: #0f3d24;
+  /* The white button on the hero card and its text. The same in both themes. */
+  --hub-hero-button: #ffffff;
+  --hub-hero-button-text: #0f3d24;
   --hub-primary: var(--hub-brand);
   --hub-primary-end: #1e6b42;
   --hub-ink: var(--hub-on-brand);
@@ -187,6 +192,99 @@
   --hub-field-edge: rgb(17 19 17 / 0.1);
 }
 
+
+/* ------------------------------------------------------------------
+   The dark theme. Set by data-theme="dark" on <html> (src/lib/theme.ts).
+   Near-black page, charcoal cards with a hairline rim, bright green for done.
+   Only colour tokens change. Every other value stays from :root.
+------------------------------------------------------------------- */
+:root[data-theme="dark"] {
+  --hub-bg-from: #05060a;
+  --hub-bg-to: #05060a;
+  --hub-surface: #111318;
+  --hub-surface-raised: #1a1d24;
+  --hub-chip: #1a1d24;
+  --hub-inset: #16191f;
+  --hub-track: #23262e;
+  --hub-switch-off: #3a3f48;
+  --hub-hairline: rgb(255 255 255 / 0.08);
+
+  --hub-text: #f2f3f5;
+  --hub-label-strong: #c4c8cf;
+  --hub-label: #9aa0aa;
+  --hub-faint: #5c626c;
+
+  --hub-brand: #1f6b45;
+  --hub-on-brand: #ffffff;
+  --hub-brand-ink: #3ddc84;
+  --hub-primary-end: #2a8a58;
+  --hub-black: #f2f3f5;
+  --hub-on-black: #05060a;
+
+  --hub-success: #3ddc84;
+  --hub-on-success: #05210f;
+  --hub-success-line: #3ddc84;
+  --hub-positive: #3ddc84;
+  --hub-positive-end: #7be8ab;
+  --hub-done-bg: #11251a;
+  --hub-done-pill: #173a26;
+  --hub-done-rim: rgb(61 220 132 / 0.35);
+  --hub-partial: #1e5a3a;
+  --hub-bar-partial: #2c8c58;
+  --hub-success-soft: rgb(61 220 132 / 0.16);
+
+  --hub-negative: #ff7a7a;
+  --hub-negative-text: #ff8a8a;
+  --hub-negative-soft: rgb(255 122 122 / 0.12);
+  --hub-danger: #ff8a8a;
+
+  --hub-accent: #7c9cff;
+  --hub-accent-text: #9bb2ff;
+  --hub-accent-soft: rgb(124 156 255 / 0.14);
+  --hub-amber: #f0b45a;
+
+  --hub-glass: rgb(17 19 24 / 0.86);
+  --hub-glass-edge: rgb(255 255 255 / 0.08);
+
+  --hub-material: #111318;
+  --hub-material-solid: #111318;
+  --hub-overlay: rgb(0 0 0 / 0.6);
+  --hub-shadow: 0 0 0 1px rgb(255 255 255 / 0.06);
+  --hub-shadow-raised: 0 0 0 1px rgb(255 255 255 / 0.08), 0 24px 48px rgb(0 0 0 / 0.5);
+  --hub-shadow-brand: 0 8px 20px rgb(0 0 0 / 0.55);
+  --hub-focus: #3ddc84;
+  --hub-fade: linear-gradient(180deg, rgb(5 6 10 / 0) 0%, #05060a 30%);
+
+  --hub-chart-label-bg: #111318;
+  --hub-chart-target: rgb(61 220 132 / 0.45);
+  --hub-chart-target-bar: #16261d;
+  --hub-chart-grid: rgb(255 255 255 / 0.08);
+  --hub-chart-today: rgb(255 255 255 / 0.35);
+  --hub-chart-future: #1a1d24;
+
+  --popover: #111318;
+  --input: rgb(255 255 255 / 0.14);
+
+  --chart-background: #111318;
+  --chart-crosshair: rgb(255 255 255 / 0.35);
+  --chart-grid: rgb(255 255 255 / 0.08);
+  --chart-tooltip-background: #f2f3f5;
+  --chart-tooltip-foreground: #05060a;
+  --chart-tooltip-muted: rgb(5 6 10 / 0.7);
+  --chart-marker-background: #111318;
+  --chart-scale-mix: #111318;
+  --chart-scale-pattern-color: #111318;
+  --chart-marker-badge-background: #f2f3f5;
+  --chart-marker-badge-foreground: #05060a;
+  --chart-segment-background: rgb(255 255 255 / 0.03);
+  --chart-segment-line: rgb(255 255 255 / 0.18);
+  --legend: #111318;
+
+  --hub-field: #16191f;
+  --hub-field-hover: #1a1d24;
+  --hub-field-edge: rgb(255 255 255 / 0.12);
+}
+
 @theme {
   /*
     The type scale. The T-shirt names keep tailwind-merge correct.
@@ -236,6 +334,9 @@
   --color-hub-primary-end: var(--hub-primary-end);
   --color-hub-brand: var(--hub-brand);
   --color-hub-on-brand: var(--hub-on-brand);
+  --color-hub-brand-ink: var(--hub-brand-ink);
+  --color-hub-hero-button: var(--hub-hero-button);
+  --color-hub-hero-button-text: var(--hub-hero-button-text);
   --color-hub-black: var(--hub-black);
   --color-hub-on-black: var(--hub-on-black);
   --color-hub-accent: var(--hub-accent);
@@ -546,7 +647,12 @@
     color-scheme: light;
     background-color: var(--hub-bg-from);
     min-height: 100%;
+    /* A page or tab change must not make the browser jump to keep old content in view. */
+    overflow-anchor: none;
+  }  html[data-theme="dark"] {
+    color-scheme: dark;
   }
+
   body {
     @apply text-foreground;
     min-height: 100dvh;

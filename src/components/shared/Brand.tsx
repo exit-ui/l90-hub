@@ -23,7 +23,7 @@ export function LaurelMark({ className }: { className?: string }) {
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn('inline-flex items-center gap-2 text-hub-text', className)}>
-      <LaurelMark className="text-hub-brand" />
+      <LaurelMark className="text-hub-brand-ink" />
       <span className="type-metric">L90</span>
     </span>
   );

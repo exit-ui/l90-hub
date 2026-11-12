@@ -71,3 +71,40 @@ describe('parseCssColor', () => {
     expect(parseCssColor('var(--x)')).toBeNull();
   });
 });
+
+/** Reads one colour token from the dark block of src/index.css. */
+function darkToken(name: string): Rgba {
+  const block = /:root\[data-theme="dark"\]\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+  const match = new RegExp(`${name}:\\s*([^;]+);`).exec(block);
+  return parseCssColor(match?.[1] ?? '') ?? token(name);
+}
+
+describe('contrast of the dark theme', () => {
+  const page = composite(darkToken('--hub-bg-from'), [0, 0, 0]);
+  const card = composite(darkToken('--hub-surface'), page);
+  const on = (name: string, base: Rgb) => composite(darkToken(name), base);
+
+  it('keeps every small text colour at 4.5:1 or more on a card and on the page', () => {
+    for (const name of ['--hub-text', '--hub-label-strong', '--hub-label', '--hub-positive', '--hub-negative-text', '--hub-accent-text', '--hub-amber', '--hub-danger', '--hub-brand-ink']) {
+      expect(contrast(on(name, card), card)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(on(name, page), page)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('keeps green text readable on the done tint and the done pill', () => {
+    const done = on('--hub-done-bg', card);
+    const pill = on('--hub-done-pill', card);
+    expect(contrast(on('--hub-positive', done), done)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(on('--hub-positive', pill), pill)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(on('--hub-text', done), done)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('keeps text on the brand, the light button and the success fill readable', () => {
+    const brand = on('--hub-brand', card);
+    const black = on('--hub-black', card);
+    const fill = on('--hub-success', card);
+    expect(contrast(on('--hub-on-brand', brand), brand)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(on('--hub-on-black', black), black)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(on('--hub-on-success', fill), fill)).toBeGreaterThanOrEqual(3);
+  });
+});

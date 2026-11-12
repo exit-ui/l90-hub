@@ -131,15 +131,16 @@ export function PillTabs({ tabs, value, onChange, label, className }: PillTabsPr
           </Menu.Root>
         ) : null}
       </div>
-      {tabs.map((tab) => (
+      {/* Only the open panel is in the page, so a tab change never shows two panels in one frame. */}
+      {current ? (
         <TabsContent
           className="rounded-card type-body focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ring"
-          key={tab.id}
-          value={tab.id}
+          key={current.id}
+          value={current.id}
         >
-          {tab.content}
+          {current.content}
         </TabsContent>
-      ))}
+      ) : null}
     </Tabs>
   );
 }

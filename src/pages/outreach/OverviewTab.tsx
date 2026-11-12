@@ -39,7 +39,7 @@ function HeroCard({ target, contacted }: { target: number; contacted: number }) 
           <RollingNumber className="type-number num" format={formatInteger} value={contacted} />
         </div>
         <a
-          className="press inline-flex min-h-11 items-center rounded-full bg-hub-surface px-4 type-label font-semibold text-hub-brand no-underline"
+          className="press inline-flex min-h-11 items-center rounded-full bg-hub-hero-button px-4 type-label font-semibold text-hub-hero-button-text no-underline"
           href={routeHref('setup')}
         >
           Edit target

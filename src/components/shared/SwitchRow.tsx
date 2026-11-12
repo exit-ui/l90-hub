@@ -41,7 +41,7 @@ export function SwitchRow({ label, detail, checked, onChange, className }: Switc
           checked ? 'justify-end bg-hub-success' : 'justify-start bg-hub-switch-off',
         )}
       >
-        <motion.span className="block size-7 rounded-full bg-hub-surface shadow-sm" layout transition={reduced ? NO_MOTION : SPRING} />
+        <motion.span className="block size-7 rounded-full bg-hub-hero-button shadow-sm" layout transition={reduced ? NO_MOTION : SPRING} />
       </span>
     </button>
   );

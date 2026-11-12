@@ -12,6 +12,7 @@ import { useHubActions } from '@/store/useHub';
 import { Wordmark } from './Brand';
 import { PressButton } from './PressButton';
 import { Sheet } from './Sheet';
+import { ThemeSwitch } from './ThemeSwitch';
 
 const PAGE_ICONS: Readonly<Record<PageId, LucideIcon>> = {
   home: House,
@@ -96,6 +97,12 @@ function MoreSheet({
           })}
         </ul>
       </nav>
+      <section aria-labelledby="more-appearance" className="mt-6 grid gap-2">
+        <h3 className="type-label font-semibold text-hub-label-strong" id="more-appearance">
+          Appearance
+        </h3>
+        <ThemeSwitch />
+      </section>
     </Sheet>
   );
 }
@@ -138,7 +145,10 @@ function Sidebar({ page }: { page: PageId }) {
           <SideLink id={id} key={id} page={page} />
         ))}
       </nav>
-      <div className="mt-auto min-h-11 px-2">
+      <div className="mt-auto grid gap-3 px-2">
+        <ThemeSwitch className="[&_button]:px-2" />
+      </div>
+      <div className="mt-3 min-h-11 px-2">
         <AnimatePresence initial={false}>
           {DM_PAGES.includes(page) ? null : (
             <motion.div animate={{ opacity: 1 }} exit={{ opacity: 0 }} initial={{ opacity: 0 }} transition={FADE}>
