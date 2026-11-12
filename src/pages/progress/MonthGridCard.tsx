@@ -30,8 +30,8 @@ function DayCell({ cell, selected, onSelect }: DayCellProps) {
       className={cn(
         'h-auto min-h-16 w-full min-w-0! flex-col gap-1 rounded-control border border-transparent px-0 py-2 type-label leading-none font-medium',
         style.cell,
-        cell.isToday && 'ring-2 ring-hub-text ring-inset',
-        selected && 'border-transparent bg-hub-glass-edge text-hub-text rim-hairline',
+        cell.isToday && 'ring-2 ring-hub-brand ring-inset',
+        selected && 'border-transparent bg-hub-brand text-hub-on-brand',
       )}
       data-date={cell.date}
       onClick={() => onSelect(cell.date)}

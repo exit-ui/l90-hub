@@ -61,7 +61,7 @@ function LoopDiagram() {
         return (
           <g key={node.label}>
             <rect
-              className={first ? undefined : 'fill-hub-raised stroke-hub-hairline'}
+              className={first ? undefined : 'fill-hub-chip stroke-hub-hairline'}
               fill={first ? 'url(#hub-grad-primary)' : undefined}
               height={NODE_HEIGHT}
               rx={NODE_HEIGHT / 2}
@@ -70,7 +70,7 @@ function LoopDiagram() {
               y={node.y - NODE_HEIGHT / 2}
             />
             <text
-              className={cn('type-body font-semibold', first ? 'fill-hub-ink' : 'fill-hub-text')}
+              className={cn('type-body font-semibold', first ? 'fill-hub-on-brand' : 'fill-hub-text')}
               dominantBaseline="central"
               textAnchor="middle"
               x={node.x}

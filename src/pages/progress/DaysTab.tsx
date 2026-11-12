@@ -37,7 +37,7 @@ function Legend() {
         );
       })}
       <li className="flex items-center gap-2">
-        <span aria-hidden="true" className="block size-4 rounded-full ring-2 ring-hub-text ring-inset" />
+        <span aria-hidden="true" className="block size-4 rounded-full ring-2 ring-hub-brand ring-inset" />
         Today
       </li>
       <li>D = mission day</li>

@@ -4,7 +4,7 @@ import { Gauge } from '@/components/charts/gauge';
 import { formatInteger } from '@/lib/format';
 import { GAUGE_SPRING } from '@/lib/motion';
 import { cn } from '@/lib/utils';
-import { TONE_GLOW, TONE_GRADIENT } from './tones';
+import { TONE_GRADIENT } from './tones';
 
 interface HubGaugeProps {
   value: number;
@@ -71,7 +71,7 @@ export function HubGauge({ value, limit, label, className }: HubGaugeProps) {
     <div className={cn('w-full min-w-0', className)}>
       <div
         aria-label={label}
-        className={cn('relative mx-auto w-full max-w-60 min-w-0', over ? null : TONE_GLOW.data)}
+        className="relative mx-auto w-full max-w-60 min-w-0"
         role="img"
       >
         {/* Bklit fades the track in for 450 ms. The static mode stops that; the spring above moves the fill. */}

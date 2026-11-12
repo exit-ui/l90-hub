@@ -15,15 +15,16 @@ import { FADE } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
 /**
- * The field system (spec 7.6, 7.7): a filled inset surface with a soft inner edge, 44 px tall on a phone and 48 px from 640 px,
- * 16 px text (no zoom on iOS), 16 px side padding, radius 12. The focus ring is the global one.
+ * The field system (spec 7.6): a white field card with a hairline edge. The label sits inside at the top,
+ * the value below it in 20 px semibold (no zoom on iOS). Focus shows a green ring on the whole card.
+ * A control outside a field card (a table cell) keeps a white surface of its own, 44 px tall.
  */
 export const FIELD_CLASS = 'field-surface h-11 w-full min-w-0 px-4 sm:h-12';
 export const TEXTAREA_CLASS = 'field-surface block w-full min-w-0 resize-none px-4 py-3';
 /** Kept for older call sites: the same as FIELD_CLASS. */
 export const CONTROL_CLASS = FIELD_CLASS;
 export const CHECKBOX_CLASS =
-  'size-6 rounded-full data-checked:border-hub-positive data-checked:bg-hub-positive data-checked:text-hub-ink dark:data-checked:bg-hub-positive';
+  'size-6 rounded-full border-hub-faint data-checked:border-hub-success data-checked:bg-hub-success data-checked:text-hub-on-success';
 
 /** A quiet "Saved" with a tick, shown for a moment after a field saves on blur. */
 export function SavedTick({ show }: { show: boolean }) {
@@ -80,20 +81,22 @@ interface FieldProps {
   className?: string;
 }
 
-/** A label above one control (8 px gap), an optional hint below, and an error with an icon. */
+/** A white field card: the label and the control inside, an optional hint below, and an error with an icon. */
 export function Field({ label, htmlFor, hint, error, aside, children, className }: FieldProps) {
   return (
     <div className={cn('grid min-w-0 content-start gap-2', className)}>
-      <div className="flex min-h-5 items-center justify-between gap-2">
-        <label className="type-caption text-hub-label-strong" htmlFor={htmlFor}>
-          {label}
-        </label>
-        {aside}
+      <div className="field-box min-w-0">
+        <div className="flex min-h-4 items-center justify-between gap-2">
+          <label className="type-caption min-w-0 text-hub-label" htmlFor={htmlFor}>
+            {label}
+          </label>
+          {aside}
+        </div>
+        {children}
       </div>
-      {children}
-      {hint ? <p className="type-caption text-hub-label">{hint}</p> : null}
+      {hint ? <p className="type-caption px-4 text-hub-label">{hint}</p> : null}
       {error ? (
-        <p className="type-label flex items-center gap-2 text-hub-danger" role="alert">
+        <p className="type-label flex items-center gap-2 px-4 text-hub-danger" role="alert">
           <CircleAlert aria-hidden="true" className="size-4 shrink-0" />
           {error}
         </p>
@@ -255,7 +258,7 @@ export function SelectField<T extends string>({ label, value, options, onChange,
     <Field className={fieldClassName} htmlFor={id} label={label}>
       <div className="relative">
         <select
-          className={cn(FIELD_CLASS, 'cursor-pointer appearance-none pr-12')}
+          className={cn(FIELD_CLASS, 'cursor-pointer appearance-none pr-8')}
           id={id}
           onChange={(event) => {
             const match = options.find((option) => option === event.target.value);
@@ -273,7 +276,7 @@ export function SelectField<T extends string>({ label, value, options, onChange,
         </select>
         <ChevronDown
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-hub-label-strong"
+          className="pointer-events-none absolute top-1/2 right-0 size-4 -translate-y-1/2 text-hub-label"
         />
       </div>
     </Field>

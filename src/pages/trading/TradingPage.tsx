@@ -15,7 +15,7 @@ export function TradingPage() {
   const section = tradingSection(route.segments[0]);
   return (
     <>
-      <PageHeader detail="This hub gives no financial advice." title="Trading" />
+      <PageHeader back detail="This hub gives no financial advice." title="Trading" />
       <SegmentedSwitch
         className="mb-6 max-w-md"
         label="Trading sections"

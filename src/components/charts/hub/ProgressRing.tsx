@@ -5,7 +5,7 @@ import { RingChart } from '@/components/charts/ring-chart';
 import type { RingData } from '@/components/charts/ring-context';
 import { CHART_ENTER, GAUGE_SPRING } from '@/lib/motion';
 import { cn } from '@/lib/utils';
-import { type ChartTone, TONE_GLOW, TONE_GRADIENT } from './tones';
+import { type ChartTone, TONE_GRADIENT } from './tones';
 
 interface ProgressRingProps {
   value: number;
@@ -64,7 +64,7 @@ export function ProgressRing({
       role="img"
       style={{ width: size, height: size }}
     >
-      <div className={TONE_GLOW[tone]}>
+      <div>
         <RingChart
           baseInnerRadius={size / 2 - strokeWidth - 4}
           data={data}

@@ -15,9 +15,9 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false,
       manifest: APP_MANIFEST,
-      includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png', 'gotham.svg', 'icon.svg'],
+      includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png', 'icon.svg'],
       workbox: {
-        // The app shell, every lazy page chunk, the fonts and the backdrop assets work offline.
+        // The app shell, every lazy page chunk, the fonts and the icons work offline.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2,webmanifest}'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,

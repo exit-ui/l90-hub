@@ -1,7 +1,6 @@
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { Backdrop } from '@/components/shared/Backdrop';
 import { PressButton } from '@/components/shared/PressButton';
 import { ProgressBar } from '@/components/shared/ProgressBar';
 import { useToday } from '@/hooks/useToday';
@@ -125,71 +124,81 @@ export function OnboardingPage() {
   };
 
   const View = step === 'review' ? null : STEP_VIEWS[step];
+  const startDay = dayNumber(today, draft.startDate);
+  const startLabel = startDay === 1 ? 'Start day 1' : startDay > 1 ? `Continue at day ${startDay}` : 'Start the hub';
+  const edit = (target: OnboardingStep) => {
+    const next = steps.indexOf(target);
+    if (next >= 0) {
+      goTo(next);
+    }
+  };
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 pt-shell pb-16 md:px-6 lg:pt-24" id="main">
-      <Backdrop />
-      <p className="type-label text-hub-label">Set up the hub</p>
-      <h1
-        className="mt-1 type-title font-semibold text-hub-text outline-none"
-        ref={heading}
-        tabIndex={-1}
-      >
-        {STEP_TITLES[step]}
-      </h1>
-      <p className="mt-1 type-body text-hub-label">
-        Step {index + 1} of {steps.length}. Answer the questions. The hub then starts with the correct numbers.
-      </p>
+    <main className="mx-auto w-full max-w-xl px-4 pt-shell pb-48 md:px-6 lg:pt-16" id="main">
+      <div className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2">
+        <button
+          aria-label="Previous step"
+          className="press flex size-11 cursor-pointer items-center justify-center rounded-full bg-hub-surface text-hub-text rim-hairline disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={index === 0}
+          onClick={() => goTo(index - 1)}
+          type="button"
+        >
+          <ArrowLeft aria-hidden="true" className="size-5" strokeWidth={1.8} />
+        </button>
+        <p className="type-label text-center text-hub-label">
+          Step {index + 1} of {steps.length}
+        </p>
+        <PressButton className="px-3" onClick={skip} tone="ghost">
+          Skip
+        </PressButton>
+      </div>
       <ProgressBar
         className="mt-4"
         fraction={fractionOf(index + 1, steps.length)}
         label={`Step ${index + 1} of ${steps.length}`}
-        tone="secondary"
+        tone="brand"
       />
 
-      <section className="surface-card mt-8 p-4 sm:p-5 lg:p-6">
-        <AnimatePresence initial={false} mode="wait">
-          <motion.div
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            initial={{ opacity: 0, y: 8 }}
-            key={step}
-            transition={FADE}
-          >
+      <AnimatePresence initial={false} mode="wait">
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8"
+          exit={{ opacity: 0, y: -6 }}
+          initial={{ opacity: 0, y: 8 }}
+          key={step}
+          transition={FADE}
+        >
+          <h1 className="type-title text-hub-text outline-none" ref={heading} tabIndex={-1}>
+            {STEP_TITLES[step]}
+          </h1>
+          <div className="mt-6">
             {View ? (
               <View actions={actions} draft={draft} errors={errors} today={today} />
             ) : (
-              <ReviewStep day={dayNumber(today, draft.startDate)} summary={summary} />
+              <ReviewStep day={startDay} onEdit={edit} summary={summary} />
             )}
-          </motion.div>
-        </AnimatePresence>
-      </section>
+          </div>
+        </motion.div>
+      </AnimatePresence>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <PressButton disabled={index === 0} onClick={() => goTo(index - 1)}>
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          Back
-        </PressButton>
-        {last ? (
-          <PressButton disabled={blocked} onClick={finish} tone="primary">
-            <Check aria-hidden="true" className="size-4" />
-            Start the hub
-          </PressButton>
-        ) : (
-          <PressButton disabled={blocked} onClick={() => goTo(index + 1)} tone="primary">
-            Next
-            <ArrowRight aria-hidden="true" className="size-4" />
-          </PressButton>
-        )}
-        <PressButton className="ml-auto" onClick={skip} tone="ghost">
-          Skip the questions
-        </PressButton>
+      <div className="bg-fade fixed inset-x-0 bottom-0 z-30 px-4 pt-8 pb-sheet">
+        <div className="mx-auto grid max-w-xl gap-2">
+          {blocked ? (
+            <p className="type-label text-center text-hub-danger" role="status">
+              Correct the fields that show an error. Then continue.
+            </p>
+          ) : null}
+          {last ? (
+            <PressButton className="h-14 w-full sm:h-14" disabled={blocked} onClick={finish} tone="primary">
+              {startLabel}
+            </PressButton>
+          ) : (
+            <PressButton className="h-14 w-full sm:h-14" disabled={blocked} onClick={() => goTo(index + 1)} tone="primary">
+              Continue
+            </PressButton>
+          )}
+        </div>
       </div>
-      {blocked ? (
-        <p className="mt-3 type-label text-hub-danger" role="status">
-          Correct the fields that show an error. Then select Next.
-        </p>
-      ) : null}
     </main>
   );
 }

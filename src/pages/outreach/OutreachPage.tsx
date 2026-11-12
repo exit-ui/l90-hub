@@ -13,7 +13,7 @@ export function OutreachPage() {
 
   return (
     <>
-      <PageHeader title="Outreach" />
+      <PageHeader back title="Outreach" />
       <PillTabs
         label="Outreach sections"
         onChange={setTab}

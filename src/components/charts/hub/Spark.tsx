@@ -2,7 +2,7 @@ import { AreaSparkline, BarSparkline } from '@/components/charts/sparkline';
 import type { ChartPoint } from '@/lib/summary';
 import { CHART_ENTER_MS } from '@/lib/motion';
 import { cn } from '@/lib/utils';
-import { type ChartTone, TONE_COLOR, TONE_GLOW } from './tones';
+import { type ChartTone, TONE_COLOR } from './tones';
 
 interface SparkProps {
   data: readonly ChartPoint[];
@@ -16,7 +16,7 @@ interface SparkProps {
 
 /**
  * A small chart for a summary card: a smooth curve, a gradient area fill,
- * and a glowing dot on the last value. A wrapper for the Bklit Sparkline.
+ * and a dot on the last value. A wrapper for the Bklit Sparkline.
  */
 export function Spark({
   data,
@@ -51,7 +51,7 @@ export function Spark({
   } as const;
 
   return (
-    <div className={cn('min-w-0', TONE_GLOW[tone], className)}>
+    <div className={cn('min-w-0', className)}>
       {variant === 'bar' ? (
         <BarSparkline {...shared} barGap={3} barRadius={3} />
       ) : (

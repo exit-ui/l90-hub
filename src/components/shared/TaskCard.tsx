@@ -49,7 +49,7 @@ function SignedOffBadge({ date }: { date: DateKey }) {
       {signedOff ? (
         <motion.span
           animate={{ scale: 1, opacity: 1 }}
-          className="inline-flex min-h-8 items-center gap-2 rounded-full bg-hub-positive/16 px-3 type-label font-semibold text-hub-positive"
+          className="inline-flex min-h-8 items-center gap-2 rounded-full bg-hub-done-pill px-3 type-label font-semibold text-hub-positive"
           exit={{ scale: 0.9, opacity: 0 }}
           initial={{ scale: 0.9, opacity: 0 }}
           key="badge"

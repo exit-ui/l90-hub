@@ -14,7 +14,7 @@ export function GhostPill({ icon: Icon, className, children, type = 'button', ..
   return (
     <motion.button
       className={cn(
-        'type-label hit-area inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-2 rounded-full bg-hub-inset px-3.5 font-medium text-hub-label-strong rim-hairline transition-colors hover:bg-hub-track hover:text-hub-text sm:min-h-11 sm:px-4',
+        'type-label hit-area inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-2 rounded-full bg-hub-chip px-3.5 font-medium text-hub-label-strong transition-colors hover:bg-hub-track hover:text-hub-text sm:min-h-11 sm:px-4',
         className,
       )}
       type={type}

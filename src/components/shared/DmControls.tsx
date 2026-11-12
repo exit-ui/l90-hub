@@ -14,10 +14,12 @@ interface DmButtonsProps {
   date: DateKey;
   /** False when another button is the one filled primary button on the screen. */
   primary?: boolean;
+  /** The 52 px round "+" of the Today counter. */
+  large?: boolean;
 }
 
 /** A small "+5" pill and the round "+" button. The same pair on every screen. */
-export function DmButtons({ date, primary = true }: DmButtonsProps) {
+export function DmButtons({ date, primary = true, large = false }: DmButtonsProps) {
   const { addDm } = useHubActions();
   const add = (amount: number) => {
     addDm(date, amount);
@@ -28,7 +30,13 @@ export function DmButtons({ date, primary = true }: DmButtonsProps) {
       <PressButton aria-label="Add 5 DMs" className="px-4" onClick={() => add(5)} tone="secondary">
         +5
       </PressButton>
-      <PressButton aria-label="Add 1 DM" iconOnly onClick={() => add(1)} tone={primary ? 'primary' : 'secondary'}>
+      <PressButton
+        aria-label="Add 1 DM"
+        className={large ? 'size-13 sm:size-13' : undefined}
+        iconOnly
+        onClick={() => add(1)}
+        tone={primary ? 'black' : 'secondary'}
+      >
         <Plus aria-hidden="true" className="size-5" strokeWidth={2.5} />
       </PressButton>
     </div>

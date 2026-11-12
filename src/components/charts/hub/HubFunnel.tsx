@@ -22,10 +22,10 @@ const STAGGER_SECONDS = 0.15;
 /** The Bklit funnel draws a segment at 44% of the width for each side. */
 const MAX_WIDTH_RATIO = 2.2;
 
-/** The colour of a stage: the full primary colour at the top, a lighter mix at the bottom. */
+/** The colour of a stage: the full green at the top, a lighter mix at the bottom. */
 function stageColor(index: number, count: number): string {
   const share = count > 1 ? Math.round(100 - (index / (count - 1)) * 65) : 100;
-  return `color-mix(in oklab, var(--hub-primary) ${share}%, var(--chart-scale-mix))`;
+  return `color-mix(in oklab, var(--hub-success-line) ${share}%, var(--chart-scale-mix))`;
 }
 
 /**
@@ -70,7 +70,7 @@ export function HubFunnel({ stages, label, className }: HubFunnelProps) {
     <div className={cn('flex w-full min-w-0 items-stretch gap-3', className)}>
       <div
         aria-label={label}
-        className="w-[34%] max-w-40 shrink-0 overflow-hidden drop-glow-primary"
+        className="w-[34%] max-w-40 shrink-0 overflow-hidden"
         role="img"
         style={{ height }}
       >

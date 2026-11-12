@@ -1,19 +1,24 @@
-import { buzz } from '@/lib/haptics';
-import { BookOpen, CircleCheck, Flame } from 'lucide-react';
+import { BookOpen, CircleCheck, Flame, UserRound } from 'lucide-react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { Wordmark } from '@/components/shared/Brand';
+import { DmButtons } from '@/components/shared/DmControls';
 import { Notice } from '@/components/shared/Notice';
 import { PressButton } from '@/components/shared/PressButton';
+import { ProgressBar } from '@/components/shared/ProgressBar';
 import { ProgressChart } from '@/components/shared/ProgressChart';
+import { RollingNumber } from '@/components/shared/RollingNumber';
 import { useNow } from '@/hooks/useNow';
-import { CHECK_SPRING, FADE } from '@/lib/motion';
 import { useRoute } from '@/hooks/useRoute';
 import { useToday } from '@/hooks/useToday';
-import { formatDayPhone, formatLong, formatWeekdayShort } from '@/lib/dates';
+import { formatLong } from '@/lib/dates';
 import { formatR, toRoman } from '@/lib/format';
+import { buzz } from '@/lib/haptics';
 import { missionHeadline } from '@/lib/homeText';
-import { type ModuleView, momentumShort, momentumText, type TodayView, todayView } from '@/lib/moduleView';
-import { missionClock } from '@/lib/phases';
+import { type ModuleView, momentumShort, todayView } from '@/lib/moduleView';
+import { CHECK_SPRING, FADE, PULSE } from '@/lib/motion';
+import { MISSION_DAYS, missionClock } from '@/lib/phases';
+import { pillarCards } from '@/lib/pillarCards';
 import type { PillarId } from '@/lib/pillars';
 import { closeAction, type ExpandId, expandedFrom, routeHref } from '@/lib/routes';
 import type { Momentum } from '@/lib/streak';
@@ -22,96 +27,29 @@ import { lineForDay } from '@/lib/summary';
 import { cn } from '@/lib/utils';
 import { levelProgress, totalXp } from '@/lib/xp';
 import { useHub, useHubActions } from '@/store/useHub';
-import { DmButtons } from '@/components/shared/DmControls';
-import { InstallHint } from './InstallHint';
-import { PillarModule } from './PillarModule';
 import { cardHeight } from './expand/cardHeights';
 import { ExpandedLayer, type ViewEntry } from './expand/ExpandedLayer';
 import { PillarView, ProgressView, SignOffView, ViewTitle } from './expand/views';
+import { InstallHint } from './InstallHint';
+import { PillarCards } from './PillarCards';
+import { PillarModule } from './PillarModule';
+import { SignOffCard } from './SignOffCard';
 
-/** The grid cell of each module at 390 px, 768 px and 1280 px. */
-const CELLS: Readonly<Record<PillarId, string>> = {
-  outreach: 'col-span-2 md:col-span-2 md:row-span-2 lg:col-span-6 lg:row-span-2',
-  fitness: 'col-span-1 lg:col-span-3',
-  learning: 'col-span-1 lg:col-span-3',
-  reading: 'col-span-1 lg:col-span-3',
-  trading: 'col-span-1 lg:col-span-3',
-  signoff: 'col-span-2 md:col-span-4 lg:col-span-4 lg:col-start-9 lg:row-start-3 lg:self-start',
-};
+/** The tick cards of the day, in pillar order. Sign-off has its own card below them. */
+const TICK_PILLARS: readonly PillarId[] = ['outreach', 'fitness', 'learning', 'reading', 'trading'];
 
-function Chip({ href, children, label }: { href: string; children: string; label: string }) {
-  return (
-    <a
-      aria-label={label}
-      className="press hit-area inline-flex min-h-8 items-center rounded-full bg-hub-material px-3 type-label font-semibold sm:min-h-11 text-hub-label-strong no-underline rim-hairline hover:text-hub-text"
-      href={href}
-    >
-      {children}
-    </a>
-  );
-}
-
-/** The momentum chip: days on target and the streak state. A tap opens Progress. */
-function MomentumChip({ momentum, className }: { momentum: Momentum; className?: string }) {
-  const text = momentumText(momentum);
-  return (
-    <a
-      className={cn(
-        'press hit-area min-h-8 items-center gap-1.5 rounded-full bg-hub-material px-3 type-label sm:min-h-11 sm:gap-2 font-semibold text-hub-label-strong no-underline rim-hairline hover:text-hub-text',
-        className,
-      )}
-      href={routeHref('progress')}
-    >
-      <Flame aria-hidden="true" className="size-4 text-hub-amber" />
-      {text.lead}
-      {text.detail ? (
-        <>
-          <span aria-hidden="true" className="text-hub-label">
-            ·
-          </span>
-          <span className={cn(text.recover && 'text-hub-amber')}>{text.detail}</span>
-        </>
-      ) : null}
-    </a>
-  );
-}
-
-/** The momentum chip on a phone: a flame and one number. The label holds all the words. */
-function MomentumChipShort({ momentum }: { momentum: Momentum }) {
+/** The momentum chip: a flame and one number. The label holds all the words. A tap opens Progress. */
+function MomentumChip({ momentum }: { momentum: Momentum }) {
   const text = momentumShort(momentum);
   return (
     <a
       aria-label={text.label}
-      className="press hit-area inline-flex min-h-8 items-center gap-1 rounded-full bg-hub-material px-2.5 type-label font-semibold text-hub-label-strong no-underline rim-hairline hover:text-hub-text"
+      className="press inline-flex min-h-11 items-center gap-1 rounded-full bg-hub-surface px-3 type-label font-semibold text-hub-label-strong no-underline rim-hairline hover:text-hub-text"
       href={routeHref('progress')}
     >
       <Flame aria-hidden="true" className="size-4 text-hub-amber" />
       <span className={cn('num', text.recover && 'text-hub-amber')}>{text.text}</span>
     </a>
-  );
-}
-
-/** The DMs of the last 7 days. It fills the tall Outreach module on a wide screen. */
-function WeekStrip({ days }: { days: TodayView['recentDms'] }) {
-  return (
-    <figure className="mt-4 hidden px-2 lg:block">
-      <figcaption className="type-label text-hub-label">Last 7 days</figcaption>
-      <ol className="mt-2 grid h-20 grid-cols-7 items-end gap-2">
-        {days.map((day) => (
-          <li className="flex h-full flex-col items-center justify-end gap-1" key={day.date}>
-            <span className="type-label num text-hub-label-strong">{day.value}</span>
-            <span
-              aria-hidden="true"
-              className={cn('w-full rounded-xs', day.isToday ? 'bg-hub-bar-fill' : 'bg-hub-track')}
-              style={{ height: day.barPx }}
-            />
-            <span className={cn('type-label', day.isToday ? 'text-hub-text' : 'text-hub-label')}>
-              {formatWeekdayShort(day.date)}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </figure>
   );
 }
 
@@ -121,7 +59,7 @@ function CompleteLine() {
   return (
     <motion.p
       animate={{ opacity: 1, y: 0 }}
-      className="type-body mb-5 flex sm:mb-8 items-center gap-3 rounded-card px-4 py-3 text-hub-positive surface-card rim-positive"
+      className="type-body rim-positive mb-8 flex items-center gap-3 rounded-card px-4 py-3 text-hub-positive"
       initial={reduced ? { opacity: 0 } : { opacity: 0, y: 8 }}
       role="status"
       transition={reduced ? FADE : CHECK_SPRING}
@@ -135,8 +73,6 @@ function CompleteLine() {
 function signedR(value: number): string {
   return formatR(value).replace(/R$/, '');
 }
-
-const CHART_CELL = 'col-span-2 md:col-span-4 lg:col-span-8 lg:col-start-1 lg:row-start-3';
 
 const VIEW_TITLES: Readonly<Record<ExpandId, string>> = {
   outreach: 'Outreach',
@@ -161,10 +97,22 @@ function cardInView(id: ExpandId): boolean {
   return box.bottom > 0 && box.top < window.innerHeight;
 }
 
+/** "Day XXIV of XC · Phase 2" while the mission runs; the plain headline before and after it. */
+function dayCaption(clock: ReturnType<typeof missionClock>): { text: string; label: string } {
+  if (clock.stage !== 'active') {
+    const text = missionHeadline(clock);
+    return { text, label: text };
+  }
+  const phase = clock.phase ? ` · Phase ${clock.phase}` : '';
+  return {
+    text: `Day ${toRoman(clock.day)} of ${toRoman(MISSION_DAYS)}${phase}`,
+    label: `Day ${clock.day} of ${MISSION_DAYS}${clock.phase ? `, phase ${clock.phase}` : ''}`,
+  };
+}
+
 /**
- * Today: one grid of pillar modules with the ticks of the day, then the motion chart.
- * Each card opens into its expanded view with one continuous motion (spec 10).
- * +1 DM is the one white filled button until all other modules are complete.
+ * Today: the DM count of the day, the pillar cards, the tick cards of the day, "Sign off the day"
+ * and the progress chart. Each tick card opens into its expanded view with one continuous motion (spec 10).
  */
 export function HomePage() {
   const today = useToday();
@@ -193,14 +141,17 @@ export function HomePage() {
   }
 
   const view = useMemo(() => todayView(state, today, now), [state, today, now]);
+  const cards = useMemo(() => pillarCards(state, today), [state, today]);
   const clock = useMemo(() => missionClock(today, state.startDate), [today, state.startDate]);
   const level = useMemo(() => levelProgress(totalXp(state)).level, [state]);
   const line = lineForDay(clock.day);
+  const caption = dayCaption(clock);
   const dm = state.days[today]?.dm ?? 0;
   // The number pulses one time when the DMs reach the target.
   const pulse = state.dmTarget > 0 && dm >= state.dmTarget ? 1 : 0;
-  const signOffPrimary = view.othersComplete && !view.signedOff;
   const headline = signOffHeadline(clock.stage === 'active' ? clock.day : null, view.ticksDone, view.ticksTotal);
+  const outreach = view.modules.find((module) => module.id === 'outreach');
+  const signoff = view.modules.find((module) => module.id === 'signoff');
 
   const open = (id: ExpandId) => {
     const hash = routeHref('home', id);
@@ -231,7 +182,7 @@ export function HomePage() {
     open('signoff');
   };
 
-  const placeholder = (id: ExpandId, className: string) => (
+  const placeholder = (id: ExpandId, className?: string) => (
     <div
       aria-hidden="true"
       className={cn('surface-card opacity-0', className)}
@@ -241,12 +192,10 @@ export function HomePage() {
   );
 
   const renderModule = (module: ModuleView) => {
-    const className = CELLS[module.id];
     if (module.id === expanded) {
-      return placeholder(module.id, className);
+      return placeholder(module.id);
     }
     const common = {
-      className,
       isOpen: false,
       onOpen: () => open(module.id),
       onToggle: (task: string) => toggleTask(today, task),
@@ -258,12 +207,9 @@ export function HomePage() {
         return (
           <PillarModule
             {...common}
-            beside={<DmButtons date={today} primary={!signOffPrimary} />}
-            subline={<p className="type-body text-hub-label-strong">{module.note}</p>}
-            extraRows={<WeekStrip days={view.recentDms} />}
-            hero
             key={module.id}
             pulseKey={pulse}
+            subline={module.note ? <p className="type-label text-hub-label">{module.note}</p> : null}
           />
         );
       case 'learning':
@@ -303,20 +249,6 @@ export function HomePage() {
             whole={false}
           />
         );
-      case 'signoff':
-        return (
-          <PillarModule
-            {...common}
-            beside={
-              view.signedOff ? null : (
-                <PressButton className="px-3" onClick={signOffNow} tone={signOffPrimary ? 'primary' : 'secondary'}>
-                  Sign off
-                </PressButton>
-              )
-            }
-            key={module.id}
-          />
-        );
       default:
         return <PillarModule {...common} key={module.id} />;
     }
@@ -325,73 +257,111 @@ export function HomePage() {
   const expandedModule = expanded ? view.modules.find((module) => module.id === expanded) : undefined;
   const titleId = expanded ? `view-title-${expanded}` : '';
 
-  const levelChip = (
-    <Chip
-      href={routeHref('progress')}
-      label={`Level ${level}${clock.phase ? `, phase ${clock.phase}` : ''}. Open Progress.`}
-    >
-      {`Lv ${level} · ${clock.phase ? `Phase ${toRoman(clock.phase)}` : clock.stage === 'before' ? 'Soon' : 'Review'}`}
-    </Chip>
-  );
-
   return (
     <>
-      <header className="mb-5 sm:mb-8 md:mb-12">
-        {/* Below 1024 px: the date and the chips share one line, so the modules start sooner. */}
-        <div className="flex min-h-8 items-center justify-between gap-2 lg:hidden">
-          <p className="type-label min-w-0 truncate text-hub-label">
-            <span aria-hidden="true">{formatDayPhone(today)}</span>
-            <span className="sr-only">{formatLong(today)}</span>
-          </p>
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="contents sm:hidden">
-              <MomentumChipShort momentum={view.momentum} />
-            </span>
-            <MomentumChip className="hidden sm:inline-flex" momentum={view.momentum} />
-            {levelChip}
-          </div>
+      <header className="mb-6 flex items-center justify-between gap-3">
+        <a className="rounded-full no-underline lg:hidden" href={routeHref('home')}>
+          <Wordmark />
+          <span className="sr-only"> hub, Today</span>
+        </a>
+        <p className="type-label hidden text-hub-label lg:block">{formatLong(today)}</p>
+        <div className="flex items-center gap-2">
+          <MomentumChip momentum={view.momentum} />
+          <a
+            aria-label="Open Setup"
+            className="press flex size-11 items-center justify-center rounded-full bg-hub-chip text-hub-label no-underline hover:text-hub-text"
+            href={routeHref('setup')}
+          >
+            <UserRound aria-hidden="true" className="size-5" strokeWidth={1.7} />
+          </a>
         </div>
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 lg:flex lg:items-end lg:gap-8">
-            <div className="shrink-0">
-              <p className="type-label hidden text-hub-label lg:block">{formatLong(today)}</p>
-              <h1 className="type-title mt-1 text-hub-text">{missionHeadline(clock)}</h1>
-            </div>
-            <p className="type-line hidden max-w-prose text-hub-label-strong lg:line-clamp-2">{line.text}</p>
-          </div>
-          <div className="hidden shrink-0 items-center gap-2 lg:flex">
-            <MomentumChip className="inline-flex" momentum={view.momentum} />
-            {levelChip}
-          </div>
-        </div>
-        <p className="type-line mt-1 line-clamp-2 max-w-prose text-hub-label-strong sm:mt-2 lg:hidden">{line.text}</p>
       </header>
+
+      <section aria-labelledby="dm-today-title" className="mb-8">
+        <p className="type-label flex flex-wrap items-center gap-x-2 text-hub-label">
+          <span aria-hidden="true">{caption.text}</span>
+          <span className="sr-only">{caption.label}</span>
+          <span aria-hidden="true">·</span>
+          <a className="text-hub-label underline-offset-4 hover:text-hub-text hover:underline" href={routeHref('progress')}>
+            Level {level}
+          </a>
+        </p>
+        <div className="mt-2 flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <motion.p
+              animate={pulse > 0 && !reduced ? PULSE : undefined}
+              className="type-hero num origin-left text-hub-text"
+              key={`hero-pulse-${pulse}`}
+            >
+              <RollingNumber value={dm} />
+              <span className="text-hub-faint">/{state.dmTarget}</span>
+            </motion.p>
+            <h1 className="type-body mt-1 text-hub-label" id="dm-today-title">
+              DMs sent today
+            </h1>
+          </div>
+          <DmButtons date={today} large />
+        </div>
+        <ProgressBar
+          className="mt-4 h-1.5"
+          fraction={state.dmTarget > 0 ? dm / state.dmTarget : 0}
+          label={outreach?.barLabel ?? `${dm} DMs`}
+          tone={dm >= state.dmTarget ? 'complete' : 'primary'}
+        />
+        <p className="type-line mt-3 line-clamp-2 max-w-prose text-hub-label">{line.text}</p>
+      </section>
 
       <InstallHint />
 
       {view.momentum.state === 'recover' ? (
-        <Notice announce={false} className="mb-5 sm:mb-8" kind="NOTE">
+        <Notice announce={false} className="mb-8" kind="NOTE">
           You missed yesterday. Send the DMs today to keep the streak.
         </Notice>
       ) : null}
 
       {view.allComplete ? <CompleteLine /> : null}
 
+      <PillarCards cards={cards} />
+
       <LayoutGroup id="today">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-12">
-          {view.modules.map(renderModule)}
-          {expanded === 'progress' ? (
-            placeholder('progress', CHART_CELL)
-          ) : (
-            <ProgressChart
-              className={CHART_CELL}
-              maxInsights={1}
-              onOpen={() => open('progress')}
-              today={today}
-              variant="compact"
-            />
-          )}
-        </div>
+        <section aria-labelledby="ticks-title" className="mb-8">
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <h2 className="type-section text-hub-text" id="ticks-title">
+              Today's ticks
+            </h2>
+            <span className="type-label text-hub-label">Tap to tick</span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
+            {TICK_PILLARS.map((id) => view.modules.find((module) => module.id === id))
+              .filter((module): module is ModuleView => module !== undefined)
+              .map(renderModule)}
+          </div>
+        </section>
+
+        {signoff ? (
+          <div className="mb-8">
+            {expanded === 'signoff' ? (
+              placeholder('signoff')
+            ) : (
+              <SignOffCard
+                onOpen={() => open('signoff')}
+                onSignOff={signOffNow}
+                onToggle={(task) => toggleTask(today, task)}
+                returning={returning === 'signoff'}
+                signedOff={view.signedOff}
+                ticksDone={view.ticksDone}
+                ticksTotal={view.ticksTotal}
+                view={signoff}
+              />
+            )}
+          </div>
+        ) : null}
+
+        {expanded === 'progress' ? (
+          placeholder('progress')
+        ) : (
+          <ProgressChart maxInsights={1} onOpen={() => open('progress')} today={today} variant="compact" />
+        )}
 
         <AnimatePresence>
           {expanded ? (

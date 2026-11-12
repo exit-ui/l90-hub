@@ -233,7 +233,7 @@ export function ExpandedLayer({ id, entry, titleId, title, onClose, children }: 
               <motion.button
                 aria-label="Close"
                 animate={{ opacity: 1 }}
-                className="glass tap press inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full text-hub-text"
+                className="tap press inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full bg-hub-chip text-hub-text hover:bg-hub-track"
                 initial={{ opacity: 0 }}
                 transition={CHROME_IN}
                 onClick={() => closeRef.current()}

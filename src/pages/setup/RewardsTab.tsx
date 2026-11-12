@@ -18,7 +18,7 @@ function ClaimedBadge({ celebrate }: { celebrate: boolean }) {
   return (
     <motion.span
       animate={{ scale: 1, opacity: 1 }}
-      className="relative inline-flex min-h-11 items-center gap-2 self-start rounded-full bg-hub-positive px-4 type-body font-semibold text-hub-ink"
+      className="relative inline-flex min-h-11 items-center gap-2 self-start rounded-full bg-hub-done-pill px-4 type-body font-semibold text-hub-positive"
       exit={{ scale: 0.8, opacity: 0 }}
       initial={{ scale: 0.6, opacity: 0 }}
       role="status"
@@ -31,7 +31,7 @@ function ClaimedBadge({ celebrate }: { celebrate: boolean }) {
             <motion.span
               animate={{ x: spark.x, y: spark.y, opacity: 0, scale: 0.4 }}
               aria-hidden="true"
-              className="absolute top-1/2 left-1/2 -mt-1 -ml-1 size-2 rounded-full bg-hub-positive"
+              className="absolute top-1/2 left-1/2 -mt-1 -ml-1 size-2 rounded-full bg-hub-success"
               initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
               key={`${spark.x}-${spark.y}`}
               transition={{ duration: CELEBRATION_MS / 1000, ease: 'easeOut' }}

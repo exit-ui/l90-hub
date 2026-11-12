@@ -11,7 +11,7 @@ export function FitnessPage() {
   const [tab, setTab] = useTabRoute('fitness', TABS);
   return (
     <>
-      <PageHeader title="Fitness" />
+      <PageHeader back title="Fitness" />
       <PillTabs
         label="Fitness sections"
         onChange={setTab}

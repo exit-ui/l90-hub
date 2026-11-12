@@ -16,7 +16,7 @@ interface SheetProps {
 }
 
 /**
- * A glass sheet: a bottom sheet with 32 px top corners on a phone,
+ * A white sheet: a bottom sheet with 32 px top corners on a phone,
  * a centred 480 px dialog on a wide screen. It opens in 350 ms.
  */
 export function Sheet({
@@ -31,7 +31,7 @@ export function Sheet({
   return (
     <Dialog.Root onOpenChange={onOpenChange} open={open}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-hub-ink/60 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0" />
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-hub-overlay transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0" />
         <Dialog.Popup
           className={cn(
             'glass-sheet inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col overflow-y-auto rounded-t-sheet px-4 pt-4 pb-sheet text-hub-text outline-none',

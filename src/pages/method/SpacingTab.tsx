@@ -58,7 +58,7 @@ function ForgettingCurve() {
       {REVIEW_DAYS.map((day) => (
         <g key={day}>
           <circle
-            className="fill-hub-positive stroke-hub-surface"
+            className="fill-hub-success stroke-hub-surface"
             cx={xOfDay(day, SPACING_FRAME)}
             cy={BASE}
             r={5}
@@ -99,7 +99,7 @@ export function SpacingTab() {
         <p className="mt-2 flex items-center gap-2 type-label text-hub-text">
           <span
             aria-hidden="true"
-            className="inline-block size-3 shrink-0 rounded-full bg-hub-positive"
+            className="inline-block size-3 shrink-0 rounded-full bg-hub-success"
           />
           Review days: {REVIEW_LIST}.
         </p>

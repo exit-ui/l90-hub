@@ -12,7 +12,7 @@ export function MethodPage() {
   const [tab, setTab] = useTabRoute('method', TAB_IDS);
   return (
     <>
-      <PageHeader title="Method" />
+      <PageHeader back title="Method" />
       <PillTabs
         label="Method sections"
         onChange={setTab}

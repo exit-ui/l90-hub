@@ -40,6 +40,8 @@ interface MotionChartProps {
   formatValue: (value: number) => string;
   /** The y-axis name, for example "% of target". */
   yAxisLabel?: string;
+  /** "area": the daily values as a green line over a soft gradient fill (the default). "bars": one bar a day. */
+  look?: 'area' | 'bars';
 }
 
 const EPOCH = '2020-01-01';
@@ -225,6 +227,7 @@ export function MotionChart({
   height,
   formatValue,
   yAxisLabel,
+  look = 'area',
 }: MotionChartProps) {
   const reduced = useReducedMotion();
   const clipId = `motion-chart-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
@@ -294,6 +297,7 @@ export function MotionChart({
     setHover(index >= Math.round(to.x0) && index <= Math.round(to.x1) ? index : null);
   };
 
+  const hoverBar = hover === null ? null : (to.series.get('bars')?.get(hover) ?? null);
   const hoverText = (() => {
     if (hover === null) {
       return null;
@@ -315,14 +319,21 @@ export function MotionChart({
 
   return (
     <div className="relative w-full min-w-0" ref={containerRef}>
-      <p aria-hidden="true" className="pointer-events-none absolute top-0 right-0 min-h-4 type-label text-hub-label-strong num">
-        {hoverText}
-      </p>
+      {hoverText && hover !== null ? (
+        <p
+          aria-hidden="true"
+          className="type-caption num pointer-events-none absolute -top-2 z-10 -translate-x-1/2 rounded-full bg-hub-black px-2.5 py-1 whitespace-nowrap text-hub-on-black"
+          style={{ left: Math.min(Math.max(x(hover), 64), Math.max(64, width - 64)) }}
+        >
+          {hoverText}
+        </p>
+      ) : null}
       <div aria-label={label} role="img" style={{ height }}>
         {width > 0 ? (
           <svg
             className="block touch-pan-y overflow-visible"
             height={height}
+            onPointerDown={onPointerMove}
             onPointerLeave={() => setHover(null)}
             onPointerMove={onPointerMove}
             width={width}
@@ -331,7 +342,34 @@ export function MotionChart({
               <clipPath id={clipId}>
                 <rect height={innerHeight + MARGIN.top} width={innerWidth} x={MARGIN.left} y={0} />
               </clipPath>
+              <linearGradient id={`${clipId}-fill`} x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stopColor="var(--hub-chart-fill)" stopOpacity={0.32} />
+                <stop offset="1" stopColor="var(--hub-chart-fill)" stopOpacity={0} />
+              </linearGradient>
             </defs>
+            {todayIndex < Math.round(to.x1) && todayIndex >= Math.round(to.x0) ? (
+              <g aria-hidden="true">
+                <rect
+                  fill="var(--hub-chart-future)"
+                  height={innerHeight}
+                  opacity={0.7}
+                  width={Math.max(0, MARGIN.left + innerWidth - (x(todayIndex) + band / 2))}
+                  x={x(todayIndex) + band / 2}
+                  y={MARGIN.top}
+                />
+                {MARGIN.left + innerWidth - (x(todayIndex) + band / 2) > 72 ? (
+                  <text
+                    className="fill-hub-label type-caption"
+                    dominantBaseline="middle"
+                    textAnchor="middle"
+                    x={(x(todayIndex) + band / 2 + MARGIN.left + innerWidth) / 2}
+                    y={MARGIN.top + innerHeight / 2}
+                  >
+                    Days ahead
+                  </text>
+                ) : null}
+              </g>
+            ) : null}
             {ticks.map((value) => (
               <g key={`tick-${value.toFixed(3)}`}>
                 <line stroke="var(--hub-chart-grid)" x1={MARGIN.left} x2={MARGIN.left + innerWidth} y1={y(value)} y2={y(value)} />
@@ -347,7 +385,20 @@ export function MotionChart({
               </g>
             ))}
             <g clipPath={`url(#${clipId})`}>
-              {bars.map((mark) => {
+              {look === 'area' && bars.length > 0 ? (
+                <g>
+                  <path d={areaPath(bars, x, y, zeroY)} fill={`url(#${clipId}-fill)`} />
+                  <path
+                    d={linePath(bars, x, y)}
+                    fill="none"
+                    stroke="var(--hub-chart-line)"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.2}
+                  />
+                </g>
+              ) : null}
+              {(look === 'bars' ? bars : []).map((mark) => {
                 const top = y(Math.max(mark.value, 0));
                 const bottom = y(Math.min(mark.value, 0));
                 return (
@@ -428,10 +479,21 @@ export function MotionChart({
             {hover !== null ? (
               <line
                 stroke="var(--hub-chart-today)"
+                strokeDasharray="2 3"
                 x1={x(hover)}
                 x2={x(hover)}
                 y1={MARGIN.top}
                 y2={MARGIN.top + innerHeight}
+              />
+            ) : null}
+            {hover !== null && hoverBar !== null && look === 'area' ? (
+              <circle
+                cx={x(hover)}
+                cy={y(hoverBar)}
+                fill="var(--hub-surface)"
+                r={5.5}
+                stroke="var(--hub-chart-line)"
+                strokeWidth={2.5}
               />
             ) : null}
             <line stroke="var(--hub-chart-grid)" x1={MARGIN.left} x2={MARGIN.left + innerWidth} y1={zeroY} y2={zeroY} />

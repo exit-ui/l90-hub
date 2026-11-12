@@ -3,6 +3,7 @@ import { persist, type PersistStorage, type StorageValue } from 'zustand/middlew
 import { addBook, moveBook, normalizeBooks, readChapter, setChapters, currentBook } from '@/lib/books';
 import { isDateKey, monthKey, todayKey } from '@/lib/dates';
 import { reviewCard } from '@/lib/leitner';
+import { toggleAttendance } from '@/lib/sessions';
 import { toggleTaskState } from '@/lib/tickEffects';
 import { buildFromAnswers, type OnboardingAnswers } from '@/lib/onboarding';
 import { rewardStatuses } from '@/lib/phases';
@@ -56,6 +57,8 @@ export interface HubActions {
 
   addSession: (list: SessionList, session: Session) => void;
   removeSession: (list: SessionList, index: number) => void;
+  /** The "Gym attended today" switch: adds a session on the date, or removes the newest one of that date. */
+  toggleAttendance: (date: DateKey) => void;
 
   addCoin: (symbol: string) => void;
   updateCoin: (index: number, patch: Partial<Coin>) => void;
@@ -217,6 +220,7 @@ export const useHub = create<HubStore>()(
             [list]: [...state[list], { ...session, minutes: whole(session.minutes) }],
           })),
         removeSession: (list, index) => set((state) => ({ [list]: without(state[list], index) })),
+        toggleAttendance: (date) => set((state) => ({ fitness: toggleAttendance(state.fitness, date) })),
 
         addCoin: (symbol) =>
           set((state) => {

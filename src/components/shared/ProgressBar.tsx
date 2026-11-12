@@ -2,15 +2,16 @@ import { motion } from 'motion/react';
 import { SPRING } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
-export type BarTone = 'primary' | 'primary-flat' | 'secondary' | 'data' | 'complete' | 'limit';
+export type BarTone = 'primary' | 'primary-flat' | 'secondary' | 'data' | 'complete' | 'limit' | 'brand';
 
 const FILLS: Readonly<Record<BarTone, string>> = {
   primary: 'bg-hub-bar-fill',
   'primary-flat': 'bg-hub-bar-fill',
   secondary: 'bg-hub-accent',
-  data: 'bg-hub-positive',
-  complete: 'bg-hub-positive',
+  data: 'bg-hub-success',
+  complete: 'bg-hub-success',
   limit: 'bg-hub-amber',
+  brand: 'bg-hub-brand',
 };
 
 interface ProgressBarProps {
@@ -22,7 +23,7 @@ interface ProgressBarProps {
   className?: string;
 }
 
-/** A 4 px bar with a 2 px radius. The fill grows with a spring that settles in under 300 ms. */
+/** A thin round bar. The fill grows with a spring that settles in under 300 ms. */
 export function ProgressBar({ fraction, label, tone = 'data', className }: ProgressBarProps) {
   const percent = Math.round(Math.min(1, Math.max(0, fraction)) * 100);
   return (
@@ -31,12 +32,12 @@ export function ProgressBar({ fraction, label, tone = 'data', className }: Progr
       aria-valuemax={100}
       aria-valuemin={0}
       aria-valuenow={percent}
-      className={cn('h-1 w-full overflow-hidden rounded-xs bg-hub-track', className)}
+      className={cn('h-1 w-full overflow-hidden rounded-full bg-hub-track', className)}
       role="progressbar"
     >
       <motion.div
         animate={{ width: `${percent}%` }}
-        className={cn('h-full rounded-xs transition-colors duration-150', FILLS[tone])}
+        className={cn('h-full rounded-full transition-colors duration-150', FILLS[tone])}
         initial={false}
         transition={SPRING}
       />

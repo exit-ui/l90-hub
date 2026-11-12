@@ -28,7 +28,7 @@ function platformNow() {
 
 /**
  * The install offer on Today (round 6).
- * iOS Safari in a tab: a glass card with the two steps and "Not now", one time only.
+ * iOS Safari in a tab: a white card with the two steps and "Not now", one time only.
  * Android Chrome after beforeinstallprompt: an "Install the app" pill.
  * Nothing in the home-screen app or on a desktop.
  */
@@ -45,7 +45,7 @@ export function InstallHint() {
         <motion.aside
           animate={{ opacity: 1 }}
           aria-label="Install the app"
-          className="glass mb-5 rounded-card p-4 sm:mb-8"
+          className="surface-card mb-5 p-4 sm:mb-8"
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
           key="ios"

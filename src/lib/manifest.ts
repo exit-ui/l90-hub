@@ -1,8 +1,8 @@
 /**
  * The web app manifest of the hub. Plain data with no imports, so vite.config.ts can use it too.
- * The colours are the darkest background token (--hub-bg-from) in src/index.css.
+ * The colours are the page background token (--hub-bg-from) in src/index.css.
  */
-export const APP_BACKGROUND = '#05060a';
+export const APP_BACKGROUND = '#f4f5f2';
 
 export interface ManifestIcon {
   src: string;
@@ -61,7 +61,7 @@ export function manifestProblems(manifest: unknown): string[] {
   }
   for (const key of ['background_color', 'theme_color'] as const) {
     if (typeof value[key] === 'string' && !/^#[0-9a-f]{6}$/i.test(value[key])) {
-      problems.push(`The field "${key}" must be a colour like #05060a.`);
+      problems.push(`The field "${key}" must be a colour like #f4f5f2.`);
     }
   }
   const icons = Array.isArray(value.icons) ? (value.icons as Partial<ManifestIcon>[]) : [];

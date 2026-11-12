@@ -53,7 +53,7 @@ export const GAUGE_SPRING = { visualDuration: 0.32, bounce: 0.1 } as const;
 export const SERIES_FADE = { duration: 0.25, ease: 'easeOut' } as const;
 
 /** The radius of a card and of an expanded view, set inline so Motion corrects it during a scale. */
-export const CARD_RADIUS = 28;
+export const CARD_RADIUS = 24;
 export const VIEW_RADIUS = 32;
 
 export const BUTTON_TAP = { scale: 0.96, transition: { duration: 0.1 } } as const;

@@ -15,7 +15,7 @@ export function LearningPage() {
 
   return (
     <>
-      <PageHeader title="Learning" />
+      <PageHeader back title="Learning" />
       <PillTabs
         label="Learning sections"
         onChange={setTab}

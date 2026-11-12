@@ -42,7 +42,7 @@ function useOverflow() {
 }
 
 /**
- * Pill tabs on the content material. Only the active pill is glass.
+ * Pill tabs on a white capsule. The active pill is brand green with white text.
  * When the pills do not fit, a pull-down section menu shows instead, so nothing scrolls sideways.
  */
 export function PillTabs({ tabs, value, onChange, label, className }: PillTabsProps) {
@@ -60,7 +60,7 @@ export function PillTabs({ tabs, value, onChange, label, className }: PillTabsPr
         >
           <TabsList
             aria-label={label}
-            className="h-auto w-max gap-1 rounded-full bg-hub-material p-1 rim-hairline group-data-horizontal/tabs:h-auto"
+            className="surface-card h-auto w-max gap-1 rounded-full p-1 group-data-horizontal/tabs:h-auto"
           >
             {tabs.map((tab) => {
               const active = tab.id === value;
@@ -70,8 +70,8 @@ export function PillTabs({ tabs, value, onChange, label, className }: PillTabsPr
                     'tap relative h-auto flex-none cursor-pointer rounded-full border-0 px-4 type-body font-medium transition-colors',
                     'bg-transparent data-active:bg-transparent dark:data-active:border-transparent dark:data-active:bg-transparent',
                     active
-                      ? 'text-hub-text hover:text-hub-text data-active:text-hub-text'
-                      : 'text-hub-label-strong hover:text-hub-text',
+                      ? 'text-hub-on-brand hover:text-hub-on-brand data-active:text-hub-on-brand'
+                      : 'text-hub-label hover:text-hub-text',
                   )}
                   key={tab.id}
                   tabIndex={overflow ? -1 : undefined}
@@ -94,7 +94,7 @@ export function PillTabs({ tabs, value, onChange, label, className }: PillTabsPr
           <Menu.Root>
             <Menu.Trigger
               aria-label={`${label}: ${current?.label ?? ''}`}
-              className="tap press inline-flex cursor-pointer items-center gap-2 rounded-full bg-hub-material px-4 type-body font-semibold text-hub-text rim-hairline hover:bg-hub-track"
+              className="surface-card tap press inline-flex cursor-pointer items-center gap-2 rounded-full px-4 type-body font-semibold text-hub-text hover:bg-hub-inset"
             >
               {current?.label}
               <ChevronDown aria-hidden="true" className="size-4 text-hub-label-strong" />
@@ -113,7 +113,7 @@ export function PillTabs({ tabs, value, onChange, label, className }: PillTabsPr
                   >
                     {tabs.map((tab) => (
                       <Menu.RadioItem
-                        className="flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-control px-3 type-body text-hub-text outline-none select-none data-highlighted:bg-hub-track"
+                        className="flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-control px-3 type-body text-hub-text outline-none select-none data-highlighted:bg-hub-chip"
                         closeOnClick
                         key={tab.id}
                         value={tab.id}

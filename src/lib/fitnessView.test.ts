@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Session } from '@/store/types';
-import { fitnessOverview } from './fitnessView';
+import { fitnessOverview, fitnessWeek } from './fitnessView';
+import { attendedOn, toggleAttendance } from './sessions';
 
 const session = (date: string, minutes: number): Session => ({ date, type: 'Push', minutes, note: '' });
 
@@ -38,5 +39,26 @@ describe('fitness overview', () => {
     expect(view.weeklySessions.at(-1)).toEqual({ label: '2026-11-09', value: 2 });
     expect(view.weeklyMinutes.at(-1)).toEqual({ label: '2026-11-09', value: 105 });
     expect(view.weeklyMinutes.at(-2)).toEqual({ label: '2026-11-02', value: 30 });
+  });
+});
+
+describe('fitnessWeek', () => {
+  it('gives the 7 days of the week, Monday first, with attendance', () => {
+    const week = fitnessWeek([session('2026-11-09', 60), session('2026-11-11', 45)], '2026-11-12');
+    expect(week.map((day) => day.letter).join('')).toBe('MTWTFSS');
+    expect(week.map((day) => day.attended)).toEqual([true, false, true, false, false, false, false]);
+    expect(week[3]?.isToday).toBe(true);
+    expect(week.filter((day) => day.ahead)).toHaveLength(3);
+  });
+});
+
+describe('the "Gym attended today" switch', () => {
+  it('adds a session on the date, then removes the newest session of that date', () => {
+    const one = toggleAttendance([], '2026-11-12');
+    expect(attendedOn(one, '2026-11-12')).toBe(true);
+    const two = toggleAttendance([session('2026-11-12', 60), ...one], '2026-11-12');
+    expect(two).toHaveLength(1);
+    expect(two[0]?.minutes).toBe(60);
+    expect(attendedOn(toggleAttendance(one, '2026-11-12'), '2026-11-12')).toBe(false);
   });
 });

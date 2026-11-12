@@ -59,7 +59,7 @@ interface SegmentedSwitchProps<T extends string> {
   className?: string;
 }
 
-/** A large switch between two or three sections. */
+/** A pill segmented control: the active pill is brand green with white text. */
 export function SegmentedSwitch<T extends string>({
   options,
   value,
@@ -72,7 +72,7 @@ export function SegmentedSwitch<T extends string>({
     <div
       aria-label={label}
       className={cn(
-        'grid auto-cols-fr grid-flow-col gap-1 rounded-full bg-hub-material p-1 rim-hairline',
+        'surface-card grid auto-cols-fr grid-flow-col gap-1 rounded-full p-1',
         className,
       )}
       role="group"
@@ -84,7 +84,7 @@ export function SegmentedSwitch<T extends string>({
             aria-pressed={active}
             className={cn(
               'relative min-h-11 cursor-pointer rounded-full px-4 type-body font-semibold transition-colors',
-              active ? 'text-hub-text' : 'text-hub-label-strong hover:text-hub-text',
+              active ? 'text-hub-on-brand' : 'text-hub-label hover:text-hub-text',
             )}
             key={option.id}
             onClick={() => onChange(option.id)}
@@ -107,7 +107,7 @@ export function SegmentedSwitch<T extends string>({
   );
 }
 
-/** The title of a card: 20 px, the section size. */
+/** The title of a card: the section size. */
 export function CardTitle({ children, id }: { children: ReactNode; id?: string }) {
   return (
     <h2 className="type-section font-semibold text-hub-text" id={id}>

@@ -11,7 +11,7 @@ function CueActionDiagram() {
   return (
     <div
       aria-label="Diagram. A cue leads to an action."
-      className="mt-4 flex items-center justify-center gap-3 rounded-control bg-hub-raised/60 p-4"
+      className="mt-4 flex items-center justify-center gap-3 rounded-control bg-hub-inset p-4"
       role="img"
     >
       <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-hub-hairline bg-hub-surface px-4 type-body font-semibold text-hub-text">
@@ -19,7 +19,7 @@ function CueActionDiagram() {
         Cue
       </span>
       <ArrowRight aria-hidden="true" className="size-6 shrink-0 text-hub-label" />
-      <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-grad-secondary px-4 type-body font-semibold text-hub-text">
+      <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-hub-chip px-4 type-body font-semibold text-hub-text">
         <Play aria-hidden="true" className="size-4" />
         Action
       </span>

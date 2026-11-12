@@ -8,7 +8,7 @@ import { FADE, SHEET_SPRING } from '@/lib/motion';
 const UPDATE_CHECK_MS = 60 * 60 * 1000;
 
 /**
- * Registers the service worker. When a new version is ready, a small glass toast asks for a reload.
+ * Registers the service worker. When a new version is ready, a small frosted toast asks for a reload.
  * The app never reloads by itself, so no typed text is lost.
  */
 export function UpdateToast() {

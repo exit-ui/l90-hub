@@ -1,6 +1,7 @@
 import type { DateKey, Session } from '@/store/types';
-import { addDays, mondayOf } from './dates';
+import { addDays, formatWeekdayShort, mondayOf, weekOf } from './dates';
 import {
+  attendedOn,
   type HeatCell,
   HEATMAP_WEEKS,
   heatmapCells,
@@ -60,4 +61,31 @@ export function fitnessOverview(
     weeklyMinutes: weeklyMinutes(sessions, today),
     cells: heatmapCells(dates, today),
   };
+}
+
+export interface WeekDayChip {
+  date: DateKey;
+  /** One letter, for example "M". */
+  letter: string;
+  /** The full name for a screen reader, for example "Mon". */
+  name: string;
+  attended: boolean;
+  isToday: boolean;
+  /** A day after today: it shows grey and empty. */
+  ahead: boolean;
+}
+
+/** The 7 days of the week of today, Monday first, with the gym attendance of each. Pure. */
+export function fitnessWeek(sessions: readonly Session[], today: DateKey): WeekDayChip[] {
+  return weekOf(today).map((date) => {
+    const name = formatWeekdayShort(date);
+    return {
+      date,
+      letter: name.slice(0, 1),
+      name,
+      attended: attendedOn(sessions, date),
+      isToday: date === today,
+      ahead: date > today,
+    };
+  });
 }

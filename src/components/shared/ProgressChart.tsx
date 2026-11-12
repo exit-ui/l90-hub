@@ -35,7 +35,7 @@ interface ProgressChartProps {
 }
 
 const MENU_ITEM =
-  'flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-control px-3 type-body text-hub-text outline-none select-none data-highlighted:bg-hub-track data-disabled:cursor-not-allowed data-disabled:opacity-40';
+  'flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-control px-3 type-body text-hub-text outline-none select-none data-highlighted:bg-hub-chip data-disabled:cursor-not-allowed data-disabled:opacity-40';
 
 
 interface MetricMenuProps {
@@ -54,7 +54,7 @@ function MetricMenu({ metric, compare, compareOn, onMetric, onToggle }: MetricMe
     <Menu.Root>
       <Menu.Trigger
         aria-label={compareOn ? `Metrics: ${compare.map((item) => METRIC_INFO[item].label).join(', ')}` : `Metric: ${METRIC_INFO[metric].label}`}
-        className="tap press inline-flex min-w-0 cursor-pointer items-center gap-1 rounded-full bg-hub-track px-3 type-body font-semibold text-hub-text rim-hairline hover:bg-hub-glass-edge data-popup-open:bg-hub-glass-edge"
+        className="tap press inline-flex min-w-0 cursor-pointer items-center gap-1 rounded-full bg-hub-chip px-3 type-body font-semibold text-hub-text hover:bg-hub-track data-popup-open:bg-hub-track"
       >
         <span className="truncate">{buttonText}</span>
         <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-hub-label-strong" />
@@ -118,7 +118,7 @@ function MetricMenu({ metric, compare, compareOn, onMetric, onToggle }: MetricMe
 function RangeControl({ value, onChange }: { value: Range; onChange: (range: Range) => void }) {
   const pillId = useId();
   return (
-    <div aria-label="Range" className="flex shrink-0 items-center rounded-full bg-hub-track p-1 rim-hairline" role="group">
+    <div aria-label="Range" className="flex shrink-0 items-center rounded-full bg-hub-chip p-1" role="group">
       {RANGES.map((range) => {
         const active = range === value;
         return (
@@ -127,7 +127,7 @@ function RangeControl({ value, onChange }: { value: Range; onChange: (range: Ran
             aria-pressed={active}
             className={cn(
               'relative min-h-11 min-w-11 cursor-pointer rounded-full type-body font-semibold transition-colors',
-              active ? 'text-hub-text' : 'text-hub-label-strong hover:text-hub-text',
+              active ? 'text-hub-on-brand' : 'text-hub-label hover:text-hub-text',
             )}
             key={range}
             onClick={() => onChange(range)}
@@ -138,6 +138,44 @@ function RangeControl({ value, onChange }: { value: Range; onChange: (range: Ran
               <motion.span className="glass-pill absolute inset-0 rounded-full" layoutId={pillId} transition={SPRING} />
             ) : null}
             <span className="relative">{range}D</span>
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** The metric pills of the full chart, in the order of the pillars. The row scrolls sideways inside the card. */
+const PILL_METRICS: readonly Metric[] = ['dm', 'gym', 'learning', 'reading', 'r', 'tasks', 'xp'];
+const PILL_LABELS: Readonly<Record<Metric, string>> = {
+  dm: 'DMs',
+  gym: 'Gym',
+  learning: 'Learning',
+  reading: 'Reading',
+  r: 'Trading',
+  tasks: 'Ticks',
+  xp: 'XP',
+};
+
+function MetricPills({ value, onChange }: { value: Metric; onChange: (metric: Metric) => void }) {
+  return (
+    <div aria-label="Metric" className="scroll-row -mx-4 flex gap-2 px-4 pb-1 sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6" role="group">
+      {PILL_METRICS.map((metric) => {
+        const active = metric === value;
+        return (
+          <motion.button
+            aria-label={METRIC_INFO[metric].label}
+            aria-pressed={active}
+            className={cn(
+              'min-h-11 shrink-0 cursor-pointer rounded-full px-4 type-body font-semibold transition-colors',
+              active ? 'bg-hub-brand text-hub-on-brand' : 'bg-hub-surface text-hub-label rim-hairline hover:text-hub-text',
+            )}
+            key={metric}
+            onClick={() => onChange(metric)}
+            type="button"
+            whileTap={BUTTON_TAP}
+          >
+            {PILL_LABELS[metric]}
           </motion.button>
         );
       })}
@@ -211,7 +249,43 @@ export function ProgressChart({
     return () => observer.disconnect();
   }, [openable]);
 
-  const controls = (
+  const fullControls = (
+    <div className="grid min-w-0 gap-3">
+      {compareOn ? null : <MetricPills onChange={(metric) => setPrefs({ metric })} value={prefs.metric} />}
+      <div className="flex min-w-0 items-center gap-2">
+        {compareOn ? (
+          <MetricMenu
+            compare={prefs.compare}
+            compareOn
+            metric={prefs.metric}
+            onMetric={(metric) => setPrefs({ metric })}
+            onToggle={(metric) => setPrefs({ compare: toggleCompare(prefs.compare, metric) })}
+          />
+        ) : (
+          <p className="type-label text-hub-label">Drag on the chart to explore.</p>
+        )}
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <RangeControl onChange={(next) => setPrefs({ range: next })} value={range} />
+          <motion.button
+            aria-label="Compare metrics"
+            aria-pressed={compareOn}
+            className={cn(
+              'tap inline-flex cursor-pointer items-center justify-center rounded-full transition-colors',
+              compareOn ? 'bg-hub-brand text-hub-on-brand' : 'bg-hub-chip text-hub-label hover:text-hub-text',
+            )}
+            onClick={() => setPrefs({ compareOn: !prefs.compareOn })}
+            title="Compare metrics"
+            type="button"
+            whileTap={BUTTON_TAP}
+          >
+            <Layers aria-hidden="true" className="size-5" />
+          </motion.button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const compactControls = (
     <div className="flex min-w-0 items-center gap-2">
       <MetricMenu
         compare={prefs.compare}
@@ -222,25 +296,10 @@ export function ProgressChart({
       />
       <div className="ml-auto flex shrink-0 items-center gap-2">
         <RangeControl onChange={(next) => setPrefs({ range: next })} value={range} />
-        {full ? (
-          <motion.button
-            aria-label="Compare metrics"
-            aria-pressed={compareOn}
-            className={cn(
-              'tap inline-flex cursor-pointer items-center justify-center rounded-full rim-hairline transition-colors',
-              compareOn ? 'bg-hub-glass-edge text-hub-text' : 'bg-hub-track text-hub-label-strong hover:text-hub-text',
-            )}
-            onClick={() => setPrefs({ compareOn: !prefs.compareOn })}
-            title="Compare metrics"
-            type="button"
-            whileTap={BUTTON_TAP}
-          >
-            <Layers aria-hidden="true" className="size-5" />
-          </motion.button>
-        ) : null}
       </div>
     </div>
   );
+  const controls = full ? fullControls : compactControls;
 
   const content = (
     <>
@@ -272,9 +331,9 @@ export function ProgressChart({
       </div>
 
       {insights.length > 0 ? (
-        <ul aria-label="Insights" className="mt-2 grid gap-2">
+        <ul aria-label="Insights" className={cn('mt-3 grid gap-3', full && 'sm:grid-cols-2')}>
           {insights.map((insight) => (
-            <li className="type-body text-hub-label-strong" key={insight.kind}>
+            <li className={cn('type-body text-hub-label-strong', full && 'surface-inset p-3')} key={insight.kind}>
               {insight.text}
             </li>
           ))}
@@ -357,11 +416,11 @@ export function ChartTable({ summary, columns, rows, format }: ChartTableProps) 
           <caption className="sr-only">{summary}</caption>
           <thead>
             <tr>
-              <th className="sticky top-0 bg-hub-surface px-3 py-2 text-hub-label" scope="col">
+              <th className="sticky top-0 bg-hub-inset px-3 py-2 text-hub-label" scope="col">
                 Date
               </th>
               {columns.map((column) => (
-                <th className="sticky top-0 bg-hub-surface px-3 py-2 text-right text-hub-label" key={column} scope="col">
+                <th className="sticky top-0 bg-hub-inset px-3 py-2 text-right text-hub-label" key={column} scope="col">
                   {column}
                 </th>
               ))}

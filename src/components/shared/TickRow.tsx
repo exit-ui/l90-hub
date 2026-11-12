@@ -10,7 +10,7 @@ interface TickRowProps {
   cue: string | null;
   action: string;
   done: boolean;
-  /** The one row to do now. It has a white inset bar and a white cue. */
+  /** The one row to do now. It has a green inset bar and a dark cue. */
   isNext?: boolean;
   onToggle: () => void;
 }
@@ -35,13 +35,13 @@ export function TickRow({ task, cue, action, done, isNext = false, onToggle }: T
       type="button"
     >
       {isNext ? (
-        <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-hub-primary" />
+        <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-hub-brand" />
       ) : null}
       <span
         aria-hidden="true"
         className={cn(
           'relative flex size-6 shrink-0 items-center justify-center rounded-full transition-colors duration-150',
-          done ? 'bg-hub-positive text-hub-ink' : 'bg-transparent ring-check',
+          done ? 'bg-hub-success text-hub-on-success' : 'bg-transparent ring-check',
         )}
       >
         {done ? (

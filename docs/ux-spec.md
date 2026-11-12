@@ -1,9 +1,10 @@
-# L90 Hub: UX spec (binding, round 2)
+# L90 Hub: UX spec (binding, round 7: light fintech)
 
 Status: binding for the builder agent. The alignment agent checks the build against section 13.
 Scope: the visual layer and the interaction layer. The data model in `src/store/types.ts` stays as it is, except where this spec says otherwise.
 Data note (round 2 fix): `DayRecord` gained an optional `signedOff: boolean` (default false; older records load with false). Only "Sign off the day" sets it; a tick on a sign-off task never does.
 Words "must", "must not" and "never" are binding. "Should" means "do it unless you write the reason in the PR".
+Round 7 (the current round) replaces the dark "night city + liquid glass" look with a light fintech look from the approved mockups (Today, Outreach, Progress, Fitness, Onboarding): a pale page, white cards with one soft shadow, a deep forest green brand and a bright success green. It rewrites sections 2.1, 4, 5.2, 7.2–7.7, 8, 10.4, 14 and the checklist. The backdrop, the background photo and the glass lens are removed. Where an older sentence still names glass, the backdrop or a "white filled button", the round-7 text wins.
 Round 2 adds: expandable cards (section 10), a new motion system (section 9), the number roll (9.4) and a new type system (7.2). Round 3 adds: the green completion state (4.3), compact Today controls (4.4), no rain (8.2) and one weight for numbers (7.2). Round 1 rules that still hold are kept. Rules that conflict were rewritten in place.
 
 ## 0. The user's brief in one line
@@ -28,8 +29,8 @@ Sources round 2: motion.dev/examples/react-app-store (App Store card pattern); m
 | Goal-gradient | Effort rises near the goal. | Each module shows a progress bar to today's goal. At ≥ 75 % the bar label says "1 more". |
 | Peak-end rule | People judge by the peak and the end. | Sign-off is the designed peak and the end of each day (6.3). |
 | Aesthetic-usability | Good looks increase tolerance. | One calm material system, one spacing scale, one type family, no decorative noise. |
-| Von Restorff | The different item is remembered. | Exactly one "Next" row on Home. Exactly one white filled button per visible layer. |
-| Serial position | First and last items are remembered best. | Outreach module is first. Sign-off module is last. |
+| Von Restorff | The different item is remembered. | Exactly one "Next" row on Home. The brand-green fill marks the main act of a card or view (Sign off, Continue); the round black "+" marks +1 DM. |
+| Serial position | First and last items are remembered best. | The DM count is first. The Sign-off card is the last card before the chart. |
 | Tesler's law | Complexity must live somewhere; put it in the system. | The app maps tasks to pillars, normalises chart data and writes insights. The user configures nothing. |
 | Postel's law | Accept loose input, give strict output. | Number fields accept " 20 ", "+5", "20 DMs". Task text accepts "6:20" and "06:20". |
 | Gestalt: proximity, common region, similarity | Near, enclosed and similar items read as one group. | One module surface = one pillar. Space inside a group < space between groups (7.1). All ticks look the same in all modules and in the expanded views. |
@@ -42,12 +43,12 @@ Sources round 2: motion.dev/examples/react-app-store (App Store card pattern); m
 | Two-minute start | A tiny first step beats a big plan. | With 0 DMs after 16:00 the Outreach hint says "Send 1 DM now." |
 | Default effect | People keep defaults. | Chart = DMs, 30 days; gym tick logs the next type in the rotation; learning tick logs the last topic. |
 | Implementation intentions | "When X, I do Y" plans help. | The "Next" row shows the cue. The plans in `defaults.ts` stay the cue source. |
-| Liquid Glass (WWDC25) | Glass is for controls that float above content. Content comes first. Corners are concentric. | Glass only on: tab bar, top bar, menus, sheets, the active pill, the Close button of an expanded view. Modules and expanded views use the content material. Radii follow 7.3. |
+| Material hierarchy (Apple HIG "Materials") | Content comes first; chrome floats above it. Corners are concentric. | Content sits on white cards on a pale page. Frosted white (92 % white + blur) only on the floating tab bar and toasts. Radii follow 7.3. |
 | 8 pt grid | One base unit gives rhythm. | All spacing from 7.1. No arbitrary values (`gap-[3px]`, `p-1.5`, `rounded-[22px]`). |
 
 ## 2. Information architecture and navigation
 
-- 2.1 Tabs (mobile bottom bar and desktop top bar, same order, same labels): **Today**, **Outreach**, **Progress**, **More**. Max 4 items + the +1 DM button on desktop.
+- 2.1 Navigation (round 7). Phone: a frosted white tab bar with 5 slots: **Today**, **Outreach**, a raised 58–60 px dark-green round button in the centre that logs +1 DM (with the short vibration where the API exists), **Progress**, **More**. From 1024 px: a white sidebar on the left with the L90 wordmark, Today, Outreach, Progress, then a "More" group with the 5 other pages, and a "+1 DM" button at the bottom on pages without their own DM controls.
 - 2.2 More menu (sheet): Learning, Fitness, Trading, Method, Setup. Max 5 rows.
 - 2.3 Progress is its own page. It holds: the full motion chart with compare mode, the 90-day mission grid, the mission stats (total DMs, days on target, days left, phase, level) and the Days tab (old Calendar). The week-template editor is in Setup → "Week".
 - 2.4 One tap from Today: tick any task, +1 DM, +5 DMs, +1 check, open any expanded view (module header, chart card header), change chart metric or range, open sign-off.
@@ -77,53 +78,52 @@ Sources round 2: motion.dev/examples/react-app-store (App Store card pattern); m
 
 ### 4.1 Order of content (both widths)
 
-1. Header: eyebrow date (label colour), title "Day 23 of 90", one quiet chip "Lv 8 · Phase I" on the right (tap → Progress), and the momentum chip. Under it, the daily line: Inter italic (7.2), label-strong colour, max 2 lines. No theme caption on Home.
-2. Recovery notice (only in the "recover" state, 6.2). Max 1 notice on Home. When every module is done, one calm green line instead: "All modules are done today. Rest and come back tomorrow." (with a check icon).
-3. Pillar modules (4.3).
-4. Motion chart card (section 5, compact variant).
-5. Bottom space so the tab bar never covers content: 112 px + safe-area inset on mobile.
+1. Header: the L90 wordmark with the small laurel mark on the left (below 1024 px; from 1024 px the sidebar holds it and the header shows the long date). On the right: the momentum chip (flame and one number, the label holds the words; tap opens Progress) and a round 44 px profile button that opens Setup. No bell: there are no notifications.
+2. The DM counter: a caption "Day XXIV of XC · Phase 1 · Level 8" (Roman numerals visually, "Day 24 of 90, phase 1" for screen readers; the level opens Progress), the hero number "12/20" (the "/20" in the faint colour), the label "DMs sent today", the "+5" pill and the round black 52 px "+" on the right, a 6 px green progress bar, and the daily line in the secondary grey (plain, not italic).
+3. Install hint (iOS Safari only), the recover notice (only in the "recover" state, 6.2) and, when every module is done, one calm green line "All modules are done today. Rest and come back tomorrow." with a check icon.
+4. "My pillars" with "View details ›" (opens Progress): four white cards (about 156–160 px square) in a row that scrolls sideways inside the page: Fitness, Learning, Reading, Trading. Each has the name, a round icon chip, one big metric (22 px, the tail in the faint colour), one change line and a soft area sparkline of the last 14 days at the bottom (`pillarCards` in `src/lib/pillarCards.ts`, pure, tested). Up is green text; same or fewer is grey; only a trading loss is red (line, fill and text). A pillar with no data shows a calm line ("No sessions yet") and a dashed baseline, never a zero.
+5. "Today's ticks" with "Tap to tick": the tick cards of Outreach, Fitness, Learning, Reading and Trading (4.3).
+6. "Sign off the day" card (6.3): a 56 px ring with done/total ticks of the day, one line, and the "Sign off" button; after the sign-off a "Done" pill. The sign-off ticks follow below.
+7. The progress chart card (section 5, compact variant).
+8. Bottom space so the tab bar never covers content: 96 px + safe-area inset on a phone.
 
 ### 4.2 Grid
 
-- 390 px: page gutter 16 px, 2 columns, gap 12 px. Outreach spans 2 columns. Fitness | Learning. Reading | Trading. Sign-off spans 2 columns. Chart spans 2 columns.
-- 360 px: same as 390 px. Nothing scrolls sideways.
-- 768–1023 px: 4 columns, gap 16 px. Outreach spans 2 columns × 2 rows; Fitness, Learning, Reading, Trading fill the other 4 cells. Chart spans 4 columns. Sign-off spans 4 columns on its own row.
-- 1280 px: content max-width 1120 px, centred, gutter 32 px, 12-column grid, gap 16 px. Row 1–2: Outreach (6 cols, 2 rows) + Fitness, Learning (3 cols each) / Reading, Trading (3 cols each). Row 3: chart (8 cols) + Sign-off (4 cols). Above the fold at 1280×800: header, all 6 modules' headers and numbers.
-- Module heights in one row are equal (CSS grid `align-items: stretch`). Content aligns to the top; the progress bar sits at the bottom edge.
-- The grid itself never animates layout (no `layout` prop on grid cells). A cell whose card is open keeps its size (10.3).
+- Below 768 px: one column, gutter 16 px, gap 12 px between tick cards. The pillar row bleeds to the screen edges and scrolls sideways inside itself; the page never scrolls sideways at 360 px.
+- 768–1279 px: tick cards in 2 columns, gap 16 px. From 1280 px: 3 columns. From 1024 px the pillar cards sit in a 4-column grid with no inner scroll.
+- Content max width 1120 px beside the 256 px sidebar.
+- Tick cards in one row have equal heights (CSS grid stretch). The grid itself never animates layout (no `layout` prop on grid cells). A cell whose card is open keeps its size (10.3).
 
-### 4.3 Module anatomy (all modules)
+### 4.3 Tick card anatomy (all modules)
 
-- Surface: content material (7.4), radius 28 px, padding 16 px (< 768 px) / 24 px (≥ 768 px).
-- Header = one `<button>` (the "open" target, 10.2) that holds row 1 and row 2. Min height 44 px. Hover/press: `--hub-inset` fill on the header only, press scale 0.98 on the whole card (100 ms). No chevron, no icon tile.
-  - Row 1: pillar name (module name style) left; the ratio "2 of 3" (label style) right.
-  - Row 2: one big number (module number style) + unit (body style, label colour). Outreach uses the hero number style.
-- Row 3: the tick list (4.5). Ticks are siblings of the header button, never inside it.
-- Bottom: progress bar 4 px tall, full inner width, radius 2 px, track `--hub-track`, fill `--hub-bar-fill`; fill = positive green when the module is complete.
-- Complete state (round 3): `isModuleComplete` in `src/lib/moduleView.ts` (pure, tested): every tick of the module is done; Outreach also needs DMs ≥ target; Sign-off also needs the sign-off (`DayRecord.signedOff`). Then: a green 1 px rim (`--hub-positive-rim`), the big number and the bar in `--hub-positive`, and "Done" with a check in the ratio slot (never colour alone). The check springs in once (`CHECK_SPRING`); reduced motion fades. The rim glints once (6.1). The same state shows in the expanded view header. The module does not move, resize or reorder.
-- Empty state (no task for this pillar today): module keeps its cell, shows the big number and one body line, for example "No trading task today." No tick list. The header still opens the expanded view.
+- Surface: a white card (7.4), radius 24 px, padding 16 px (< 640 px) / 20 px.
+- Header = one `<button>` (the "open" target, 10.2): a 36 px round icon chip, the pillar name (module name style) with the number under it (section size, the unit in label style), and the ratio "2 of 3" in a chip pill on the right. Min height 44 px. Hover: the inset fill on the header only; press scale 0.98 on the card.
+- The tick list (4.5) follows. Ticks are siblings of the header button, never inside it.
+- Bottom: a thin round progress bar, track `--hub-track`, fill `--hub-bar-fill` (success green).
+- Complete state: `isModuleComplete` in `src/lib/moduleView.ts` (pure, tested). Then the card turns the done tint (`--hub-done-bg`) with a green 1 px rim (`--hub-done-rim`), the icon chip turns pale green, the number turns `--hub-positive`, and a "Done" pill (`--hub-done-pill`, check icon + word, never colour alone) replaces the ratio. The check springs in once (`CHECK_SPRING`); reduced motion fades. The rim glints once in green (6.1). The card does not move, resize or reorder.
+- Empty state (no task for this pillar today): the card keeps its cell and shows one body line, for example "No task today." The header still opens the view.
 
 ### 4.4 Module content
 
-| Module | Big number | Goal for the bar | Ticks | Extra control on Home |
+| Card | Number | Bar | Ticks | Extra control |
 |---|---|---|---|---|
-| Outreach | DMs today, "/ 20" | dmTarget | outreach tasks | beside the number: a small "+5" pill (secondary, 44 px) and a round "+" button (primary, 44 × 44 px, `aria-label` "Add 1 DM"); the hint line under the number |
+| Outreach | DMs today, "/ 20" | DMs / dmTarget | outreach tasks | the hint line under the header (the +5 and "+" sit in the DM counter, 4.1) |
 | Fitness | gym this week, "/ 3" | fitTarget per week | fitness tasks | none |
 | Learning | sessions this week, "/ 2" | learnTarget per week | learning tasks + "Review N cards" row when cards are due | none |
-| Reading | chapter X of Y (current book) | 1 chapter today | reading tasks | none |
-| Trading | cumulative R, signed, "R" | chart checks used vs limit (amber at the limit) | trading tasks | "+1 check" small pill (secondary, 44 px tall) |
-| Sign-off | tasks done today, "%" | all ticks of the day | sign-off tasks | "Sign off" small pill beside the number (secondary until all other modules are complete, then primary); hidden after the sign-off (the header opens the view) |
+| Reading | chapter X "of Y" | 1 chapter today | reading tasks | none |
+| Trading | cumulative R, signed | chart checks used vs limit (amber at the limit) | trading tasks | "+1 check" pill |
+| Sign-off | ring: ticks done / total of the day | – | sign-off tasks | "Sign off" (brand green) until the sign-off, then "Done" |
 
-- "Adjust" (−1 DM and the exact count) moves from the Outreach module into the Outreach expanded view.
-- Only the round +1 DM is a white filled button while the day is open. When every other module is done, the "Sign off" pill becomes the single white filled button and +1 DM becomes secondary. There is no full-width +1 DM bar on Today.
+- "Adjust" (−1 DM and the exact count) lives in the Outreach expanded view and on the Outreach page.
+- The round "+" for +1 DM is black (`--hub-black`); the brand green fill is the main act of a card (Sign off, Continue, Start). The tab bar's centre button is the same +1 DM act in brand green. There is no full-width +1 DM bar.
 
 ### 4.5 Tick rows (the anti-"AI list" rule)
 
-- A row is: 24 px check circle + action text (body style, 2 lines max, then ellipsis; full text in `aria-label`) + optional cue (label style, above the action, one line). Row min-height 44 px, row gap 4 px, no dividers, no icon tiles, no chevrons, no subtitles that repeat the title.
-- Done row: the circle fills green with a dark check; the text changes to label-strong colour. No strike-through.
-- The "Next" row: exactly one row on Home, chosen by `nextTask(tasks, done, now)` (pure, tested). It has a 2 px left inset bar in white and the cue in white. No other row is highlighted. The same row keeps the marker in its expanded view.
-- Icons appear only where they carry meaning: the check state, the flame on the momentum chip, the X on a Close button.
-- More than 4 ticks on Home: show 3, then a text button "Show N more" that opens the module's expanded view (not an in-place list). The expanded view shows all ticks.
+- A row is: 24 px check circle + action text (body style, 2 lines max, then ellipsis; full text in `aria-label`) + optional cue (label style, above the action, one line). Row min-height 44 px, row gap 4 px, no dividers, no chevrons, no subtitles that repeat the title.
+- Done row: the circle fills success green with a dark green check; the text changes to label-strong colour. No strike-through.
+- The "Next" row: exactly one row on Home, chosen by `nextTask(tasks, done, now)` (pure, tested). It has a 2 px left inset bar in the brand green and the cue in the text colour. No other row is highlighted. The same row keeps the marker in its expanded view.
+- Icons appear only where they carry meaning: the pillar icon chip, the check state, the flame on the momentum chip, the X on a Close button.
+- More than 4 ticks on Home: show 3, then a text button "Show N more" that opens the expanded view. The expanded view shows all ticks.
 
 ## 5. The motion chart
 
@@ -139,7 +139,8 @@ Sources round 2: motion.dev/examples/react-app-store (App Store card pattern); m
 
 - Single (Home, expanded chart, Progress): bars for the daily value, a 7-day mean line (ranges 30/90), a dashed target line, a dashed projection after today (range 90).
 - Compare (expanded chart and Progress only): 2–3 metrics from {dm, tasks, gym, learning, reading} as lines in "% of target"; a 100 % reference line; y-axis label "% of target". Colours `--hub-accent`, `--hub-amber`, `--hub-positive` in that order; each line also has a different dash or marker.
-- Controls: metric = iOS-style pull-down menu; range = a 3-segment control "7D · 30D · 90D"; compare = a toggle (expanded chart and Progress only). All controls fit in one row at 360 px. No chip rows that wrap or scroll sideways.
+- Controls: on Today the metric is an iOS-style pull-down menu; on Progress and in the expanded chart a row of metric pills (DMs, Gym, Learning, Reading, Trading, Ticks, XP; the active pill brand green with white text) scrolls sideways inside the card, and the menu returns for compare mode. Range = a 3-segment control "7D · 30D · 90D" with the active segment in brand green; compare = a toggle (expanded chart and Progress only). Nothing scrolls the page sideways at 360 px.
+- Look (round 7): single mode draws the daily values as a green line (`--hub-chart-line`) over a soft green gradient fill, the 7-day mean as a blue line, the target as a dashed line with a legend line under the chart. Days after today sit on a pale "Days ahead" band. Pointer down or move shows a dashed crosshair, a white dot with a green ring on the value, and a dark tooltip pill with the date and value. `look="bars"` keeps the bar form for a caller that wants it.
 - Default: metric `dm`, range `30` (range `7` while mission day < 8), single. The last choice is kept per device in `localStorage` (try/catch). Home card and expanded chart share the same choice.
 
 ### 5.3 Chart motion
@@ -153,7 +154,7 @@ Sources round 2: motion.dev/examples/react-app-store (App Store card pattern); m
 
 ### 5.4 Insights (pure, in `src/lib/insights.ts`, tested)
 
-`chartInsights(series, metric, settings, today): Insight[]`, by priority. A card shows the first 2. Each text is STE (≤ 20 words, active voice). Rules: 1 target gap; 2 period change (N = 7, ≥ 4 non-null days each side; "up from 0" when previous mean is 0); 3 best weekday (≥ 2 values per weekday); 4 projection (dm, reading; range 90); 5 compare mode weakest series this week. No insight when data is too thin. Never invent an insight. Never compare the user with other persons.
+`chartInsights(series, metric, settings, today): Insight[]`, by priority. A card shows the first 2; on Progress they sit as tiles in a 2-column grid. Each text is STE (≤ 20 words, active voice). Rules: 1 target gap; 2 period change (N = 7, ≥ 4 non-null days each side; "up from 0" when previous mean is 0); 3 best weekday (≥ 2 values per weekday); 4 projection (dm, reading; range 90); 5 compare mode weakest series this week. No insight when data is too thin. Never invent an insight. Never compare the user with other persons.
 
 ### 5.5 Accessibility
 
@@ -223,64 +224,68 @@ Type scale (size / line-height in px, weight, tracking in em):
 |---|---|---|---|---|
 | Page title | 28 / 34 | 32 / 38 | 600 | −0.02 |
 | Expanded title (pillar name in an expanded view, sign-off line) | 28 / 34 | 32 / 38 | 600 | −0.02 |
-| Hero number (Outreach module, every expanded big number) | 64 / 64 | 72 / 72 | 600 | −0.035 |
-| Module number | 40 / 44 | 40 / 44 | 600 | −0.03 |
-| Section / sheet title | 20 / 26 | 20 / 26 | 600 | −0.015 |
+| Hero number (the Today DM counter, every expanded big number) | 44 / 48 | 44 / 48 | 600 | −0.03 |
+| Module number | 28 / 32 | 32 / 36 | 600 | −0.02 |
+| Pillar card metric | 22 / 28 | 22 / 28 | 600 | −0.02 |
+| Field value | 20 / 26 | 20 / 26 | 600 | −0.01 |
+| Section / sheet title | 17 / 22 | 18 / 24 | 600 | −0.01 |
 | Module name | 15 / 20 | 16 / 22 | 600 | −0.01 |
 | Body, task action | 15 / 20 | 16 / 22 | 400 | −0.005 |
-| Daily line | 17 / 24 italic | 18 / 26 italic | 400 | −0.01 |
+| Daily line | 15 / 22 | 17 / 24 | 400 | −0.005 |
 | Label, cue, ratio, chart label | 13 / 18 | 13 / 18 | 500 | 0 |
 
 - Round 3: one weight system. Every number is 600 with tight tracking (the optical-size axis gives the display cut); titles 600; labels 500; body 400. No light (300) or bold (700) text anywhere.
 - The 1280 px column applies from 1024 px up. No text smaller than 13 px. Max 3 sizes per module. Numbers use `.num`. Units next to a number use the body style, label colour.
-- Each role is one utility class in `index.css` (`.type-title`, `.type-hero`, `.type-number`, `.type-section`, `.type-name`, `.type-body`, `.type-line`, `.type-label`). Components use these classes, not ad-hoc `text-[..]` values.
+- Each role is one utility class in `index.css` (`.type-title`, `.type-hero`, `.type-number`, `.type-metric`, `.type-value`, `.type-section`, `.type-name`, `.type-body`, `.type-line`, `.type-label`, `.type-caption`). Components use these classes, not ad-hoc `text-[..]` values.
+- Round 7: the daily line is plain (not italic) in the secondary grey. The italic font file stays imported for any later use.
 
-### 7.3 Radii (concentric)
+### 7.3 Radii (round 7)
 
-Outer radius = inner radius + padding. Modules 28; controls inside a 16 px padded module 12; check circles full round; tab bar, top bar and Close buttons full round; sheets and expanded views 32 (top corners only on mobile, all corners ≥ 768 px). No other radius values. A radius that animates (10.3) is set as an inline `style` number, so Motion corrects it during the scale.
+Cards and the hero card 24; tick tiles, field cards and choice chips 20; controls inside a card 12; sheets and expanded views 32 (top corners only on a phone); pills, chips, check circles, the tab bar's centre button and Close buttons full round. A radius that animates (10.3) is set as an inline `style` number (`CARD_RADIUS` 24 → `VIEW_RADIUS` 32), so Motion corrects it.
 
-### 7.4 Materials
+### 7.4 Materials (round 7)
 
-- Content material (modules, chart card): `--hub-material` fill, 1 px inner rim `--hub-material-rim`, no `backdrop-filter`. Under `prefers-reduced-transparency`: 0.96 alpha.
-- Expanded material (expanded views): new token `--hub-material-solid: rgb(14 16 22 / 0.96)`, same rim, no `backdrop-filter`.
-- Overlay (behind an expanded view): new token `--hub-overlay: rgb(5 6 10 / 0.6)` plus `backdrop-filter: blur(12px)`. The overlay is a scrim, not glass. Under `prefers-reduced-transparency`: no blur, alpha 0.85.
-- Glass (tab bar, top bar, menus, sheets, the active pill, the Close button of an expanded view): the existing `glass` / `glass-thick` utilities. Glass never sits on glass. No glass on cards or expanded views.
-- The pointer `sheen` effect stays only on the tab bar pill.
+- Page: `--hub-bg-from` #F4F5F2.
+- Card: `surface-card`: white, no border, radius 24, shadow `--hub-shadow` (0 1px 2px rgb(15 30 20 / 0.04), 0 10px 30px rgb(15 30 20 / 0.06)). Modules, the chart card, stat cards, field cards and the Sign-off card use it.
+- Done card: `rim-positive`: the done tint `--hub-done-bg` #E6F7EC with a 1 px `--hub-done-rim` and the same shadow.
+- Hero card: `bg-hero`, the only gradient: `radial-gradient(120% 140% at 100% 100%, rgba(125,220,160,0.55) 0%, rgba(125,220,160,0) 48%), linear-gradient(135deg, #070908 0%, #0F3D24 100%)` with white text. Small text on it stays on the dark part; its one control is a white pill.
+- Expanded view: `surface-solid`, white with the raised shadow. Overlay: `--hub-overlay` (11 % to 28 % ink) plus a 6 px blur; under `prefers-reduced-transparency` no blur and a solid alpha.
+- Frosted white (`glass`): 92 % white + `blur(20px) saturate(160%)` + a hairline. Only the phone tab bar and the update toast. Menus and sheets (`glass-thick`, `glass-sheet`) are solid white with the raised shadow. The active pill (`glass-pill`) is solid brand green.
 - All colours are tokens in `src/index.css`. No colour literals in components.
 
 ### 7.5 Density
 
-- Max 8 distinct cards on Home (6 modules + chart + 1 notice).
-- First viewport at 390×844 (above the tab bar) shows: the header, the full Outreach module including the +1 DM button, and the top of row 2. Home total height at 390 px with `?sample=1` ≤ 1,600 px (round 6: the compact phone scale in 7.7; round 5 was 1,900). At 390×844 the header, the full Outreach module and both half modules of row 2 (Fitness, Learning) sit above the tab bar.
-- Max 4 ticks visible per module, max 2 insight lines per card, max 1 notice, max 1 prose sentence (the daily line).
+- Home holds: the DM counter, 4 pillar cards in one sideways row, 5 tick cards, the Sign-off card, the chart card and at most 1 notice.
+- First viewport at 390×844 (above the tab bar) shows: the header, the full DM counter with the "+" button and the daily line, the pillar row and the top of the first tick card. Home total height at 390 px with `?sample=1` is about 2,400 px or less (round 7).
+- Max 4 ticks visible per card, max 2 insights per chart card, max 1 notice, max 1 prose sentence (the daily line).
 
-### 7.6 Round 5: type floor, spacing and the field system
+### 7.6 Type floor, spacing and the field system
 
-- Type floor: body and list rows 16 / 24 (`.type-body`, `.type-name`), secondary text 14 / 20 (`.type-label`), captions 13 / 18 (`.type-caption`) only for chart axes and the reference legend. Headings use a 1.2 line height (section 20 / 24, title 28 / 34 → 32 / 38). Tight tracking only on numbers and titles. A script audit of every page and view at 390 px finds no readable text below 14 px outside captions.
-- Spacing: cards and modules use 20 px padding below 1024 px and 24 px from 1024 px (20 joins the token list for card padding only). Tick rows have 16 px between the check and the text. Each page has one title, then content; page subtitles that repeat the title are removed.
-- Fields (`src/components/shared/Field.tsx`): one system for every input, select, date, number and text area. A filled inset surface (`field-surface`, `--hub-field`) with a soft 1 px inner edge, no hard border, radius 12, 48 px tall, 16 px text, 16 px side padding, dark colour scheme. Label 13 px medium above with an 8 px gap; hint 13 px below; error in the danger colour with an icon. Focus: the global ring and a lighter fill, no layout shift. Selects are native (iOS picker) with a chevron; dates are native with the calendar icon. Text areas start at 2 lines and grow. Fields that save as you type show a quiet "Saved" tick after the blur. Short fields sit 2 per row from 380 px; the submit is a compact pill aligned right.
-- DM controls (`DmControls.tsx`): every screen that changes the DM count uses the same "+5" pill and round "+" button and the same "Adjust" ghost pill (−1 and the exact count). There is no full-width "+1 DM" bar anywhere.
-- Charts: every line or bar chart is the motion chart (`MotionChart`, `ProgressChart`, `MetricChart`) with 13 px axes. The target label is a legend line under the chart, never a pill on the bars.
+- Type floor: body and list rows 15 / 22 on a phone, 16 / 24 from 640 px; secondary text 13 / 18 on a phone (`.type-label`); captions 12 / 16 (`.type-caption`) only for chart axes, units, tab labels, cues and small pills. Tight tracking only on numbers and titles.
+- Spacing: cards use 16 px padding on a phone and 20 px from 640 px. Tick rows have 16 px between the check and the text. Sections on Today are 32 px apart.
+- Fields (`src/components/shared/Field.tsx`, round 7): one system for every input, select, date, number and text area. Each field is a white field card (`field-box`, radius 20, a hairline edge, 12 × 16 px padding) with the label (12–13 px, secondary grey) inside at the top and the value under it in 20 px semibold (text areas keep 16 px regular). Focus: a 3 px green ring (`--hub-focus`) on the whole card, no layout shift. An error shows a danger edge and a line with an icon below. A control outside a field card (a table cell) keeps a white 44 px surface with a hairline (`field-surface`). Selects are native with a chevron; dates are native. Fields that save as you type show a quiet "Saved" tick after the blur.
+- DM controls (`DmControls.tsx`): every screen that changes the DM count uses the same "+5" pill and round black "+" button and the same "Adjust" pill (−1 and the exact count).
+- Charts: every line or bar chart over time is the motion chart (`MotionChart`, `ProgressChart`, `MetricChart`) with 12–13 px axes, except the Outreach range bars (checklist 105) and the pillar sparklines. The target label is a legend line under the chart, never a pill on the bars.
 
 ### 7.7 Round 6: the phone fit (below 640 px only)
 
 The user said the phone view was too big and that the tab bar sat on the Safari toolbar. From 640 px up nothing changes.
 
-- Compact scale (`@media (max-width: 639px)` in `src/index.css`, token overrides only): body and list rows 15 / 22, secondary 13 / 18, captions 12 / 16 (chart axes, units, tab labels only), the daily line 15 / 22, section titles 17 / 22, page titles 26 / 30, module numbers 32 / 36 (−20 %), the Outreach number 52 / 52. Fields stay 16 px text, so iOS does not zoom.
+- Compact scale (`@media (max-width: 639px)` in `src/index.css`, token overrides only): body and list rows 15 / 22, secondary 13 / 18, captions 12 / 16 (chart axes, units, tab labels only), the daily line 15 / 22, section titles 17 / 22, page titles 26 / 30, module numbers 28 / 32, the hero number 44 / 48 at every width (round 7). Field values are 20 px, so iOS does not zoom.
 - Spacing on a phone: card padding 16 (`p-4 sm:p-5 lg:p-6`), grid gaps 12, section gaps 20 (`mb-5`, `gap-5`). The Today chart is 160 px tall on a phone (expanded 260).
 - Targets: tick rows stay 44 px or more. Fields are 44 px tall on a phone (48 from 640 px). Buttons look 40 px and chips 32 px, ghost pills 36 px, but `hit-area` grows each touch target to 44 × 44 px with a pseudo element.
-- Header on a phone: the date ("Thu 12 November") and the chips share the first line; the momentum chip shows a flame and one number, and its label holds all the words. The title and the daily line follow. Page headers with a date put it on the chip line the same way.
-- Tab bar (`AppShell` `TabBar`, `useBarVisible`, pure rule `nextBarState` in `src/lib/barScroll.ts`, tested): 56 px tall (4 px rim + 48 px items), icon 20 px plus a 12 px label, `env(safe-area-inset-bottom) + 8 px` from the bottom. It slides down out of view on a scroll down of 12 px or more and comes back on a scroll up, within 32 px of the top or the end, and on a new page. It never hides while a field or the bar has focus. Spring `SPRING`; reduced motion: instant. Content keeps `env(safe-area-inset-bottom) + 80 px` at the bottom.
-- Safari in a tab: the bar uses `position: fixed` with the safe area, so it sits in the layout viewport above Safari's toolbar, never under it; it hides on a scroll down, so Safari's own bars and the page get the room. In the home-screen app the page uses the full screen with `viewport-fit=cover`, and the top safe area pads the header (`pt-shell`).
-- Install offer (`src/lib/platform.ts`, tested; `src/pages/home/InstallHint.tsx`; `src/pwa/installPrompt.ts`): in iOS Safari in a tab, Today shows one glass card: "Install the app for full screen. Tap Share, then Add to Home Screen." with "Not now". "Not now" is kept in localStorage `l90-hub-install-hint` (try/catch) and focus moves to the page. Never in the home-screen app, on a desktop, in other iOS browsers or in in-app views. On Android Chrome, when `beforeinstallprompt` fires, Today shows an "Install the app" pill that opens the browser dialog.
-- Expanded views on a phone: the title is 17 / 22 semibold, the grabber and header padding are smaller, so content starts about 20 px sooner. Close (44 px, glass) and the swipe close stay.
+- Header on a phone (round 7): the wordmark on the left, the momentum chip and the profile button on the right, all on one line. The day, phase and level share the caption over the DM count.
+- Tab bar (round 7; `AppShell` `TabBar`, `useBarVisible`, pure rule `nextBarState` in `src/lib/barScroll.ts`, tested): frosted white, flush with the bottom edge, a hairline on top, the safe-area inset as bottom padding. Five slots: Today, Outreach, the raised round +1 DM button (60 px, brand green, a 4 px ring in the page colour, lifted 16 px), Progress, More. Items are 48 px tall with a 24 px icon and a 12 px label; the active item is dark and semibold, the others grey. It slides down out of view on a scroll down of 12 px or more and comes back on a scroll up, within 32 px of the top or the end, and on a new page. It never hides while a field or the bar has focus. Spring `SPRING`; reduced motion: instant. Content keeps `env(safe-area-inset-bottom) + 96 px` at the bottom.
+- Safari in a tab: the bar uses `position: fixed` at the bottom of the layout viewport, so it sits above Safari's toolbar, never under it; it hides on a scroll down, so Safari's own bars and the page get the room. In the home-screen app the page uses the full screen with `viewport-fit=cover`, and the top safe area pads the header (`pt-shell`).
+- Install offer (`src/lib/platform.ts`, tested; `src/pages/home/InstallHint.tsx`; `src/pwa/installPrompt.ts`): in iOS Safari in a tab, Today shows one white card: "Install the app for full screen. Tap Share, then Add to Home Screen." with "Not now". "Not now" is kept in localStorage `l90-hub-install-hint` (try/catch) and focus moves to the page. Never in the home-screen app, on a desktop, in other iOS browsers or in in-app views. On Android Chrome, when `beforeinstallprompt` fires, Today shows an "Install the app" pill that opens the browser dialog.
+- Expanded views on a phone: the title is 17 / 22 semibold, the grabber and header padding are smaller, so content starts about 20 px sooner. Close (44 px, a round chip) and the swipe close stay.
 
-## 8. Background and atmosphere
+## 8. Light theme, colour and contrast (round 7)
 
-- 8.1 The app must not ship the user's Instagram reference images (copyright).
-- 8.2 Default backdrop "Night city" (procedural, `src/lib/backdrop.ts` + one `<Backdrop/>` component, fixed, `z-index: -1`): base gradient `--hub-bg-from` → `--hub-bg-to`; skyline (`gotham.svg`, bottom 55 %, lit windows ≤ 6 %, desaturated); 14–18 bokeh discs from `bokehField(seed, w, h)` (pure, deterministic, tested; sodium, cold blue, tail-light red, white; radius 16–96, blur 24–64, opacity 0.06–0.22, weighted to the lower half); wet-ground reflection (last 12 %, opacity × 0.5); 2 fog gradients; no rain (round 3: removed with its setting; nothing replaces it, the backdrop is static); depth haze per skyline layer, soft bokeh with a faint core, and the window lights as thin streaks on the wet road; grain; top scrim `--hub-scrim-top` over the top 40 %. Layers 1–5 render once per viewport size to a cached canvas; the backdrop never repaints on scroll.
-- 8.3 Setting "Choose a background photo" (Setup → Appearance): file input `accept="image/*"`, downscale to 2,560 px long edge, Blob in IndexedDB (store `hub-media`, key `backdrop`), never localStorage, never uploaded. `filter: saturate(0.7) blur(2px)` + overlay alpha from `scrimAlpha(meanLuminance)` (pure, tested: clamp((L − 0.08) / L, 0.35, 0.85)). Buttons "Choose a photo", "Remove the photo". Live preview with one sample module.
-- 8.4 Contrast: body text and numbers ≥ 4.5:1, large text (≥ 24 px) and UI boundaries ≥ 3:1, against the module material composited over pure white. Unit test `contrast(text, composite(material, white)) ≥ 4.5`. The same test covers `--hub-material-solid`.
+- 8.1 No backdrop. The night-city canvas, the bokeh, the skyline asset, the background photo setting (Setup → Appearance), the glass lens (`useLens`) and the photo store code are removed. A photo that an older version stored in IndexedDB (`hub-media`) is left as it is and is not read; the hub record, `sanitizeState` and backups do not change. The app must not ship the user's Instagram reference images (copyright).
+- 8.2 Colour tokens (`src/index.css` `:root`, mapped to Tailwind colours in `@theme inline`): page `--hub-bg-from` #F4F5F2; card `--hub-surface` #FFFFFF; text `--hub-text` #111311; secondary `--hub-label` #5F6670 (passes 4.5:1); `--hub-label-strong` #3D434A; faint `--hub-faint` #A3A8AF only for large number tails such as "/20"; brand `--hub-brand` #0F3D24 (active pills, primary buttons, the centre tab button) with `--hub-on-brand` white; black button `--hub-black` #111311; success `--hub-success` #3DDC84 for bars, fills and rings with a dark green check (`--hub-on-success`); green text `--hub-positive` #14703D (slightly darker than the mockup's #177A43, so it passes 4.5:1 on the done pill); done tint `--hub-done-bg` #E6F7EC and pill `--hub-done-pill` #CFF3DC; partial `--hub-partial` #BDEFD0; chip `--hub-chip` #F1F2EF; track `--hub-track` #E7E9E4; hairline rgb(17 19 17 / 0.07); negative `--hub-negative` #E5484D with text `--hub-negative-text` #C2373C, only for trading down moves; secondary accent `--hub-accent` #5B6CFF (the learning sparkline and the ring gradient start) with text `--hub-accent-text` #4353E0; amber text `--hub-amber` #A15C07.
+- 8.3 Missed days are never red: the 90-day heatmap uses success green (signed off), pale green (partly done) and greys (missed, ahead); today has a brand-green outline.
+- 8.4 Contrast: body text, secondary text, green text, red text, blue text, amber text and danger text are ≥ 4.5:1 on a white card and on the page; text on the brand and on the black button ≥ 4.5:1; the check on the success fill ≥ 3:1. Unit test `src/lib/contrast.test.ts` reads the tokens from `src/index.css` and checks each pair. The faint colour stays below 4.5:1 and is never used for small text.
 
 ## 9. Motion system
 
@@ -315,14 +320,14 @@ The user said the phone view was too big and that the tab bar sat on the Safari 
 - The Today grid and its cells never have `layout`. Modules never animate position on a tick.
 - All Today cards sit in one `<LayoutGroup id="today">`; ids are `card-<id>`, `title-<id>`, `number-<id>`, `bar-<id>` with `<id>` from 10.1.
 - A shared text element is `display: inline-block; width: fit-content` so its aspect ratio stays the same and the scale does not stretch the text.
-- `border-radius` of a shared container is an inline `style` number (28 → 32), never a class only, so Motion corrects it.
+- `border-radius` of a shared container is an inline `style` number (24 → 32), never a class only, so Motion corrects it.
 - Content that is not shared never rides a scale: it fades out (`CONTENT_OUT`) before the container moves and fades in (`CONTENT_IN`) after.
 - Animate only `transform` and `opacity` (plus Motion's layout projection). Never animate `width`, `height`, `top` or `left` directly.
 
 ### 9.3 What moves, what never moves
 
 - Moves: check fill, number rolls, progress bars, the module glint, chart morphs, card ↔ expanded view, the overlay, sheets, the active tab pill.
-- Never moves: module positions and order, the page on a tick (no layout shift), text while it is read, the backdrop on scroll (no parallax), hover lifts on cards (no `CARD_HOVER`), anything on its own (no auto-play, no loops).
+- Never moves: module positions and order, the page on a tick (no layout shift), text while it is read, hover lifts on cards (no `CARD_HOVER`), anything on its own (no auto-play, no loops).
 
 ### 9.4 Number roll (built in-house with the free `motion` package)
 
@@ -366,7 +371,7 @@ Motion+ is a paid, licensed product (one-time purchase, private repo). The user 
 
 - The history chart is the existing chart in single mode with range 14, no controls, 120 px tall, with its `aria-label` and table (5.5).
 - The insight is the first item of `chartInsights` for `pillarMetric(id)` at range 30. No insight when none is true.
-- Inside an expanded view there is exactly one white filled button (Outreach: +1 DM; Sign-off: "Sign off the day" before the sign-off; others: none).
+- Inside an expanded view there is at most one filled button: the black "+" (Outreach) or the brand-green "Sign off the day" (Sign-off, before the sign-off); others: none.
 
 ### 10.2 The open target
 
@@ -376,10 +381,10 @@ Motion+ is a paid, licensed product (one-time purchase, private repo). The user 
 
 ### 10.3 Shared elements and the open/close sequence
 
-- Shared (`layoutId`): `card-<id>` (the surface: grid card ↔ expanded panel), `title-<id>` (pillar name; for the chart: the card title "Progress"), `number-<id>` (the big number; the chart card has none), `bar-<id>` (the progress bar; the chart card has none). No icon is shared: modules have no icon (4.3).
+- Shared (`layoutId`): `card-<id>` (the surface: grid card ↔ expanded panel), `title-<id>` (pillar name; for the chart: the card title "Progress"), `number-<id>` (the big number; the chart card has none), `bar-<id>` (the progress bar; the chart card has none). No icon is shared (the icon chip of a tick card fades with the other content). The Sign-off card shares only `card-signoff` and `title-signoff`; its ring is not shared.
 - The card's grid cell keeps its exact size while the view is open: the cell renders a placeholder with the card's measured height and the material at opacity 0. No other card moves.
-- Open (`EXPAND_OPEN`): frame 0 the overlay starts its fade (`OVERLAY_FADE`), the card's non-shared content fades out (`CONTENT_OUT`), the shared elements fly to their expanded positions, radius 28 → 32. From 120 ms the expanded content fades in (`CONTENT_IN`) and the ticks stagger in (`STAGGER`: opacity 0 → 1, y 8 → 0). The container reaches its target by 350 ms.
-- Close (`EXPAND_CLOSE`): expanded content fades out (`CONTENT_OUT`), the shared elements fly back, radius 32 → 28, the overlay fades out, the card's own content fades in. The container reaches the card by 300 ms. Then the placeholder is replaced by the real card (no flash).
+- Open (`EXPAND_OPEN`): frame 0 the overlay starts its fade (`OVERLAY_FADE`), the card's non-shared content fades out (`CONTENT_OUT`), the shared elements fly to their expanded positions, radius 24 → 32. From 120 ms the expanded content fades in (`CONTENT_IN`) and the ticks stagger in (`STAGGER`: opacity 0 → 1, y 8 → 0). The container reaches its target by 350 ms.
+- Close (`EXPAND_CLOSE`): expanded content fades out (`CONTENT_OUT`), the shared elements fly back, radius 32 → 24, the overlay fades out, the card's own content fades in. The container reaches the card by 300 ms. Then the placeholder is replaced by the real card (no flash).
 - The shared title and number change size (for example 40 → 64 px) through the layout scale, with 9.2's inline-block rule. The rendered font size switches at the start of the animation, not at the end.
 - Deep link or reload on an expanded route (no card rect to fly from, or the card is out of view): no shared flight; the panel fades in with `opacity 0 → 1` and `scale 0.98 → 1` in `EXPAND_OPEN`.
 
@@ -388,7 +393,7 @@ Motion+ is a paid, licensed product (one-time purchase, private repo). The user 
 - < 768 px: `position: fixed`, left 0, right 0, bottom 0, top = safe-area inset + 16 px; radius 32 on the top corners only; padding 16; bottom padding 24 + safe-area inset. It covers the tab bar.
 - ≥ 768 px: centred, width `min(720px, 100vw − 64px)`, max-height `calc(100dvh − 96px)`, radius 32, padding 32.
 - Order: grabber (mobile only, 48 × 4 px, `--hub-track`) → header row (shared title left, Close button right) → shared big number + unit → shared bar → ticks → quick actions → history chart → insight → page link.
-- Close button: 44 × 44 px, glass, full round, X icon, `aria-label="Close"`, top right, sticky (stays visible when the view scrolls).
+- Close button: 44 × 44 px, a round chip (`--hub-chip`), X icon, `aria-label="Close"`, top right, sticky (stays visible when the view scrolls).
 - The panel scrolls inside itself (`overflow-y: auto; overscroll-behavior: contain`). Nothing scrolls sideways at 360 px.
 - Layers: overlay `z-40`, expanded panel `z-50`. Only one expanded view at a time. A sheet opened from inside (Adjust) sits above it and closes first on Escape.
 
@@ -458,10 +463,10 @@ All of these close the view with the close sequence (10.3):
 ## 14. Home-screen app (PWA, round 4)
 
 - 14.1 Install: `vite-plugin-pwa` (generateSW, `registerType: 'prompt'`). The service worker precaches the app shell, every lazy page chunk, the Inter font files and the icons; navigation falls back to `index.html`. After the first load the app starts and works fully offline.
-- 14.2 Update: a new version never reloads by itself. A small glass toast above the tab bar says "A new version is ready." with the button "Reload the app" and a Close button.
-- 14.3 Manifest (`src/lib/manifest.ts`, validated by `manifestProblems`, tested): name "90-day hub", short_name "L90", `display: standalone`, `start_url: ./#/home`, `scope: ./`, portrait, `background_color` = `theme_color` = `--hub-bg-from` (#05060a), icons 64/192/512 and a maskable 512.
-- 14.4 Icon: `public/icon.svg`, a full-bleed night-glass tile (#0b0e15) with a geometric white "L90" mark and a short green progress bar under it; PNGs come from `@vite-pwa/assets-generator` (`pwa-assets.config.ts`): favicon.ico, 64/192/512, maskable 512, opaque 180 × 180 apple-touch-icon.
-- 14.5 iOS: `apple-mobile-web-app-capable`, `mobile-web-app-capable`, status bar `black-translucent`, title "L90", apple-touch-icon, `viewport-fit=cover`, theme-color. Safe-area insets pad the page top, the tab bar, expanded views, sheets and the update toast. `overscroll-behavior: none` on the root. Inputs are 16 px so iOS does not zoom. Pinch-zoom stays on.
+- 14.2 Update: a new version never reloads by itself. A small frosted white toast above the tab bar says "A new version is ready." with the button "Reload the app" and a Close button.
+- 14.3 Manifest (`src/lib/manifest.ts`, validated by `manifestProblems`, tested): name "90-day hub", short_name "L90", `display: standalone`, `start_url: ./#/home`, `scope: ./`, portrait, `background_color` = `theme_color` = `--hub-bg-from` (#f4f5f2, round 7), icons 64/192/512 and a maskable 512.
+- 14.4 Icon (unchanged in round 7): `public/icon.svg`, a full-bleed dark tile (#0b0e15) with a geometric white "L90" mark and a short green progress bar under it; PNGs come from `@vite-pwa/assets-generator` (`pwa-assets.config.ts`): favicon.ico, 64/192/512, maskable 512, opaque 180 × 180 apple-touch-icon.
+- 14.5 iOS: `apple-mobile-web-app-capable`, `mobile-web-app-capable`, status bar `default` (round 7: dark status bar text on the light page), `<meta name="theme-color" content="#f4f5f2">`, title "L90", apple-touch-icon, `viewport-fit=cover`, theme-color. Safe-area insets pad the page top, the tab bar, expanded views, sheets and the update toast. `overscroll-behavior: none` on the root. Inputs are 16 px so iOS does not zoom. Pinch-zoom stays on.
 - 14.6 Data: after the first tap the app asks for persistent storage one time (`requestPersistentStorage`, tested). Setup → Backup says: "The app on the home screen keeps its own data. Load a backup to move data from Safari."
 - 14.7 Base: Vite `base: './'`, so the build runs from any host path.
 - 14.8 Install offer (round 6): see 7.7. iOS Safari in a tab gets a one-time hint card; Android Chrome gets an "Install the app" pill after `beforeinstallprompt`; standalone and desktop get nothing.
@@ -470,15 +475,15 @@ All of these close the view with the close sequence (10.3):
 
 Navigation and structure
 1. `docs/ux-spec.md` exists and no other doc contradicts it.
-2. The tab bar and top bar each show exactly: Today, Outreach, Progress, More (+ the +1 DM button on desktop).
+2. The phone tab bar shows exactly: Today, Outreach, the raised +1 DM button, Progress, More. From 1024 px the sidebar shows Today, Outreach, Progress and the 5 More pages (+ the +1 DM button on pages without DM controls).
 3. The More menu lists Learning, Fitness, Trading, Method, Setup and nothing else.
 4. `#/calendar` opens Progress → Days.
-5. Today shows 6 pillar modules in this order: Outreach, Fitness, Learning, Reading, Trading, Sign-off.
-6. At 390 px Outreach and Sign-off span 2 columns; the other 4 modules are 2 per row.
-7. At 1280 px Outreach spans 2 rows on the left and the chart sits beside Sign-off.
+5. Today shows, in this order: the header, the DM counter, "My pillars" (Fitness, Learning, Reading, Trading cards), "Today's ticks" (Outreach, Fitness, Learning, Reading, Trading), the Sign-off card and the chart card.
+6. At 390 px the tick cards are one column and the pillar cards scroll sideways inside their row; the page does not scroll sideways.
+7. At 1280 px the sidebar is on the left, the pillar cards sit in 4 columns and the tick cards in 3 columns.
 
 Modules and ticks
-8. Each module shows a name, one big number, a ratio and a progress bar.
+8. Each tick card shows an icon chip, a name, one number, a ratio (or "Done") and a progress bar; each pillar card shows a metric, a change line or a calm empty line, and a sparkline.
 9. Each module shows only the ticks of its pillar for today.
 10. `pillarOfTask` returns the results in 3.3 for all 11 default lines (unit test passes).
 11. `splitTask` returns the cue/action pairs of 3.4 (unit test passes).
@@ -487,7 +492,7 @@ Modules and ticks
 14. The "Gym attended" row no longer exists.
 15. Done ticks have no strike-through.
 16. Exactly 1 row on Today has the "Next" marker.
-17. Exactly 1 white filled button is visible on the top layer at any time (Today grid, or the open expanded view).
+17. Filled buttons are limited: the black "+" for +1 DM, the brand-green main act of a card or view (Sign off, Continue, Start), and the tab bar's centre button.
 18. −1 DM and the exact count are behind "Adjust" in the Outreach expanded view, not on Home.
 19. A module with no tasks today shows its empty line and no tick list.
 20. Modules do not move, resize or reorder when a tick changes or when another card opens.
@@ -509,28 +514,28 @@ Reward and sign-off
 32. No screen shows a red 0, "failed", "lost" or "broke".
 33. "Sign off the day" opens `#/home/signoff` with 3 numbers rolling from 0 (80 ms apart), 1 true highlight and tomorrow's first task; `SignOffSheet` no longer exists.
 
-Layout, materials, backdrop
+Layout, materials, colour
 34. All spacing values in changed files come from 4/8/12/16/24/32/48/64 (no arbitrary px utilities).
-35. Only the radii 12, 28, 32 and full round exist in changed components.
-36. Modules, the chart card and expanded views have no `backdrop-filter`; only the overlay and glass controls have one.
-37. Glass appears only on the tab bar, top bar, menus, sheets, the active pill and the Close button of an expanded view.
-38. The backdrop shows skyline, bokeh and fog at 390 px and 1280 px; it is static and does not move on scroll.
-39. There is no rain: no rain layer, no rain setting, no rain code.
-40. `bokehField` is deterministic for one seed (test passes).
-41. Setup → Appearance lets the user choose a photo; it is stored in IndexedDB and survives a reload; "Remove the photo" restores Night city.
-42. `scrimAlpha` and the contrast test pass for `--hub-material` and `--hub-material-solid` (≥ 4.5:1 over white).
+35. Only the radii 12, 20, 24, 32 and full round exist in changed components.
+36. Cards and expanded views have no `backdrop-filter`; only the overlay, the tab bar and the update toast have one.
+37. Frosted white appears only on the phone tab bar and the update toast; every content surface is a white card on #F4F5F2.
+38. There is no backdrop canvas, no backdrop asset and no glass lens code in the app.
+39. The only gradient is the Outreach hero card (and the soft chart and sparkline fills).
+40. `pillarCards` gives a calm empty state with no data, and only a trading loss is negative (test passes).
+41. Setup has no Appearance tab; `#/setup/appearance` falls back to the first Setup tab; the stored hub record and backups are unchanged.
+42. `contrast.test.ts` passes: every small text colour ≥ 4.5:1 on white and on the page, green text ≥ 4.5:1 on the done tint and pill.
 
 Accessibility, copy, build
 43. Every interactive element on Today, Progress and every expanded view is ≥ 44 × 44 px.
 44. Every control shows a visible focus ring; Today and every expanded view work with the keyboard alone.
 45. No page and no expanded view scrolls sideways at 360 px.
-46. Home height at 390 px with `?sample=1` is ≤ 1,600 px (round 6).
+46. Home height at 390 px with `?sample=1` is about 2,400 px or less (round 7 adds the pillar row and gives each tick card its own row).
 47. All new UI copy is STE: ≤ 20 words per sentence, active voice, instructions start with a verb.
 48. `npm run build`, `npm test` and the linter pass with no new warnings.
 
 Typography (new)
 49. `src/index.css` imports `@fontsource-variable/inter/opsz.css` and `@fontsource-variable/inter/opsz-italic.css` and no other font file; `package.json` has no `@fontsource-variable/cormorant` or `@fontsource-variable/outfit`.
-50. `--font-sans` starts with "Inter Variable"; `--font-display` and the Cormorant font no longer exist; the daily line renders in Inter italic.
+50. `--font-sans` starts with "Inter Variable"; `--font-display` and the Cormorant font no longer exist; the daily line renders in plain Inter in the secondary grey.
 51. The type roles in 7.2 exist as `.type-*` classes with the listed sizes, weights and tracking at 390 px and 1280 px; no text is smaller than 13 px.
 52. Every changing number uses `.num` (tabular figures); a number change does not shift the width of the text next to it.
 
@@ -549,7 +554,7 @@ Expandable cards (new)
 62. Each expanded view holds the content listed in 10.1 for its id.
 63. During open and close, the container, title, number and bar fly between card and view (shared `layoutId`); non-shared content fades and is never visibly stretched.
 64. While a view is open, its grid cell keeps its size and no other card moves.
-65. The overlay dims and blurs the page behind; under `prefers-reduced-transparency` it has no blur.
+65. The overlay dims the page behind with a light blur; under `prefers-reduced-transparency` it has no blur.
 66. The Close button, Escape, a tap on the overlay, swipe down (< 768 px, > 120 px or > 600 px/s) and browser Back each close the view.
 67. A short swipe (< 120 px, slow) returns the panel; the tick list still scrolls with a finger.
 68. Each view has its route from 10.1; reload on that route shows the view (fade-in); `#/home/foo` shows Today with no view.
@@ -563,10 +568,10 @@ Expandable cards (new)
 
 Round 3 (user feedback)
 76. `isModuleComplete` and `allModulesComplete` in `src/lib/moduleView.ts` are pure and tested (ticks; Outreach target; Sign-off sign-off).
-77. A done module shows a green rim, a green number and bar, and "Done" with a check; the expanded view header shows the same; the change animates once (< 400 ms) or fades under reduced motion.
+77. A done tick card turns the pale done green with a green rim, a green number, and a "Done" pill with a check; the expanded view header shows the green number; the change animates once (< 400 ms) or fades under reduced motion.
 78. When every module is done, Today shows one calm green line with a check icon.
-79. Today has no full-width +1 DM bar: Outreach has a round 44 px "+" ("Add 1 DM", the one primary) and a small "+5" pill ("Add 5 DMs"); "Adjust" is only in the Outreach view.
-80. "+1 check" and "Sign off" are small pills; the chart card has no "Open full view" button (its "Progress" title opens the view, with a chevron); level and phase share one chip.
+79. Today has no full-width +1 DM bar: the DM counter has a round black 52 px "+" ("Add 1 DM") and a "+5" pill ("Add 5 DMs"); "Adjust" is in the Outreach view and on the Outreach page.
+80. "+1 check" and "Sign off" are pills; the chart card has no "Open full view" button (its "Progress" title opens the view, with a chevron); day, phase and level share the caption line over the DM count.
 81. Numbers, titles, labels and body follow one weight system (600 / 600 / 500 / 400); no light or bold text.
 82. Round 3: Home height at 390 px was lower than in round 2 (1,726 px). Round 5 raises it with the type floor (item 46).
 
@@ -580,10 +585,10 @@ Round 4 (home-screen app)
 89. `vite.config.ts` uses `base: './'`; the built app loads its chunks, fonts and service worker from a subpath.
 
 Round 5 (polish)
-90. Every input, select, date, number and text area uses the shared field system (7.6); no page has its own input styling.
+90. Every input, select, date, number and text area uses the shared field system (7.6): a white field card with the label inside and a green focus ring; no page has its own input styling (the onboarding DM stepper is the one large exception).
 91. No screen shows a full-width "+1 DM" bar; "+5" and the round "+" are the same everywhere; "Adjust" is a ghost pill with an icon and a 44 px target.
 92. A font-size audit of every page and view at 390 px finds no text below 14 px outside captions and chart axes.
-93. Cards and modules use 20 px padding below 1024 px and 24 px from 1024 px; tick rows keep 16 px between the check and the text.
+93. Cards use 16 px padding on a phone and 20 px from 640 px; tick rows keep 16 px between the check and the text.
 94. Every line or bar chart on every page is the motion chart; the target label is a legend line under the chart.
 95. Each page shows one title, then content (no subtitle that repeats the title).
 
@@ -591,8 +596,16 @@ Round 6 (phone fit)
 96. Below 640 px the compact scale in 7.7 applies; from 640 px up every size is as in round 5.
 97. A font-size audit of every page, tab and expanded view at 390 px finds no text below 13 px outside captions, and no caption below 12 px.
 98. Fields are 44 px tall with 16 px text on a phone; every button, chip, pill and tick row has a 44 × 44 px touch target.
-99. Home at 375, 390 and 430 px with `?sample=1` is about 1,600 px or less; at 390×844 Outreach, Fitness and Learning are fully above the tab bar.
-100. The phone tab bar is 56 px tall, 8 px above the safe area; it hides on a scroll down, shows on a scroll up, at the top, at the end and on a new page, and never hides while a field has focus. Reduced motion: no slide.
-101. On the phone header the date and the chips share one line, with no truncation at 375 px.
+99. Home at 375, 390 and 430 px with `?sample=1` is about 2,400 px or less; at 390×844 the header, the DM counter and the pillar row sit above the tab bar.
+100. The phone tab bar is frosted white, flush with the bottom with the safe area as padding, with the raised centre +1 DM button; it hides on a scroll down, shows on a scroll up, at the top, at the end and on a new page, and never hides while a field has focus. Reduced motion: no slide.
+101. On the phone header the wordmark, the momentum chip and the profile button share one line, with no truncation at 375 px.
 102. iOS Safari in a tab shows the install hint one time; "Not now" keeps it closed (`l90-hub-install-hint`). The home-screen app, a desktop and Android without the prompt event show nothing; Android with the event shows "Install the app".
 103. Expanded views on a phone have the smaller header and keep Close and the swipe close.
+
+Round 7 (light fintech)
+104. The page is #F4F5F2, cards are white with the soft shadow and no border; `index.html` has `theme-color` #f4f5f2, the status bar style `default` and no `dark` class; the manifest colours are #f4f5f2 (test passes).
+105. Outreach shows the back button and the centred title on a phone, the gradient hero card, a Week | Month | 90 days pill control (active pill brand green), rounded green bars in front of pale target bars with a dashed "20 target" line, and the funnel rows Sent, Replies, Calls, Clients with % pills (`outreachBars` and `funnelSummary` tests pass).
+106. Progress shows the metric pills, the green area chart with the crosshair dot and tooltip, insight tiles in 2 columns, and the 90-day heatmap of small rounded squares (15 a row, today outlined, no red) with a link to the Days tab.
+107. Fitness shows the ring gauge (blue into green) for the week, the week chips, the "Gym attended today" switch (`role="switch"`, adds or removes a session of today), the 13-week history chips, the totals and the daily heatmap.
+108. Onboarding shows a back button, "Step N of M", a thin brand-green progress bar, one big title, the DM target stepper, the gym-day chips, a review list where each row opens its step, and a full-width brand-green button ("Continue", then "Start day 1"). The logic in `src/lib/onboarding.ts` is unchanged.
+109. Learning, Fitness, Trading, Method and Setup show a back button and a centred title below 1024 px.

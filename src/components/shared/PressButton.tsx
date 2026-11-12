@@ -2,17 +2,19 @@ import { type HTMLMotionProps, motion } from 'motion/react';
 import { BUTTON_TAP } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
-export type ButtonTone = 'primary' | 'secondary' | 'soft' | 'ghost' | 'danger';
+export type ButtonTone = 'primary' | 'black' | 'secondary' | 'soft' | 'ghost' | 'danger';
 
 /**
- * primary   : the one white filled button of a view.
- * secondary : a light fill with a hairline rim. Not glass: glass is for the navigation layer.
+ * primary   : the one brand-green filled button of a view.
+ * black     : the round "+" beside the DM count.
+ * secondary : the chip fill.
  * soft      : a quiet fill inside a module.
  * ghost     : text only.
  */
 const TONES: Readonly<Record<ButtonTone, string>> = {
-  primary: 'bg-grad-primary text-hub-ink glow-primary',
-  secondary: 'bg-hub-track text-hub-text rim-hairline hover:bg-hub-glass-edge',
+  primary: 'bg-hub-brand text-hub-on-brand hover:bg-hub-primary-end',
+  black: 'bg-hub-black text-hub-on-black',
+  secondary: 'bg-hub-chip text-hub-text hover:bg-hub-track',
   soft: 'surface-inset text-hub-text hover:bg-hub-track',
   ghost: 'bg-transparent text-hub-text hover:bg-hub-inset',
   danger: 'surface-inset text-hub-danger hover:bg-hub-track',

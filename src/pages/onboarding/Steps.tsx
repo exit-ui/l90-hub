@@ -1,14 +1,20 @@
-import { type ReactNode, useState } from 'react';
+import { Minus, Plus } from 'lucide-react';
+import { motion } from 'motion/react';
+import { type ReactNode, useId, useState } from 'react';
 import { Notice } from '@/components/shared/Notice';
 import { PressButton } from '@/components/shared/PressButton';
 import { TextField } from '@/components/shared/Field';
 import { currentBook } from '@/lib/books';
 import { dayNumber, formatShort } from '@/lib/dates';
 import { FUNNEL_INPUTS } from '@/lib/funnel';
-import { plural } from '@/lib/format';
+import { formatInteger, plural } from '@/lib/format';
+import { BUTTON_TAP } from '@/lib/motion';
+import { MISSION_DAYS } from '@/lib/phases';
+import { cn } from '@/lib/utils';
 import {
   type Draft,
   pastDates,
+  type OnboardingStep,
   type ReviewSummary,
   type ScalarDraftKey,
   type StepErrors,
@@ -36,6 +42,128 @@ function Intro({ children }: { children: ReactNode }) {
   return <p className="type-body text-hub-label">{children}</p>;
 }
 
+function wholeNumber(text: string): number | null {
+  const value = Number(text.trim());
+  return text.trim() !== '' && Number.isInteger(value) ? value : null;
+}
+
+/** A big stepper: a round "−", the number (it is also a field) and a round "+". */
+function Stepper({
+  label,
+  unit,
+  value,
+  min,
+  max,
+  error,
+  onChange,
+}: {
+  label: string;
+  unit: string;
+  value: string;
+  min: number;
+  max: number;
+  error?: string;
+  onChange: (value: string) => void;
+}) {
+  const id = useId();
+  const current = wholeNumber(value);
+  const step = (amount: number) => onChange(String(Math.min(max, Math.max(min, (current ?? min) + amount))));
+  return (
+    <div className="grid gap-2">
+      <label className="type-label px-4 text-hub-label" htmlFor={id}>
+        {label}
+      </label>
+      <div className="surface-card flex items-center justify-between gap-3 px-4 py-6">
+        <motion.button
+          aria-label={`Decrease the ${label.toLowerCase()}`}
+          className="flex size-14 shrink-0 cursor-pointer items-center justify-center rounded-full bg-hub-chip text-hub-text disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={current !== null && current <= min}
+          onClick={() => step(-1)}
+          type="button"
+          whileTap={BUTTON_TAP}
+        >
+          <Minus aria-hidden="true" className="size-5" />
+        </motion.button>
+        <div className="min-w-0 text-center">
+          <input
+            aria-invalid={error ? true : undefined}
+            className="type-hero num w-full min-w-0 rounded-control bg-transparent text-center text-hub-text"
+            id={id}
+            inputMode="numeric"
+            onChange={(event) => onChange(event.target.value)}
+            value={value}
+          />
+          <p aria-hidden="true" className="type-label text-hub-label">
+            {unit}
+          </p>
+        </div>
+        <motion.button
+          aria-label={`Increase the ${label.toLowerCase()}`}
+          className="flex size-14 shrink-0 cursor-pointer items-center justify-center rounded-full bg-hub-black text-hub-on-black disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={current !== null && current >= max}
+          onClick={() => step(1)}
+          type="button"
+          whileTap={BUTTON_TAP}
+        >
+          <Plus aria-hidden="true" className="size-5" />
+        </motion.button>
+      </div>
+      {error ? (
+        <p className="type-label px-4 text-hub-danger" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** A row of number chips, one choice. The chosen chip is brand green. */
+function ChoiceChips({
+  label,
+  options,
+  value,
+  error,
+  onChange,
+}: {
+  label: string;
+  options: readonly number[];
+  value: string;
+  error?: string;
+  onChange: (value: string) => void;
+}) {
+  const current = wholeNumber(value);
+  return (
+    <div className="grid gap-2">
+      <p className="type-label text-hub-label">{label}</p>
+      <div aria-label={label} className="grid grid-chips gap-2" role="group">
+        {options.map((option) => {
+          const selected = option === current;
+          return (
+            <motion.button
+              aria-pressed={selected}
+              className={cn(
+                'type-metric num h-16 cursor-pointer rounded-tile transition-colors',
+                selected ? 'bg-hub-brand text-hub-on-brand' : 'bg-hub-surface text-hub-text rim-hairline hover:bg-hub-inset',
+              )}
+              key={option}
+              onClick={() => onChange(String(option))}
+              type="button"
+              whileTap={BUTTON_TAP}
+            >
+              {option}
+            </motion.button>
+          );
+        })}
+      </div>
+      {error ? (
+        <p className="type-label px-4 text-hub-danger" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function MissionStep({ draft, errors, actions }: StepProps) {
   return (
     <div className="grid gap-4">
@@ -48,17 +176,20 @@ export function MissionStep({ draft, errors, actions }: StepProps) {
         type="date"
         value={draft.startDate}
       />
-      <TextField
+      <Stepper
         error={errors.dmTarget}
-        hint="The number of DMs that you send each day."
-        inputMode="numeric"
         label="Daily DM target"
+        max={500}
         min={1}
         onChange={(value) => actions.setScalar('dmTarget', value)}
-        step={1}
-        type="number"
+        unit="DMs a day"
         value={draft.dmTarget}
       />
+      {wholeNumber(draft.dmTarget) !== null ? (
+        <p className="type-label px-4 text-hub-label">
+          {`That is ${formatInteger((wholeNumber(draft.dmTarget) ?? 0) * MISSION_DAYS)} DMs over ${MISSION_DAYS} days.`}
+        </p>
+      ) : null}
       <TextField
         error={errors.baseContacted}
         hint="Count all the DMs that you sent before the hub. The hub adds the new DMs to this number."
@@ -77,19 +208,19 @@ export function MissionStep({ draft, errors, actions }: StepProps) {
 export function TargetsStep({ draft, errors, actions }: StepProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Intro>Enter the targets for the side quests. You can change them later in Setup.</Intro>
-      <span className="hidden sm:block" />
-      <TextField
-        error={errors.fitTarget}
-        hint="The number of gym sessions in each week."
-        inputMode="numeric"
-        label="Gym sessions each week"
-        min={1}
-        onChange={(value) => actions.setScalar('fitTarget', value)}
-        step={1}
-        type="number"
-        value={draft.fitTarget}
-      />
+      <div className="grid gap-4 sm:col-span-2">
+        <Intro>Enter the targets for the side quests. You can change them later in Setup.</Intro>
+        <ChoiceChips
+          error={errors.fitTarget}
+          label="Gym days each week"
+          onChange={(value) => actions.setScalar('fitTarget', value)}
+          options={[1, 2, 3, 4, 5, 6, 7]}
+          value={draft.fitTarget}
+        />
+        <p className="surface-inset type-label p-4 text-hub-label">
+          Pick a number that you can keep on a busy week. Missed days do not reset anything.
+        </p>
+      </div>
       <TextField
         error={errors.learnTarget}
         hint="The number of Linux and Python sessions in each week."
@@ -290,31 +421,40 @@ export function RewardsStep({ draft, actions }: StepProps) {
 interface ReviewStepProps {
   summary: ReviewSummary;
   day: number;
+  /** Opens the step of a row, so the user can change the answer. */
+  onEdit: (step: OnboardingStep) => void;
 }
 
-export function ReviewStep({ summary, day }: ReviewStepProps) {
+export function ReviewStep({ summary, day, onEdit }: ReviewStepProps) {
   const { state, contacted, daysPast, daysWithDms, warnings } = summary;
   const missed = daysPast - daysWithDms;
-  const rows: { label: string; value: string }[] = [
-    { label: 'Mission day today', value: String(day) },
-    { label: 'Creators contacted', value: String(contacted) },
-    { label: 'Daily DM target', value: String(state.dmTarget) },
-    { label: 'Gym sessions each week', value: String(state.fitTarget) },
-    { label: 'Learning sessions each week', value: String(state.learnTarget) },
-    { label: 'Replies', value: String(state.funnel.replied) },
-    { label: 'Booked calls', value: String(state.funnel.booked) },
+  const rows: { label: string; value: string; step: OnboardingStep }[] = [
+    { label: 'Mission day today', value: String(day), step: 'mission' },
+    { label: 'Creators contacted', value: formatInteger(contacted), step: 'mission' },
+    { label: 'Daily DM target', value: String(state.dmTarget), step: 'mission' },
+    { label: 'Gym days each week', value: String(state.fitTarget), step: 'targets' },
+    { label: 'Learning sessions each week', value: String(state.learnTarget), step: 'targets' },
+    { label: 'Replies', value: String(state.funnel.replied), step: 'funnel' },
+    { label: 'Booked calls', value: String(state.funnel.booked), step: 'funnel' },
   ];
   return (
     <div className="grid gap-4">
-      <Intro>Check the numbers. Go back to correct a number. Then start the hub.</Intro>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
+      <Intro>Check your answers. Tap a row to change it.</Intro>
+      <ul className="surface-card px-4">
         {rows.map((row) => (
-          <div className="min-w-0" key={row.label}>
-            <dt className="type-label text-hub-label">{row.label}</dt>
-            <dd className="mt-1 type-section font-semibold text-hub-text num">{row.value}</dd>
-          </div>
+          <li className="border-b border-hub-hairline last:border-b-0" key={row.label}>
+            <button
+              aria-label={`${row.label}: ${row.value}. Change it.`}
+              className="flex min-h-13 w-full cursor-pointer items-center justify-between gap-3 text-left"
+              onClick={() => onEdit(row.step)}
+              type="button"
+            >
+              <span className="type-body text-hub-label">{row.label}</span>
+              <span className="type-body num font-semibold text-hub-text">{row.value}</span>
+            </button>
+          </li>
         ))}
-      </dl>
+      </ul>
       {daysPast > 0 ? (
         <Notice kind="NOTE">
           {`You sent DMs on ${daysWithDms} of ${daysPast} past ${plural(daysPast, 'day', 'days')}. ${
