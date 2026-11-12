@@ -365,3 +365,21 @@ export function momentumText(value: Momentum): MomentumText {
     recover: false,
   };
 }
+
+export interface MomentumShort {
+  /** The few characters on the phone chip. */
+  text: string;
+  /** The full words for a screen reader. */
+  label: string;
+  recover: boolean;
+}
+
+/** The phone chip (round 6): the days on target as one number, or "Start". The label holds all the words. */
+export function momentumShort(value: Momentum): MomentumShort {
+  const full = momentumText(value);
+  const label = `${full.detail ? `${full.lead}, ${full.detail.toLowerCase()}` : full.lead}. Open Progress.`;
+  if (value.daysOnTarget <= 0) {
+    return { text: 'Start', label, recover: false };
+  }
+  return { text: String(value.daysOnTarget), label, recover: full.recover };
+}

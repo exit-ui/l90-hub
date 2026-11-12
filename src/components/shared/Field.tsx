@@ -15,10 +15,10 @@ import { FADE } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
 /**
- * The field system (spec 7.6): a filled inset surface with a soft inner edge, 48 px tall,
+ * The field system (spec 7.6, 7.7): a filled inset surface with a soft inner edge, 44 px tall on a phone and 48 px from 640 px,
  * 16 px text (no zoom on iOS), 16 px side padding, radius 12. The focus ring is the global one.
  */
-export const FIELD_CLASS = 'field-surface h-12 w-full min-w-0 px-4';
+export const FIELD_CLASS = 'field-surface h-11 w-full min-w-0 px-4 sm:h-12';
 export const TEXTAREA_CLASS = 'field-surface block w-full min-w-0 resize-none px-4 py-3';
 /** Kept for older call sites: the same as FIELD_CLASS. */
 export const CONTROL_CLASS = FIELD_CLASS;

@@ -29,7 +29,7 @@ export function StatCard({ label, value, detail, chart, href, className }: StatC
       {chart ? <div className="mt-auto pt-4">{chart}</div> : null}
     </div>
   );
-  const shell = cn('surface-card block min-w-0 p-5 lg:p-6', className);
+  const shell = cn('surface-card block min-w-0 p-4 sm:p-5 lg:p-6', className);
   if (href) {
     return (
       <a className={cn(shell, 'press no-underline')} href={href}>

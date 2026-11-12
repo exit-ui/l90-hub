@@ -24,7 +24,7 @@ interface PressButtonProps extends HTMLMotionProps<'button'> {
   iconOnly?: boolean;
 }
 
-/** A capsule button with a 44px touch target. It scales to 96 % on press, in 100 ms. */
+/** A capsule button: 40 px on a phone, 44 px from 640 px, always a 44 px touch target. It scales to 96 % on press, in 100 ms. */
 export function PressButton({
   tone = 'soft',
   iconOnly = false,
@@ -36,8 +36,8 @@ export function PressButton({
   return (
     <motion.button
       className={cn(
-        'tap inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full type-body font-semibold whitespace-nowrap transition-colors select-none disabled:cursor-not-allowed disabled:opacity-40',
-        iconOnly ? 'size-11 p-0' : 'px-4',
+        'hit-area inline-flex min-h-10 min-w-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full type-body sm:min-h-11 sm:min-w-11 font-semibold whitespace-nowrap transition-colors select-none disabled:cursor-not-allowed disabled:opacity-40',
+        iconOnly ? 'size-10 p-0 sm:size-11' : 'px-4',
         TONES[tone],
         className,
       )}

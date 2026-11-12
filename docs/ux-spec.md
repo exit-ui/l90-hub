@@ -251,7 +251,7 @@ Outer radius = inner radius + padding. Modules 28; controls inside a 16 px padde
 ### 7.5 Density
 
 - Max 8 distinct cards on Home (6 modules + chart + 1 notice).
-- First viewport at 390×844 (above the tab bar) shows: the header, the full Outreach module including the +1 DM button, and the top of row 2. Home total height at 390 px with `?sample=1` ≤ 1,900 px (round 5: raised from 1,800 for the 16 px body floor and 20 px card padding).
+- First viewport at 390×844 (above the tab bar) shows: the header, the full Outreach module including the +1 DM button, and the top of row 2. Home total height at 390 px with `?sample=1` ≤ 1,600 px (round 6: the compact phone scale in 7.7; round 5 was 1,900). At 390×844 the header, the full Outreach module and both half modules of row 2 (Fitness, Learning) sit above the tab bar.
 - Max 4 ticks visible per module, max 2 insight lines per card, max 1 notice, max 1 prose sentence (the daily line).
 
 ### 7.6 Round 5: type floor, spacing and the field system
@@ -261,6 +261,19 @@ Outer radius = inner radius + padding. Modules 28; controls inside a 16 px padde
 - Fields (`src/components/shared/Field.tsx`): one system for every input, select, date, number and text area. A filled inset surface (`field-surface`, `--hub-field`) with a soft 1 px inner edge, no hard border, radius 12, 48 px tall, 16 px text, 16 px side padding, dark colour scheme. Label 13 px medium above with an 8 px gap; hint 13 px below; error in the danger colour with an icon. Focus: the global ring and a lighter fill, no layout shift. Selects are native (iOS picker) with a chevron; dates are native with the calendar icon. Text areas start at 2 lines and grow. Fields that save as you type show a quiet "Saved" tick after the blur. Short fields sit 2 per row from 380 px; the submit is a compact pill aligned right.
 - DM controls (`DmControls.tsx`): every screen that changes the DM count uses the same "+5" pill and round "+" button and the same "Adjust" ghost pill (−1 and the exact count). There is no full-width "+1 DM" bar anywhere.
 - Charts: every line or bar chart is the motion chart (`MotionChart`, `ProgressChart`, `MetricChart`) with 13 px axes. The target label is a legend line under the chart, never a pill on the bars.
+
+### 7.7 Round 6: the phone fit (below 640 px only)
+
+The user said the phone view was too big and that the tab bar sat on the Safari toolbar. From 640 px up nothing changes.
+
+- Compact scale (`@media (max-width: 639px)` in `src/index.css`, token overrides only): body and list rows 15 / 22, secondary 13 / 18, captions 12 / 16 (chart axes, units, tab labels only), the daily line 15 / 22, section titles 17 / 22, page titles 26 / 30, module numbers 32 / 36 (−20 %), the Outreach number 52 / 52. Fields stay 16 px text, so iOS does not zoom.
+- Spacing on a phone: card padding 16 (`p-4 sm:p-5 lg:p-6`), grid gaps 12, section gaps 20 (`mb-5`, `gap-5`). The Today chart is 160 px tall on a phone (expanded 260).
+- Targets: tick rows stay 44 px or more. Fields are 44 px tall on a phone (48 from 640 px). Buttons look 40 px and chips 32 px, ghost pills 36 px, but `hit-area` grows each touch target to 44 × 44 px with a pseudo element.
+- Header on a phone: the date ("Thu 12 November") and the chips share the first line; the momentum chip shows a flame and one number, and its label holds all the words. The title and the daily line follow. Page headers with a date put it on the chip line the same way.
+- Tab bar (`AppShell` `TabBar`, `useBarVisible`, pure rule `nextBarState` in `src/lib/barScroll.ts`, tested): 56 px tall (4 px rim + 48 px items), icon 20 px plus a 12 px label, `env(safe-area-inset-bottom) + 8 px` from the bottom. It slides down out of view on a scroll down of 12 px or more and comes back on a scroll up, within 32 px of the top or the end, and on a new page. It never hides while a field or the bar has focus. Spring `SPRING`; reduced motion: instant. Content keeps `env(safe-area-inset-bottom) + 80 px` at the bottom.
+- Safari in a tab: the bar uses `position: fixed` with the safe area, so it sits in the layout viewport above Safari's toolbar, never under it; it hides on a scroll down, so Safari's own bars and the page get the room. In the home-screen app the page uses the full screen with `viewport-fit=cover`, and the top safe area pads the header (`pt-shell`).
+- Install offer (`src/lib/platform.ts`, tested; `src/pages/home/InstallHint.tsx`; `src/pwa/installPrompt.ts`): in iOS Safari in a tab, Today shows one glass card: "Install the app for full screen. Tap Share, then Add to Home Screen." with "Not now". "Not now" is kept in localStorage `l90-hub-install-hint` (try/catch) and focus moves to the page. Never in the home-screen app, on a desktop, in other iOS browsers or in in-app views. On Android Chrome, when `beforeinstallprompt` fires, Today shows an "Install the app" pill that opens the browser dialog.
+- Expanded views on a phone: the title is 17 / 22 semibold, the grabber and header padding are smaller, so content starts about 20 px sooner. Close (44 px, glass) and the swipe close stay.
 
 ## 8. Background and atmosphere
 
@@ -451,6 +464,7 @@ All of these close the view with the close sequence (10.3):
 - 14.5 iOS: `apple-mobile-web-app-capable`, `mobile-web-app-capable`, status bar `black-translucent`, title "L90", apple-touch-icon, `viewport-fit=cover`, theme-color. Safe-area insets pad the page top, the tab bar, expanded views, sheets and the update toast. `overscroll-behavior: none` on the root. Inputs are 16 px so iOS does not zoom. Pinch-zoom stays on.
 - 14.6 Data: after the first tap the app asks for persistent storage one time (`requestPersistentStorage`, tested). Setup → Backup says: "The app on the home screen keeps its own data. Load a backup to move data from Safari."
 - 14.7 Base: Vite `base: './'`, so the build runs from any host path.
+- 14.8 Install offer (round 6): see 7.7. iOS Safari in a tab gets a one-time hint card; Android Chrome gets an "Install the app" pill after `beforeinstallprompt`; standalone and desktop get nothing.
 
 ## 13. Acceptance checklist (each item: yes / no)
 
@@ -510,7 +524,7 @@ Accessibility, copy, build
 43. Every interactive element on Today, Progress and every expanded view is ≥ 44 × 44 px.
 44. Every control shows a visible focus ring; Today and every expanded view work with the keyboard alone.
 45. No page and no expanded view scrolls sideways at 360 px.
-46. Home height at 390 px with `?sample=1` is ≤ 1,900 px.
+46. Home height at 390 px with `?sample=1` is ≤ 1,600 px (round 6).
 47. All new UI copy is STE: ≤ 20 words per sentence, active voice, instructions start with a verb.
 48. `npm run build`, `npm test` and the linter pass with no new warnings.
 
@@ -573,3 +587,12 @@ Round 5 (polish)
 94. Every line or bar chart on every page is the motion chart; the target label is a legend line under the chart.
 95. Each page shows one title, then content (no subtitle that repeats the title).
 
+Round 6 (phone fit)
+96. Below 640 px the compact scale in 7.7 applies; from 640 px up every size is as in round 5.
+97. A font-size audit of every page, tab and expanded view at 390 px finds no text below 13 px outside captions, and no caption below 12 px.
+98. Fields are 44 px tall with 16 px text on a phone; every button, chip, pill and tick row has a 44 × 44 px touch target.
+99. Home at 375, 390 and 430 px with `?sample=1` is about 1,600 px or less; at 390×844 Outreach, Fitness and Learning are fully above the tab bar.
+100. The phone tab bar is 56 px tall, 8 px above the safe area; it hides on a scroll down, shows on a scroll up, at the top, at the end and on a new page, and never hides while a field has focus. Reduced motion: no slide.
+101. On the phone header the date and the chips share one line, with no truncation at 375 px.
+102. iOS Safari in a tab shows the install hint one time; "Not now" keeps it closed (`l90-hub-install-hint`). The home-screen app, a desktop and Android without the prompt event show nothing; Android with the event shows "Install the app".
+103. Expanded views on a phone have the smaller header and keep Close and the swipe close.

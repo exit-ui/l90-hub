@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createDefaultState, emptyDay } from '@/store/defaults';
 import type { HubState } from '@/store/types';
-import { allModulesComplete, isModuleComplete, momentumText, outreachNote, todayView } from './moduleView';
+import { allModulesComplete, isModuleComplete, momentumShort, momentumText, outreachNote, todayView } from './moduleView';
 
 // 2026-11-09 is a Monday: 2 outreach tasks, 1 reading, 1 gym and 1 sign-off task.
 const MONDAY = '2026-11-09';
@@ -146,5 +146,21 @@ describe('isModuleComplete', () => {
     expect(allModulesComplete([done('outreach', true), done('fitness', false, 0), done('signoff', true)])).toBe(true);
     expect(allModulesComplete([done('outreach', true), done('fitness', false), done('signoff', true)])).toBe(false);
     expect(allModulesComplete([done('outreach', true), done('signoff', false, 0)])).toBe(false);
+  });
+});
+
+describe('momentumShort', () => {
+  it('gives one number for the phone chip and all the words in the label', () => {
+    expect(momentumShort({ daysOnTarget: 0, streak: 0, best: 0, state: 'ended' })).toEqual({
+      text: 'Start',
+      label: 'Start today. Open Progress.',
+      recover: false,
+    });
+    expect(momentumShort({ daysOnTarget: 6, streak: 3, best: 3, state: 'active' })).toEqual({
+      text: '6',
+      label: '6 days on target, streak 3. Open Progress.',
+      recover: false,
+    });
+    expect(momentumShort({ daysOnTarget: 4, streak: 2, best: 3, state: 'recover' }).recover).toBe(true);
   });
 });

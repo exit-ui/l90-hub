@@ -31,7 +31,7 @@ import { useHub, useHubActions } from '@/store/useHub';
 export function ViewTitle({ id, titleId, children }: { id: string; titleId: string; children: ReactNode }) {
   return (
     <motion.h2
-      className="type-title inline-block w-fit text-hub-text outline-none"
+      className="type-title inline-block w-fit text-hub-text outline-none max-sm:text-xl max-sm:font-semibold"
       id={titleId}
       layoutId={`title-${id}`}
       tabIndex={-1}
@@ -168,7 +168,7 @@ export function PillarView({ module, today, cardsDue, onToggle, format, whole }:
         {module.announce}
       </p>
       <SharedHeader format={format} module={module} whole={whole} />
-      <Content className="mt-6 grid gap-6 md:mt-8 md:gap-8">
+      <Content className="mt-5 grid gap-5 sm:mt-6 sm:gap-6 md:mt-8 md:gap-8">
         {module.id === 'outreach' && module.note ? (
           <p className="type-body text-hub-label-strong">{module.note}</p>
         ) : null}
@@ -273,7 +273,7 @@ export function SignOffView({ module, today, signedOff, headline, onToggle, onSi
       </p>
       <SharedHeader module={module} />
       {signedOff ? (
-        <Content className="mt-6 grid gap-6 md:mt-8 md:gap-8">
+        <Content className="mt-5 grid gap-5 sm:mt-6 sm:gap-6 md:mt-8 md:gap-8">
           <h3 className="type-title text-hub-text outline-none" id={headlineId} tabIndex={-1}>
             {headline}
           </h3>
@@ -307,7 +307,7 @@ export function SignOffView({ module, today, signedOff, headline, onToggle, onSi
           ) : null}
         </Content>
       ) : (
-        <Content className="mt-6 grid gap-6 md:mt-8 md:gap-8">
+        <Content className="mt-5 grid gap-5 sm:mt-6 sm:gap-6 md:mt-8 md:gap-8">
           {module.ticks.length > 0 ? (
             <ViewTicks onToggle={onToggle} ticks={module.ticks} />
           ) : (
@@ -325,7 +325,7 @@ export function SignOffView({ module, today, signedOff, headline, onToggle, onSi
 /** The expanded chart: the full chart with compare mode, the mission numbers and the page link. */
 export function ProgressView({ today }: { today: DateKey }) {
   return (
-    <Content className="mt-4 grid gap-6 md:gap-8">
+    <Content className="mt-4 grid gap-5 sm:gap-6 md:gap-8">
       <ProgressChart embedded today={today} variant="full" />
       <MissionStats bare />
       <PageLink page="progress">Open the Progress page</PageLink>

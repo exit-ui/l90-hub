@@ -97,7 +97,7 @@ export function ProgressPage() {
             id: OVERVIEW_TAB,
             label: 'Overview',
             content: (
-              <div className="grid gap-8 md:gap-12">
+              <div className="grid gap-5 sm:gap-8 md:gap-12">
                 <ProgressChart today={today} variant="full" />
                 <MissionStats />
                 <MissionGrid />

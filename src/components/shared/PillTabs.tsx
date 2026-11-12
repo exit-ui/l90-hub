@@ -51,7 +51,7 @@ export function PillTabs({ tabs, value, onChange, label, className }: PillTabsPr
   const current = tabs.find((tab) => tab.id === value) ?? tabs[0];
 
   return (
-    <Tabs className={cn('gap-8', className)} onValueChange={(next) => onChange(String(next))} value={value}>
+    <Tabs className={cn('gap-5 sm:gap-8', className)} onValueChange={(next) => onChange(String(next))} value={value}>
       <div className="relative -mx-2 -my-2 overflow-x-clip px-2 py-2" ref={box}>
         <div
           aria-hidden={overflow ? true : undefined}

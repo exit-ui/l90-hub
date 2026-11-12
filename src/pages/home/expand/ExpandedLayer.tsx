@@ -224,11 +224,11 @@ export function ExpandedLayer({ id, entry, titleId, title, onClose, children }: 
             <motion.div
               animate={{ opacity: 1 }}
               aria-hidden="true"
-              className="mx-auto mb-2 h-1 w-12 rounded-full bg-hub-track md:hidden"
+              className="mx-auto mb-1 h-1 w-10 rounded-full bg-hub-track md:hidden"
               initial={{ opacity: 0 }}
               transition={CHROME_IN}
             />
-            <div className="flex items-start justify-between gap-4 pb-2">
+            <div className="flex items-center justify-between gap-4 pb-1 sm:items-start sm:pb-2">
               {title}
               <motion.button
                 aria-label="Close"

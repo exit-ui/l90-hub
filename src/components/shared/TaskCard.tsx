@@ -218,7 +218,7 @@ export function TaskCard({ date, className }: TaskCardProps) {
   const day = dayNumber(date, startDate);
 
   return (
-    <Card aria-labelledby={`${fieldId}-title`} className={cn('flex flex-col gap-6', className)}>
+    <Card aria-labelledby={`${fieldId}-title`} className={cn('flex flex-col gap-5 sm:gap-6', className)}>
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="type-label text-hub-label">{dayLabel(day)}</p>

@@ -28,7 +28,7 @@ export function OverviewTab() {
   const recover = useMemo(() => momentum(days, today, dmTarget).state === 'recover', [days, today, dmTarget]);
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-5 sm:gap-6">
       {recover ? (
         <Notice announce={false} kind="NOTE">
           You missed yesterday. Send the DMs today to keep the streak.

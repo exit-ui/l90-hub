@@ -6,7 +6,7 @@ type CardProps = HTMLMotionProps<'section'>;
 /** A content surface. It does not move on hover, because it is not a control. */
 export function Card({ className, children, ...props }: CardProps) {
   return (
-    <motion.section className={cn('surface-card min-w-0 p-5 lg:p-6', className)} {...props}>
+    <motion.section className={cn('surface-card min-w-0 p-4 sm:p-5 lg:p-6', className)} {...props}>
       {children}
     </motion.section>
   );

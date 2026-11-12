@@ -101,6 +101,12 @@ const LONG = new Intl.DateTimeFormat('en-GB', {
 const MEDIUM = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 const SHORT = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
 const MONTH = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
+const DAY_PHONE = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'long' });
+
+/** The date on the phone header line, for example "Thu 12 November". */
+export function formatDayPhone(key: DateKey): string {
+  return DAY_PHONE.format(mustParse(key));
+}
 
 export function formatLong(key: DateKey): string {
   return LONG.format(mustParse(key));

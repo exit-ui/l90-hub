@@ -9,12 +9,12 @@ interface GhostPillProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   children: ReactNode;
 }
 
-/** A small quiet pill with an icon, for secondary acts like "Adjust" or "Edit". 44 px tall. */
+/** A small quiet pill with an icon, for secondary acts like "Adjust" or "Edit". 36 px on a phone with a 44 px touch target. */
 export function GhostPill({ icon: Icon, className, children, type = 'button', ...props }: GhostPillProps) {
   return (
     <motion.button
       className={cn(
-        'type-label inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full bg-hub-inset px-4 font-medium text-hub-label-strong rim-hairline transition-colors hover:bg-hub-track hover:text-hub-text',
+        'type-label hit-area inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-2 rounded-full bg-hub-inset px-3.5 font-medium text-hub-label-strong rim-hairline transition-colors hover:bg-hub-track hover:text-hub-text sm:min-h-11 sm:px-4',
         className,
       )}
       type={type}

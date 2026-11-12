@@ -178,6 +178,7 @@ export function ProgressChart({
   const learnTarget = useHub((state) => state.learnTarget);
   const [prefs, setPrefs] = useChartPrefs();
   const wide = useMediaQuery('(min-width: 1024px)');
+  const phone = useMediaQuery('(max-width: 639px)');
   const titleId = useId();
 
   const full = variant === 'full';
@@ -195,7 +196,8 @@ export function ProgressChart({
     [days, weekTemplate, startDate, fitness, learning, trades, dmTarget, fitTarget, learnTarget, prefs.metric, prefs.compare, range, compareOn, today],
   );
   const format = useMemo(() => chartValueFormat(prefs.metric, compareOn), [prefs.metric, compareOn]);
-  const height = full ? 320 : wide ? 240 : 200;
+  // Round 6: a phone keeps the chart shorter, so Today fits in fewer screens.
+  const height = full ? (phone ? 260 : 320) : wide ? 240 : phone ? 160 : 200;
   const insights = model.insights.slice(0, maxInsights);
   const card = useRef<HTMLElement>(null);
   const openable = onOpen !== undefined;
@@ -255,7 +257,7 @@ export function ProgressChart({
         </ul>
       ) : null}
 
-      <div className="mt-4">
+      <div className="mt-3 sm:mt-4">
         <MotionChart
           bars={model.bars}
           formatValue={format}
@@ -297,13 +299,13 @@ export function ProgressChart({
   return (
     <motion.section
       aria-labelledby={titleId}
-      className={cn('surface-card flex min-w-0 flex-col p-5 lg:p-6', className)}
+      className={cn('surface-card flex min-w-0 flex-col p-4 sm:p-5 lg:p-6', className)}
       layoutId={onOpen ? 'card-progress' : undefined}
       ref={card}
       style={{ borderRadius: CARD_RADIUS }}
     >
       {onOpen ? (
-        <div className="flex min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 sm:gap-y-2 lg:flex-nowrap">
           <h2 className="type-section text-hub-text" id={titleId}>
             <button
               aria-controls="view-progress"

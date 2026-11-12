@@ -98,7 +98,7 @@ export function PillarModule({
       animate={pressed && !reduced ? CARD_TAP : { scale: 1 }}
       aria-labelledby={titleId}
       className={cn(
-        'surface-card flex min-w-0 flex-col p-5 transition-shadow duration-300 lg:p-6',
+        'surface-card flex min-w-0 flex-col p-4 transition-shadow duration-300 sm:p-5 lg:p-6',
         view.complete && 'rim-positive',
         className,
       )}

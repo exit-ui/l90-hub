@@ -9,10 +9,10 @@ import { useNow } from '@/hooks/useNow';
 import { CHECK_SPRING, FADE } from '@/lib/motion';
 import { useRoute } from '@/hooks/useRoute';
 import { useToday } from '@/hooks/useToday';
-import { formatLong, formatWeekdayShort } from '@/lib/dates';
+import { formatDayPhone, formatLong, formatWeekdayShort } from '@/lib/dates';
 import { formatR, toRoman } from '@/lib/format';
 import { missionHeadline } from '@/lib/homeText';
-import { type ModuleView, momentumText, type TodayView, todayView } from '@/lib/moduleView';
+import { type ModuleView, momentumShort, momentumText, type TodayView, todayView } from '@/lib/moduleView';
 import { missionClock } from '@/lib/phases';
 import type { PillarId } from '@/lib/pillars';
 import { closeAction, type ExpandId, expandedFrom, routeHref } from '@/lib/routes';
@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { levelProgress, totalXp } from '@/lib/xp';
 import { useHub, useHubActions } from '@/store/useHub';
 import { DmButtons } from '@/components/shared/DmControls';
+import { InstallHint } from './InstallHint';
 import { PillarModule } from './PillarModule';
 import { cardHeight } from './expand/cardHeights';
 import { ExpandedLayer, type ViewEntry } from './expand/ExpandedLayer';
@@ -42,7 +43,7 @@ function Chip({ href, children, label }: { href: string; children: string; label
   return (
     <a
       aria-label={label}
-      className="press inline-flex min-h-11 items-center rounded-full bg-hub-material px-3 type-label font-semibold text-hub-label-strong no-underline rim-hairline hover:text-hub-text"
+      className="press hit-area inline-flex min-h-8 items-center rounded-full bg-hub-material px-3 type-label font-semibold sm:min-h-11 text-hub-label-strong no-underline rim-hairline hover:text-hub-text"
       href={href}
     >
       {children}
@@ -56,7 +57,7 @@ function MomentumChip({ momentum, className }: { momentum: Momentum; className?:
   return (
     <a
       className={cn(
-        'press min-h-11 items-center gap-2 rounded-full bg-hub-material px-3 type-label font-semibold text-hub-label-strong no-underline rim-hairline hover:text-hub-text',
+        'press hit-area min-h-8 items-center gap-1.5 rounded-full bg-hub-material px-3 type-label sm:min-h-11 sm:gap-2 font-semibold text-hub-label-strong no-underline rim-hairline hover:text-hub-text',
         className,
       )}
       href={routeHref('progress')}
@@ -71,6 +72,21 @@ function MomentumChip({ momentum, className }: { momentum: Momentum; className?:
           <span className={cn(text.recover && 'text-hub-amber')}>{text.detail}</span>
         </>
       ) : null}
+    </a>
+  );
+}
+
+/** The momentum chip on a phone: a flame and one number. The label holds all the words. */
+function MomentumChipShort({ momentum }: { momentum: Momentum }) {
+  const text = momentumShort(momentum);
+  return (
+    <a
+      aria-label={text.label}
+      className="press hit-area inline-flex min-h-8 items-center gap-1 rounded-full bg-hub-material px-2.5 type-label font-semibold text-hub-label-strong no-underline rim-hairline hover:text-hub-text"
+      href={routeHref('progress')}
+    >
+      <Flame aria-hidden="true" className="size-4 text-hub-amber" />
+      <span className={cn('num', text.recover && 'text-hub-amber')}>{text.text}</span>
     </a>
   );
 }
@@ -105,7 +121,7 @@ function CompleteLine() {
   return (
     <motion.p
       animate={{ opacity: 1, y: 0 }}
-      className="type-body mb-8 flex items-center gap-3 rounded-card px-4 py-3 text-hub-positive surface-card rim-positive"
+      className="type-body mb-5 flex sm:mb-8 items-center gap-3 rounded-card px-4 py-3 text-hub-positive surface-card rim-positive"
       initial={reduced ? { opacity: 0 } : { opacity: 0, y: 8 }}
       role="status"
       transition={reduced ? FADE : CHECK_SPRING}
@@ -309,33 +325,52 @@ export function HomePage() {
   const expandedModule = expanded ? view.modules.find((module) => module.id === expanded) : undefined;
   const titleId = expanded ? `view-title-${expanded}` : '';
 
+  const levelChip = (
+    <Chip
+      href={routeHref('progress')}
+      label={`Level ${level}${clock.phase ? `, phase ${clock.phase}` : ''}. Open Progress.`}
+    >
+      {`Lv ${level} · ${clock.phase ? `Phase ${toRoman(clock.phase)}` : clock.stage === 'before' ? 'Soon' : 'Review'}`}
+    </Chip>
+  );
+
   return (
     <>
-      <header className="mb-8 md:mb-12">
+      <header className="mb-5 sm:mb-8 md:mb-12">
+        {/* Below 1024 px: the date and the chips share one line, so the modules start sooner. */}
+        <div className="flex min-h-8 items-center justify-between gap-2 lg:hidden">
+          <p className="type-label min-w-0 truncate text-hub-label">
+            <span aria-hidden="true">{formatDayPhone(today)}</span>
+            <span className="sr-only">{formatLong(today)}</span>
+          </p>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="contents sm:hidden">
+              <MomentumChipShort momentum={view.momentum} />
+            </span>
+            <MomentumChip className="hidden sm:inline-flex" momentum={view.momentum} />
+            {levelChip}
+          </div>
+        </div>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 lg:flex lg:items-end lg:gap-8">
             <div className="shrink-0">
-              <p className="type-label text-hub-label">{formatLong(today)}</p>
+              <p className="type-label hidden text-hub-label lg:block">{formatLong(today)}</p>
               <h1 className="type-title mt-1 text-hub-text">{missionHeadline(clock)}</h1>
             </div>
             <p className="type-line hidden max-w-prose text-hub-label-strong lg:line-clamp-2">{line.text}</p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <MomentumChip className="hidden lg:inline-flex" momentum={view.momentum} />
-            <Chip
-              href={routeHref('progress')}
-              label={`Level ${level}${clock.phase ? `, phase ${clock.phase}` : ''}. Open Progress.`}
-            >
-              {`Lv ${level} · ${clock.phase ? `Phase ${toRoman(clock.phase)}` : clock.stage === 'before' ? 'Soon' : 'Review'}`}
-            </Chip>
+          <div className="hidden shrink-0 items-center gap-2 lg:flex">
+            <MomentumChip className="inline-flex" momentum={view.momentum} />
+            {levelChip}
           </div>
         </div>
-        <p className="type-line mt-2 line-clamp-2 max-w-prose text-hub-label-strong lg:hidden">{line.text}</p>
-        <MomentumChip className="mt-2 inline-flex lg:hidden" momentum={view.momentum} />
+        <p className="type-line mt-1 line-clamp-2 max-w-prose text-hub-label-strong sm:mt-2 lg:hidden">{line.text}</p>
       </header>
 
+      <InstallHint />
+
       {view.momentum.state === 'recover' ? (
-        <Notice announce={false} className="mb-8" kind="NOTE">
+        <Notice announce={false} className="mb-5 sm:mb-8" kind="NOTE">
           You missed yesterday. Send the DMs today to keep the streak.
         </Notice>
       ) : null}

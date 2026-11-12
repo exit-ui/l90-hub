@@ -1,11 +1,12 @@
 import { buzz } from '@/lib/haptics';
 import { ChartLine, Ellipsis, LayoutGrid, type LucideIcon, Plus, Send } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
-import { type PointerEvent, type ReactNode, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { type PointerEvent, type ReactNode, useRef, useState } from 'react';
 import { GradientDefs } from '@/components/charts/hub/GradientDefs';
+import { useBarVisible } from '@/hooks/useBarVisible';
 import { useLens } from '@/hooks/useLens';
 import { useToday } from '@/hooks/useToday';
-import { BUTTON_TAP, FADE, SPRING } from '@/lib/motion';
+import { BUTTON_TAP, FADE, NO_MOTION, SPRING } from '@/lib/motion';
 import { MORE_PAGES, PAGE_LABELS, type PageId, PRIMARY_PAGES, routeHref } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { useHubActions } from '@/store/useHub';
@@ -75,7 +76,7 @@ function TabItem({ item, layoutId, wide, onMore }: TabItemProps) {
   const Icon = item.icon;
   const className = cn(
     'relative flex cursor-pointer items-center justify-center rounded-full no-underline transition-colors',
-    wide ? 'min-h-11 gap-2 px-4 type-body font-medium' : 'h-14 min-w-0 flex-1 flex-col gap-1 px-1 type-label font-semibold',
+    wide ? 'min-h-11 gap-2 px-4 type-body font-medium' : 'h-12 min-w-0 flex-1 flex-col gap-0.5 px-1 type-caption font-semibold',
     item.active ? 'text-hub-text' : 'text-hub-label-strong hover:text-hub-text',
   );
   const content = (
@@ -197,35 +198,53 @@ function TopBar({ page, onMore }: { page: PageId; onMore: () => void }) {
   );
 }
 
-/** The floating glass tab bar on a phone, in the thumb zone. It holds the 4 tabs only. */
+/**
+ * The floating glass tab bar on a phone, in the thumb zone (round 6).
+ * 56 px tall, 8 px above the safe area. It slides away on a scroll down and comes back
+ * on a scroll up, at the top and at the end of the page. It stays while a field has focus.
+ */
 function TabBar({ page, onMore }: { page: PageId; onMore: () => void }) {
   const { ref: navRef, filter: navFilter, style: navStyle } = useLens<HTMLElement>({
-    radius: 32,
-    bezel: 14,
-    strength: 34,
+    radius: 28,
+    bezel: 12,
+    strength: 30,
   });
+  const frame = useRef<HTMLDivElement>(null);
+  const visible = useBarVisible(frame, page);
+  const reduced = useReducedMotion();
+  const transition = reduced ? NO_MOTION : SPRING;
 
   return (
     <>
-      <div
+      <motion.div
+        animate={{ opacity: visible ? 1 : 0 }}
         aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 bg-linear-to-t from-hub-bg-from/90 via-hub-bg-from/40 to-transparent lg:hidden"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-24 bg-linear-to-t from-hub-bg-from/85 via-hub-bg-from/30 to-transparent lg:hidden"
+        initial={false}
+        transition={reduced ? NO_MOTION : FADE}
       />
-      <div className="pointer-events-none fixed inset-x-0 bottom-shell z-40 flex px-4 lg:hidden">
+      <motion.div
+        animate={{ y: visible ? 0 : '220%' }}
+        className="pointer-events-none fixed inset-x-0 bottom-shell z-40 flex justify-center px-4 lg:hidden"
+        data-bar-visible={visible ? 'true' : 'false'}
+        initial={false}
+        ref={frame}
+        transition={transition}
+      >
         <nav
           aria-label="Pages"
-          className="glass pointer-events-auto flex min-w-0 flex-1 items-center gap-1 rounded-full p-1"
+          className="glass pointer-events-auto flex w-full max-w-md min-w-0 items-center rounded-full p-1"
           ref={navRef}
           style={navStyle}
         >
           {navFilter}
-          <div className="relative z-3 flex min-w-0 flex-1 items-center gap-1">
+          <div className="relative z-3 flex min-w-0 flex-1 items-center gap-0.5">
             {navItems(page).map((item) => (
               <TabItem item={item} key={item.id} layoutId="tab-pill" onMore={onMore} wide={false} />
             ))}
           </div>
         </nav>
-      </div>
+      </motion.div>
     </>
   );
 }
