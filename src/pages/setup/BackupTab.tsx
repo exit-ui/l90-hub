@@ -5,6 +5,7 @@ import { CardTitle } from '@/components/shared/Controls';
 import { Field, FieldTextarea, TextAreaField } from '@/components/shared/Field';
 import { Notice } from '@/components/shared/Notice';
 import { PressButton } from '@/components/shared/PressButton';
+import { SamplePreviewButtons } from '@/components/shared/SamplePreview';
 import { dataOnly } from '@/lib/setupBackup';
 import { parseBackup, serializeBackup } from '@/lib/storage';
 import { useHub, useHubActions } from '@/store/useHub';
@@ -133,6 +134,12 @@ export function BackupTab() {
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
       <CopyCard className="lg:col-span-5 lg:self-start" />
       <LoadCard className="lg:col-span-7" />
+      <Card aria-labelledby="preview-title" className="lg:col-span-5">
+        <CardTitle id="preview-title">Preview with sample data</CardTitle>
+        <div className="mt-4">
+          <SamplePreviewButtons />
+        </div>
+      </Card>
     </div>
   );
 }

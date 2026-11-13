@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { persist, type PersistStorage, type StorageValue } from 'zustand/middleware';
 import { addBook, moveBook, normalizeBooks, readChapter, setChapters, currentBook } from '@/lib/books';
-import { isDateKey, monthKey, todayKey } from '@/lib/dates';
+import { addDays, isDateKey, monthKey, pinToday, todayKey } from '@/lib/dates';
 import { reviewCard } from '@/lib/leitner';
 import { toggleAttendance } from '@/lib/sessions';
 import { toggleTaskState } from '@/lib/tickEffects';
 import { buildFromAnswers, type OnboardingAnswers } from '@/lib/onboarding';
-import { rewardStatuses } from '@/lib/phases';
+import { MISSION_DAYS, rewardStatuses } from '@/lib/phases';
 import {
   clearStored,
   readStored,
@@ -15,8 +15,8 @@ import {
   writeStored,
 } from '@/lib/storage';
 import { portfolioValue, upsertSnapshot } from '@/lib/trading';
-import { createDefaultState, emptyDay, STATE_VERSION } from './defaults';
-import { createSampleState, isSampleMode } from './sample';
+import { createDefaultState, DEFAULT_START_DATE, emptyDay, STATE_VERSION } from './defaults';
+import { createSampleState, sampleKind } from './sample';
 import type {
   Book,
   Card,
@@ -131,13 +131,18 @@ function dataOf(store: HubStore): HubState {
   return data as HubState;
 }
 
-const sampleMode = isSampleMode();
+const sample = sampleKind();
+const sampleMode = sample !== 'none';
+// The full preview shows the last mission day, so all 90 days have data.
+if (sample === 'full') {
+  pinToday(addDays(DEFAULT_START_DATE, MISSION_DAYS - 1));
+}
 
 /** Each read and each write is safe. Sample mode never touches the saved record. */
 const storage: PersistStorage<HubState> = {
   getItem: (): StorageValue<HubState> | null => {
     if (sampleMode) {
-      return { state: createSampleState(todayKey()), version: STATE_VERSION };
+      return { state: createSampleState(todayKey(), sample === 'full'), version: STATE_VERSION };
     }
     const stored = readStored();
     if (!stored) {

@@ -40,8 +40,18 @@ function mustParse(key: DateKey): Date {
   return date;
 }
 
-export function todayKey(now: Date = new Date()): DateKey {
-  return toKey(now);
+/** A fixed "today" for the full sample preview. Null in normal use. */
+let pinnedToday: DateKey | null = null;
+
+export function pinToday(key: DateKey | null): void {
+  pinnedToday = key;
+}
+
+export function todayKey(now?: Date): DateKey {
+  if (now === undefined && pinnedToday !== null) {
+    return pinnedToday;
+  }
+  return toKey(now ?? new Date());
 }
 
 export function addDays(key: DateKey, amount: number): DateKey {

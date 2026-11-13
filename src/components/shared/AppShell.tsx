@@ -12,6 +12,7 @@ import { useHubActions } from '@/store/useHub';
 import { Wordmark } from './Brand';
 import { PressButton } from './PressButton';
 import { Sheet } from './Sheet';
+import { SampleBanner, SamplePreviewButtons } from './SamplePreview';
 import { ThemeSwitch } from './ThemeSwitch';
 
 const PAGE_ICONS: Readonly<Record<PageId, LucideIcon>> = {
@@ -102,6 +103,12 @@ function MoreSheet({
           Appearance
         </h3>
         <ThemeSwitch />
+      </section>
+      <section aria-labelledby="more-preview" className="mt-6 grid gap-2">
+        <h3 className="type-label font-semibold text-hub-label-strong" id="more-preview">
+          Preview with sample data
+        </h3>
+        <SamplePreviewButtons />
       </section>
     </Sheet>
   );
@@ -247,6 +254,7 @@ export function AppShell({ page, children, inert = false }: AppShellProps) {
           id="main"
           tabIndex={-1}
         >
+          <SampleBanner />
           {children}
         </main>
       </div>
