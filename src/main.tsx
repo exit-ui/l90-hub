@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import { hapticEverything } from './lib/haptics'
 import { requestPersistentStorage } from './lib/persist'
 import { listenForInstallPrompt } from './pwa/installPrompt'
 import { UpdateToast } from './pwa/UpdateToast'
@@ -11,6 +12,9 @@ window.addEventListener('pointerdown', () => void requestPersistentStorage(navig
 
 // Chrome on Android sends its install event early; keep it for the "Install the app" pill.
 listenForInstallPrompt()
+
+// On iPhone, every button, link, switch and tab gives a light haptic on tap.
+hapticEverything()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

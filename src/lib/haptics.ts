@@ -79,9 +79,72 @@ export function hapticTarget(element: HTMLElement | null): void {
   input.style.cssText = 'position:absolute;left:0;top:0;width:1px;height:1px;margin:0;opacity:0;pointer-events:none';
   // The label passes its click on to the switch. Only the label's own click may reach the button.
   input.addEventListener('click', (event) => event.stopPropagation());
+  label.addEventListener('click', (event) => {
+    // A disabled control gets no haptic: the label must not flip the switch.
+    if (element.matches(':disabled, [aria-disabled="true"]')) {
+      event.preventDefault();
+      return;
+    }
+    // Safari may give the tap's default action to the label (it flips the switch), so a link would
+    // not follow itself and a submit button would not submit. Do it here when the browser did not,
+    // and no handler stopped it. Chrome still does it itself.
+    const form = element instanceof HTMLButtonElement && element.type === 'submit' ? element.form : null;
+    let submitted = false;
+    const onSubmit = () => {
+      submitted = true;
+    };
+    form?.addEventListener('submit', onSubmit, { once: true });
+    window.setTimeout(() => {
+      form?.removeEventListener('submit', onSubmit);
+      if (event.defaultPrevented) {
+        return;
+      }
+      if (element instanceof HTMLAnchorElement) {
+        if (window.location.href !== element.href) {
+          window.location.assign(element.href);
+        }
+      } else if (form && !submitted) {
+        form.requestSubmit(element as HTMLButtonElement);
+      }
+    });
+  });
   label.append(input);
   if (getComputedStyle(element).position === 'static') {
     element.style.position = 'relative';
   }
   element.append(label);
+}
+
+/** Marks a control that already has its haptic label. */
+const DONE = 'data-haptic';
+
+/** The controls that get a haptic on iPhone. Add data-no-haptic to leave one out. */
+const TARGETS = 'button:not([data-no-haptic]), a[href]:not([target]):not([download]):not([data-no-haptic]), [role="switch"]:not([data-no-haptic]), [role="tab"]:not([data-no-haptic])';
+
+/**
+ * Gives every button, link, switch and tab on the page the iPhone haptic, now and as the page changes,
+ * so every tap feels the same. Does nothing off iPhone. Call it once at start-up.
+ */
+export function hapticEverything(root: HTMLElement = document.body): void {
+  if (typeof document === 'undefined' || !isIos()) {
+    return;
+  }
+  let queued = false;
+  const scan = () => {
+    queued = false;
+    for (const element of root.querySelectorAll<HTMLElement>(TARGETS)) {
+      if (!element.hasAttribute(DONE)) {
+        element.setAttribute(DONE, '');
+        hapticTarget(element);
+      }
+    }
+  };
+  scan();
+  // New controls come and go with each page; scan once per frame at most.
+  new MutationObserver(() => {
+    if (!queued) {
+      queued = true;
+      requestAnimationFrame(scan);
+    }
+  }).observe(root, { childList: true, subtree: true });
 }
