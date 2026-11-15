@@ -6,6 +6,7 @@ import { useAddDms } from '@/hooks/useAddDms';
 import { useBarVisible } from '@/hooks/useBarVisible';
 import { useFloatUp } from '@/hooks/useFloatUp';
 import { useToday } from '@/hooks/useToday';
+import { hapticTarget } from '@/lib/haptics';
 import { BUTTON_TAP, FADE, NO_MOTION, SPRING } from '@/lib/motion';
 import { MORE_PAGES, PAGE_LABELS, type PageId, PRIMARY_PAGES, routeHref } from '@/lib/routes';
 import { cn } from '@/lib/utils';
@@ -199,6 +200,7 @@ function TabBar({ page, onMore }: { page: PageId; onMore: () => void }) {
             <FloatUp bubbles={bubbles} className="-top-4" />
             <motion.button
               aria-label="Add 1 DM"
+              ref={hapticTarget}
               className="shadow-brand flex size-15 -translate-y-4 cursor-pointer items-center justify-center rounded-full border-4 border-hub-bg-from bg-hub-brand text-hub-on-brand"
               onClick={() => {
                 addDm();

@@ -13,7 +13,7 @@ export function useFloatUp(): { bubbles: Bubble[]; show: (text: string) => void 
     next.current += 1;
     const id = next.current;
     setBubbles((current) => [...current.slice(-3), { id, text }]);
-    window.setTimeout(() => setBubbles((current) => current.filter((bubble) => bubble.id !== id)), 420);
+    window.setTimeout(() => setBubbles((current) => current.filter((bubble) => bubble.id !== id)), 650);
   }, []);
   return { bubbles, show };
 }

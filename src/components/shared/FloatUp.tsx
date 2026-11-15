@@ -14,9 +14,9 @@ export function FloatUp({ bubbles, className }: { bubbles: Bubble[]; className?:
       <AnimatePresence>
         {bubbles.map((bubble) => (
           <motion.span
-            animate={{ opacity: 0, y: -34, scale: 1 }}
-            className="type-label num absolute font-bold text-hub-positive"
-            initial={{ opacity: 1, y: -6, scale: 0.8 }}
+            animate={{ opacity: [1, 1, 0], y: -44, scale: 1.15 }}
+            className="type-name num absolute font-bold text-hub-positive"
+            initial={{ opacity: 0, y: -4, scale: 0.6 }}
             key={bubble.id}
             transition={FLOAT_UP}
           >

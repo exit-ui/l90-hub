@@ -1,13 +1,11 @@
 import { motion, useReducedMotion } from 'motion/react';
-import { memo, useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { DoneBadge } from '@/components/shared/DoneBadge';
 import { PressButton } from '@/components/shared/PressButton';
 import { TickRow } from '@/components/shared/TickRow';
 import { useRisingEdge } from '@/hooks/useRisingEdge';
-import { doneHaptic, haptic } from '@/lib/haptics';
 import { COLLAPSED_TICKS, MAX_VISIBLE_TICKS, type ModuleView } from '@/lib/moduleView';
-import { CARD_RADIUS, CONTENT_IN, EXPAND_CLOSE, SPRING } from '@/lib/motion';
-import type { ExpandId } from '@/lib/routes';
+import { CARD_RADIUS, CARD_TAP, CONTENT_IN, EXPAND_CLOSE, SPRING } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 import { rememberCardHeight } from './expand/cardHeights';
 
@@ -51,17 +49,18 @@ interface SignOffCardProps {
   ticksDone: number;
   ticksTotal: number;
   signedOff: boolean;
-  onOpen: (id: ExpandId) => void;
+  onOpen: () => void;
   onSignOff: () => void;
   onToggle: (task: string) => void;
   returning?: boolean;
+  className?: string;
 }
 
 /**
  * "Sign off the day": a ring with the ticks of the day, one line and the explicit sign-off button.
  * The header opens the Sign-off view. Only the button records the sign-off; a tick never does.
  */
-export const SignOffCard = memo(function SignOffCard({
+export function SignOffCard({
   view,
   ticksDone,
   ticksTotal,
@@ -70,11 +69,13 @@ export const SignOffCard = memo(function SignOffCard({
   onSignOff,
   onToggle,
   returning = false,
+  className,
 }: SignOffCardProps) {
   const reduced = useReducedMotion();
   const titleId = useId();
   const card = useRef<HTMLElement>(null);
   const glints = useRisingEdge(view.complete);
+  const [pressed, setPressed] = useState(false);
   const allDone = ticksTotal > 0 && ticksDone === ticksTotal;
   const collapsible = view.ticks.length > MAX_VISIBLE_TICKS;
   const visible = collapsible ? view.ticks.slice(0, COLLAPSED_TICKS) : view.ticks;
@@ -99,10 +100,12 @@ export const SignOffCard = memo(function SignOffCard({
 
   return (
     <motion.section
+      animate={pressed && !reduced ? CARD_TAP : { scale: 1 }}
       aria-labelledby={titleId}
       className={cn(
         'surface-card flex min-w-0 flex-col p-4 transition-[background-color,box-shadow] duration-300 sm:p-5',
         (signedOff || view.complete) && 'rim-positive',
+        className,
       )}
       data-pillar="signoff"
       layoutId="card-signoff"
@@ -122,9 +125,13 @@ export const SignOffCard = memo(function SignOffCard({
           aria-controls="view-signoff"
           aria-expanded={false}
           aria-label="Open the Sign-off details."
-          className="-my-2 flex min-h-11 min-w-0 flex-1 cursor-pointer touch-manipulation flex-col items-start justify-center rounded-control px-2 py-2 text-left transition-[background-color,transform] duration-100 hover:bg-hub-inset active:scale-[0.985] active:bg-hub-inset"
+          className="-my-2 flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-start justify-center rounded-control px-2 py-2 text-left transition-colors hover:bg-hub-inset"
           data-open-target="signoff"
-          onClick={() => onOpen('signoff')}
+          onClick={onOpen}
+          onPointerCancel={() => setPressed(false)}
+          onPointerDown={() => setPressed(true)}
+          onPointerLeave={() => setPressed(false)}
+          onPointerUp={() => setPressed(false)}
           type="button"
         >
           <motion.span
@@ -140,14 +147,7 @@ export const SignOffCard = memo(function SignOffCard({
         {signedOff ? (
           <DoneBadge className="shrink-0" />
         ) : (
-          <PressButton
-            className="px-4"
-            onClick={() => {
-              haptic('peak');
-              onSignOff();
-            }}
-            tone="primary"
-          >
+          <PressButton className="px-4" onClick={onSignOff} tone="primary">
             Sign off
           </PressButton>
         )}
@@ -161,9 +161,8 @@ export const SignOffCard = memo(function SignOffCard({
                   action={tick.action}
                   cue={tick.cue}
                   done={tick.done}
-                  doneHaptic={doneHaptic(view.ticks.length - view.doneCount, ticksTotal - ticksDone === 1)}
                   isNext={tick.isNext}
-                  onToggle={onToggle}
+                  onToggle={() => onToggle(tick.task)}
                   task={tick.task}
                 />
               </li>
@@ -172,7 +171,7 @@ export const SignOffCard = memo(function SignOffCard({
           {collapsible ? (
             <button
               className="tap press type-label -ml-2 mt-1 inline-flex cursor-pointer items-center rounded-full px-2 text-hub-label-strong hover:text-hub-text"
-              onClick={() => onOpen('signoff')}
+              onClick={onOpen}
               type="button"
             >
               {`Show ${view.ticks.length - COLLAPSED_TICKS} more`}
@@ -182,4 +181,4 @@ export const SignOffCard = memo(function SignOffCard({
       ) : null}
     </motion.section>
   );
-});
+}

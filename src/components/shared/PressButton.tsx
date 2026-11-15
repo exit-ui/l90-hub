@@ -1,4 +1,5 @@
 import { type HTMLMotionProps, motion } from 'motion/react';
+import { hapticTarget } from '@/lib/haptics';
 import { BUTTON_TAP } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
@@ -26,13 +27,14 @@ interface PressButtonProps extends HTMLMotionProps<'button'> {
   iconOnly?: boolean;
 }
 
-/** A capsule button: 40 px on a phone, 44 px from 640 px, always a 44 px touch target. It scales to 96 % on press, in 100 ms. */
+/** Every tap plays the iPhone haptic (see hapticTarget). A capsule button: 40 px on a phone, 44 px from 640 px, always a 44 px touch target. It scales to 96 % on press, in 100 ms. */
 export function PressButton({
   tone = 'soft',
   iconOnly = false,
   className,
   type = 'button',
   children,
+  ref,
   ...props
 }: PressButtonProps) {
   return (
@@ -43,6 +45,14 @@ export function PressButton({
         TONES[tone],
         className,
       )}
+      ref={(element) => {
+        hapticTarget(element);
+        if (typeof ref === 'function') {
+          ref(element);
+        } else if (ref) {
+          ref.current = element;
+        }
+      }}
       type={type}
       whileTap={BUTTON_TAP}
       {...props}

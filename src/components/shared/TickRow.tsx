@@ -1,9 +1,10 @@
 import { Check } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { memo, useState } from 'react';
-import { haptic, type HapticKind } from '@/lib/haptics';
+import { haptic, type HapticKind, hapticTarget } from '@/lib/haptics';
 import { CHECK_POP, RIPPLE } from '@/lib/motion';
 import { cn } from '@/lib/utils';
+import { Burst } from './Burst';
 
 interface TickRowProps {
   /** The full task text. It is the accessible name of the row. */
@@ -20,7 +21,8 @@ interface TickRowProps {
 
 /**
  * One tick: a 24 px round check and the action, with the cue above it.
- * The press shows at once (CSS :active). A tick pops the check with a green ripple and a haptic.
+ * The press shows at once (CSS :active). A tick flashes the row green, pops the check with a ripple
+ * and a burst of dots, strikes the action through and plays a haptic.
  * The pop only plays after a tap, never when the page opens.
  */
 export const TickRow = memo(function TickRow({
@@ -42,6 +44,7 @@ export const TickRow = memo(function TickRow({
       aria-pressed={done}
       className="group/tick relative flex min-h-11 w-full cursor-pointer touch-manipulation items-center gap-4 rounded-control px-1 py-1 text-left transition-[background-color,transform] duration-100 select-none hover:bg-hub-inset active:scale-[0.985] active:bg-hub-inset"
       data-next={isNext ? 'true' : undefined}
+      ref={hapticTarget}
       onClick={() => {
         haptic(done ? 'tap' : doneHaptic);
         if (!done) {
@@ -51,6 +54,16 @@ export const TickRow = memo(function TickRow({
       }}
       type="button"
     >
+      {popped ? (
+        <motion.span
+          animate={{ opacity: 0 }}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-[inherit] bg-hub-success-soft"
+          initial={{ opacity: 1 }}
+          key={`flash-${pops}`}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        />
+      ) : null}
       {isNext && !done ? (
         <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-hub-brand" />
       ) : null}
@@ -63,18 +76,19 @@ export const TickRow = memo(function TickRow({
       >
         {popped ? (
           <motion.span
-            animate={{ scale: 2.2, opacity: 0 }}
+            animate={{ scale: 2.6, opacity: 0 }}
             className="absolute inset-0 rounded-full bg-hub-success"
-            initial={{ scale: 1, opacity: 0.45 }}
+            initial={{ scale: 1, opacity: 0.55 }}
             key={`ripple-${pops}`}
             transition={RIPPLE}
           />
         ) : null}
+        {popped ? <Burst key={`burst-${pops}`} /> : null}
         {done ? (
           <motion.span
-            animate={{ scale: 1, opacity: 1 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
             className="relative flex items-center justify-center"
-            initial={popped ? { scale: 0.3, opacity: 0 } : false}
+            initial={popped ? { scale: 0.2, opacity: 0, rotate: -45 } : false}
             key={`check-${pops}`}
             transition={CHECK_POP}
           >
@@ -91,7 +105,7 @@ export const TickRow = memo(function TickRow({
         <span
           className={cn(
             'line-clamp-2 type-body text-pretty transition-colors duration-150',
-            done ? 'text-hub-label' : 'text-hub-text',
+            done ? 'text-hub-label line-through decoration-hub-label/60' : 'text-hub-text',
           )}
         >
           {action}

@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'motion/react';
-import { buzz } from '@/lib/haptics';
+import { buzz, hapticTarget } from '@/lib/haptics';
 import { NO_MOTION, SPRING } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +27,7 @@ export function SwitchRow({ label, detail, checked, onChange, className }: Switc
         onChange(!checked);
         buzz();
       }}
+      ref={hapticTarget}
       role="switch"
       type="button"
     >
