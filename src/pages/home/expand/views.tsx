@@ -23,6 +23,7 @@ import {
 import { pillarMetric } from '@/lib/pillars';
 import { type PageId, routeHref } from '@/lib/routes';
 import { signOffHighlights, signOffNumbers, tomorrowFirstTask } from '@/lib/signoff';
+import { doneHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 import type { DateKey } from '@/store/types';
 import { useHub, useHubActions } from '@/store/useHub';
@@ -96,8 +97,17 @@ function SharedHeader({
 }
 
 /** All ticks of the pillar. They come in one after the other, 30 ms apart. */
-function ViewTicks({ ticks, onToggle }: { ticks: readonly TickView[]; onToggle: (task: string) => void }) {
+function ViewTicks({
+  ticks,
+  onToggle,
+  lastOfDay = false,
+}: {
+  ticks: readonly TickView[];
+  onToggle: (task: string) => void;
+  lastOfDay?: boolean;
+}) {
   const reduced = useReducedMotion();
+  const haptic = doneHaptic(ticks.filter((tick) => !tick.done).length, lastOfDay);
   if (ticks.length === 0) {
     return null;
   }
@@ -114,8 +124,9 @@ function ViewTicks({ ticks, onToggle }: { ticks: readonly TickView[]; onToggle: 
             action={tick.action}
             cue={tick.cue}
             done={tick.done}
+            doneHaptic={haptic}
             isNext={tick.isNext}
-            onToggle={() => onToggle(tick.task)}
+            onToggle={onToggle}
             task={tick.task}
           />
         </motion.li>
@@ -137,6 +148,8 @@ function PageLink({ page, segments = [], children }: { page: PageId; segments?: 
 }
 
 interface PillarViewProps {
+  /** True when one tick of the whole day is still open. */
+  lastOfDay?: boolean;
   module: ModuleView;
   today: DateKey;
   cardsDue: number;
@@ -155,7 +168,7 @@ const PAGE_LINKS: Readonly<Record<ModuleView['id'], { page: PageId; segments?: s
 };
 
 /** The expanded view of a pillar module (spec 10.1). */
-export function PillarView({ module, today, cardsDue, onToggle, format, whole }: PillarViewProps) {
+export function PillarView({ module, today, cardsDue, onToggle, format, whole, lastOfDay = false }: PillarViewProps) {
   const book = useHub((state) => state.books.find((item) => item.status === 'current'));
   const checks = useHub((state) => state.days[today]?.chartChecks ?? 0);
   const limit = useHub((state) => state.chartCheckLimit);
@@ -173,7 +186,7 @@ export function PillarView({ module, today, cardsDue, onToggle, format, whole }:
           <p className="type-body text-hub-label-strong">{module.note}</p>
         ) : null}
         {module.ticks.length > 0 ? (
-          <ViewTicks onToggle={onToggle} ticks={module.ticks} />
+          <ViewTicks onToggle={onToggle} ticks={module.ticks} lastOfDay={lastOfDay} />
         ) : (
           <p className="type-body text-hub-label">{module.emptyLine}</p>
         )}
@@ -226,6 +239,8 @@ export function PillarView({ module, today, cardsDue, onToggle, format, whole }:
 }
 
 interface SignOffViewProps {
+  /** True when one tick of the whole day is still open. */
+  lastOfDay?: boolean;
   module: ModuleView;
   today: DateKey;
   signedOff: boolean;
@@ -235,7 +250,7 @@ interface SignOffViewProps {
 }
 
 /** The Sign-off view: the ticks and "Sign off the day", then the summary (spec 6.3). */
-export function SignOffView({ module, today, signedOff, headline, onToggle, onSignOff }: SignOffViewProps) {
+export function SignOffView({ module, today, signedOff, headline, onToggle, onSignOff, lastOfDay = false }: SignOffViewProps) {
   const days = useHub((state) => state.days);
   const dmTarget = useHub((state) => state.dmTarget);
   const startDate = useHub((state) => state.startDate);
@@ -309,7 +324,7 @@ export function SignOffView({ module, today, signedOff, headline, onToggle, onSi
       ) : (
         <Content className="mt-5 grid gap-5 sm:mt-6 sm:gap-6 md:mt-8 md:gap-8">
           {module.ticks.length > 0 ? (
-            <ViewTicks onToggle={onToggle} ticks={module.ticks} />
+            <ViewTicks onToggle={onToggle} ticks={module.ticks} lastOfDay={lastOfDay} />
           ) : (
             <p className="type-body text-hub-label">{module.emptyLine}</p>
           )}

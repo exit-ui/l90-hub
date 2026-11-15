@@ -78,7 +78,7 @@
   --hub-amber: #a15c07;
 
   --hub-bar-fill: var(--hub-success);
-  --hub-glass: rgb(255 255 255 / 0.92);
+  --hub-glass: rgb(255 255 255 / 0.97);
   --hub-glass-edge: rgb(17 19 17 / 0.08);
 
   /* Cards and the expanded view. */
@@ -243,7 +243,7 @@
   --hub-accent-soft: rgb(124 156 255 / 0.14);
   --hub-amber: #f0b45a;
 
-  --hub-glass: rgb(17 19 24 / 0.86);
+  --hub-glass: rgb(17 19 24 / 0.97);
   --hub-glass-edge: rgb(255 255 255 / 0.08);
 
   --hub-material: #111318;
@@ -471,11 +471,10 @@
 }
 
 /* Frosted white: only the tab bar, the sidebar on a wide screen and toasts. */
+/* No backdrop blur: on iPhone a blurred bar over scrolling content costs frames. The fill is nearly opaque instead. */
 @utility glass {
   isolation: isolate;
   background: var(--hub-glass);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  backdrop-filter: blur(20px) saturate(160%);
   box-shadow:
     inset 0 0 0 1px var(--hub-glass-edge),
     var(--hub-shadow);

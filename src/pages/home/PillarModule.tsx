@@ -1,71 +1,59 @@
+import { BookOpen, Check } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
-import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
+import { memo, useEffect, useId, useRef } from 'react';
 import { DoneBadge } from '@/components/shared/DoneBadge';
 import { PILLAR_ICONS } from '@/components/shared/pillarIcons';
-import { ProgressBar } from '@/components/shared/ProgressBar';
-import { RollingNumber } from '@/components/shared/RollingNumber';
-import { useRisingEdge } from '@/hooks/useRisingEdge';
+import { PressButton } from '@/components/shared/PressButton';
 import { TickRow } from '@/components/shared/TickRow';
+import { useRisingEdge } from '@/hooks/useRisingEdge';
+import { doneHaptic } from '@/lib/haptics';
 import { COLLAPSED_TICKS, MAX_VISIBLE_TICKS, type ModuleView } from '@/lib/moduleView';
-import { CARD_RADIUS, CARD_TAP, CONTENT_IN, EXPAND_CLOSE, PULSE } from '@/lib/motion';
+import { CARD_RADIUS, CHECK_POP, CONTENT_IN, EXPAND_CLOSE } from '@/lib/motion';
+import { type ExpandId, routeHref } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { rememberCardHeight } from './expand/cardHeights';
 
 interface PillarModuleProps {
   view: ModuleView;
   onToggle: (task: string) => void;
-  /** Opens the expanded view of the module. */
-  onOpen: () => void;
-  /** Format of the moving number, for example a signed R value. */
-  format?: (value: number) => string;
-  /** Whole numbers only. Set false for R. */
-  whole?: boolean;
-  /** Rows after the ticks, for example "Review 3 cards". */
-  extraRows?: ReactNode;
-  /** Controls at the bottom, for example "+1 check". */
-  controls?: ReactNode;
-  /** One short line under the header, for example the Outreach hint. */
-  subline?: ReactNode;
-  /** Pulse the number one time, for example at the 20th DM. */
-  pulseKey?: number;
+  /** Opens the expanded view of a module. */
+  onOpen: (id: ExpandId) => void;
+  /** True when one tick of the whole day is still open: that tap gets the peak haptic. */
+  lastOfDay: boolean;
+  /** Learning: cards due for review today. */
+  cardsDue?: number;
+  /** Trading: adds one chart check. */
+  onChartCheck?: () => void;
   /** True right after its view closes: the content that is not shared fades in. */
   returning?: boolean;
-  /** The open state of the view. The grid shows a placeholder while it is open, so this is false here. */
-  isOpen?: boolean;
-  className?: string;
 }
 
 /**
- * One tick card of the day: a header button (icon, name, ratio or "Done", the number) that opens the view,
- * the ticks and a thin bar. A done card turns the pale done green with a green rim and a "Done" pill.
- * The surface, the name, the number and the bar fly into the view. The card never moves or reorders.
+ * One tick card of the day: the icon, the name and "2 of 3" (or "Done"), then the ticks.
+ * The header opens the view. A done card turns the pale done green, its icon becomes a check
+ * and a green light runs once along the rim. The card never moves or reorders.
  */
-export function PillarModule({
+function PillarModuleBase({
   view,
   onToggle,
   onOpen,
-  format,
-  whole = true,
-  extraRows,
-  controls,
-  subline,
-  pulseKey = 0,
+  lastOfDay,
+  cardsDue = 0,
+  onChartCheck,
   returning = false,
-  isOpen = false,
-  className,
 }: PillarModuleProps) {
   const reduced = useReducedMotion();
   const titleId = useId();
   const card = useRef<HTMLElement>(null);
   const glints = useRisingEdge(view.complete);
-  const [pressed, setPressed] = useState(false);
   const Icon = PILLAR_ICONS[view.id];
   const collapsible = view.ticks.length > MAX_VISIBLE_TICKS;
   const visible = collapsible ? view.ticks.slice(0, COLLAPSED_TICKS) : view.ticks;
   const hidden = view.ticks.length - COLLAPSED_TICKS;
-  const ratio = view.ticks.length === 0 ? 'No tasks' : `${view.doneCount} of ${view.ticks.length}`;
-  const badge = view.badge ?? (view.complete ? 'Done' : null);
+  const ratio = view.ticks.length === 0 ? null : `${view.doneCount} of ${view.ticks.length}`;
+  const done = view.badge === 'Done' || view.complete;
   const fadeIn = returning ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: CONTENT_IN } : {};
+  const haptic = doneHaptic(view.ticks.length - view.doneCount, lastOfDay);
 
   useEffect(() => {
     const element = card.current;
@@ -79,12 +67,10 @@ export function PillarModule({
 
   return (
     <motion.section
-      animate={pressed && !reduced ? CARD_TAP : { scale: 1 }}
       aria-labelledby={titleId}
       className={cn(
         'surface-card flex min-w-0 flex-col p-4 transition-[background-color,box-shadow] duration-300 sm:p-5',
         view.complete && 'rim-positive',
-        className,
       )}
       data-complete={view.complete ? 'true' : undefined}
       data-pillar={view.id}
@@ -101,67 +87,53 @@ export function PillarModule({
       <div className="-m-2">
         <button
           aria-controls={`view-${view.id}`}
-          aria-expanded={isOpen}
+          aria-expanded={false}
           aria-label={`Open the ${view.name} details.`}
-          className="flex w-full cursor-pointer items-center gap-3 rounded-control p-2 text-left transition-colors hover:bg-hub-inset"
+          className="flex min-h-11 w-full cursor-pointer touch-manipulation items-center gap-3 rounded-control p-2 text-left transition-[background-color,transform] duration-100 hover:bg-hub-inset active:scale-[0.985] active:bg-hub-inset"
           data-open-target={view.id}
-          onClick={onOpen}
-          onPointerCancel={() => setPressed(false)}
-          onPointerDown={() => setPressed(true)}
-          onPointerLeave={() => setPressed(false)}
-          onPointerUp={() => setPressed(false)}
+          onClick={() => onOpen(view.id)}
           type="button"
         >
           <span
             aria-hidden="true"
             className={cn(
-              'flex size-9 shrink-0 items-center justify-center rounded-full transition-colors',
-              view.complete ? 'bg-hub-done-pill text-hub-positive' : 'bg-hub-chip text-hub-text',
+              'flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-300',
+              view.complete ? 'bg-hub-success text-hub-on-success' : 'bg-hub-chip text-hub-text',
             )}
           >
-            <Icon className="size-4" strokeWidth={1.8} />
-          </span>
-          <span className="flex min-w-0 flex-1 flex-col">
-            <motion.span
-              className="type-name inline-block w-fit truncate text-hub-text"
-              id={titleId}
-              layoutId={`title-${view.id}`}
-              transition={EXPAND_CLOSE}
-            >
-              {view.name}
-            </motion.span>
-            <motion.span
-              className="inline-flex w-fit items-baseline gap-1"
-              layoutId={`number-${view.id}`}
-              transition={EXPAND_CLOSE}
-            >
+            {view.complete ? (
               <motion.span
-                animate={pulseKey > 0 && !reduced ? PULSE : undefined}
-                className="inline-block origin-left"
-                key={`pulse-${pulseKey}`}
+                animate={{ scale: 1, rotate: 0 }}
+                className="flex"
+                initial={glints > 0 && !reduced ? { scale: 0.3, rotate: -30 } : false}
+                key={`done-${glints}`}
+                transition={CHECK_POP}
               >
-                <RollingNumber
-                  className={cn('type-section transition-colors duration-300', view.complete ? 'text-hub-positive' : 'text-hub-text')}
-                  format={format}
-                  value={view.value}
-                  whole={whole}
-                />
+                <Check className="size-4" strokeWidth={3} />
               </motion.span>
-              <span className="type-label text-hub-label">{view.unit}</span>
-            </motion.span>
+            ) : (
+              <Icon className="size-4" strokeWidth={1.8} />
+            )}
           </span>
-          {badge ? (
-            <DoneBadge className="shrink-0 self-start" />
-          ) : (
-            <span className="type-label num shrink-0 self-start rounded-full bg-hub-chip px-2.5 text-hub-label">{ratio}</span>
-          )}
+          <motion.span
+            className="type-name min-w-0 flex-1 truncate text-hub-text"
+            id={titleId}
+            layoutId={`title-${view.id}`}
+            transition={EXPAND_CLOSE}
+          >
+            {view.name}
+          </motion.span>
+          {done ? (
+            <DoneBadge className="shrink-0" />
+          ) : ratio ? (
+            <span className="type-label num shrink-0 rounded-full bg-hub-chip px-2.5 py-0.5 text-hub-label">{ratio}</span>
+          ) : null}
         </button>
       </div>
-      {subline ? <div className="mt-2">{subline}</div> : null}
 
       <motion.div className="flex flex-1 flex-col" {...fadeIn}>
         {view.ticks.length === 0 ? (
-          <p className="type-body mt-3 text-hub-label">{view.emptyShort}</p>
+          cardsDue > 0 || onChartCheck ? null : <p className="type-body mt-3 text-hub-label">{view.emptyShort}</p>
         ) : (
           <div className="mt-3">
             <ul className="-mx-2 grid gap-1">
@@ -171,8 +143,9 @@ export function PillarModule({
                     action={tick.action}
                     cue={tick.cue}
                     done={tick.done}
+                    doneHaptic={haptic}
                     isNext={tick.isNext}
-                    onToggle={() => onToggle(tick.task)}
+                    onToggle={onToggle}
                     task={tick.task}
                   />
                 </li>
@@ -181,7 +154,7 @@ export function PillarModule({
             {collapsible ? (
               <button
                 className="tap press type-label -ml-2 mt-1 inline-flex cursor-pointer items-center rounded-full px-2 text-hub-label-strong hover:text-hub-text"
-                onClick={onOpen}
+                onClick={() => onOpen(view.id)}
                 type="button"
               >
                 {`Show ${hidden} more`}
@@ -190,22 +163,41 @@ export function PillarModule({
           </div>
         )}
 
-        {extraRows ? <div className="-mx-2">{extraRows}</div> : null}
-        {controls ? <div className="mt-auto pt-3">{controls}</div> : null}
-        {view.note && view.id !== 'outreach' ? (
-          <p className={cn('type-label text-right text-hub-label', controls ? 'pt-3' : 'mt-auto pt-3')}>{view.note}</p>
+        {cardsDue > 0 ? (
+          <a
+            className="type-body -mx-2 mt-2 flex min-h-11 items-center gap-3 rounded-control px-2 text-hub-text no-underline hover:bg-hub-inset active:bg-hub-inset"
+            href={routeHref('learning', 'cards')}
+          >
+            <BookOpen aria-hidden="true" className="size-4 shrink-0 text-hub-label" />
+            Review {cardsDue} {cardsDue === 1 ? 'card' : 'cards'}
+          </a>
+        ) : null}
+        {onChartCheck ? (
+          <div className="mt-auto flex items-center justify-between gap-3 pt-3">
+            <span className="type-label text-hub-label">{view.note ?? ''}</span>
+            <PressButton aria-label={`Add 1 chart check. ${view.note ?? ''}`} className="px-3" onClick={onChartCheck} tone="secondary">
+              +1 check
+            </PressButton>
+          </div>
         ) : null}
       </motion.div>
-
-      <div className="pt-3">
-        <motion.div layoutId={`bar-${view.id}`} transition={EXPAND_CLOSE}>
-          <ProgressBar
-            fraction={view.fraction}
-            label={view.barLabel}
-            tone={view.barTone === 'complete' ? 'complete' : view.barTone === 'limit' ? 'limit' : 'primary'}
-          />
-        </motion.div>
-      </div>
     </motion.section>
   );
 }
+
+/** A view with the same content. A tick on another card does not draw this card again. */
+function sameView(before: ModuleView, after: ModuleView): boolean {
+  return before === after || JSON.stringify(before) === JSON.stringify(after);
+}
+
+export const PillarModule = memo(
+  PillarModuleBase,
+  (before, after) =>
+    before.onToggle === after.onToggle &&
+    before.onOpen === after.onOpen &&
+    before.onChartCheck === after.onChartCheck &&
+    before.lastOfDay === after.lastOfDay &&
+    before.cardsDue === after.cardsDue &&
+    before.returning === after.returning &&
+    sameView(before.view, after.view),
+);

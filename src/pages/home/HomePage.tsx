@@ -1,19 +1,17 @@
-import { BookOpen, CircleCheck, Flame, UserRound } from 'lucide-react';
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { CircleCheck, Flame, UserRound } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Wordmark } from '@/components/shared/Brand';
 import { DmButtons } from '@/components/shared/DmControls';
 import { Notice } from '@/components/shared/Notice';
-import { PressButton } from '@/components/shared/PressButton';
 import { ProgressBar } from '@/components/shared/ProgressBar';
-import { ProgressChart } from '@/components/shared/ProgressChart';
 import { RollingNumber } from '@/components/shared/RollingNumber';
 import { useNow } from '@/hooks/useNow';
 import { useRoute } from '@/hooks/useRoute';
 import { useToday } from '@/hooks/useToday';
 import { formatLong } from '@/lib/dates';
 import { formatR, toRoman } from '@/lib/format';
-import { buzz } from '@/lib/haptics';
+import { haptic } from '@/lib/haptics';
 import { missionHeadline } from '@/lib/homeText';
 import { type ModuleView, momentumShort, todayView } from '@/lib/moduleView';
 import { CHECK_SPRING, FADE, PULSE } from '@/lib/motion';
@@ -25,7 +23,6 @@ import type { Momentum } from '@/lib/streak';
 import { signOffHeadline } from '@/lib/signoff';
 import { lineForDay } from '@/lib/summary';
 import { cn } from '@/lib/utils';
-import { levelProgress, totalXp } from '@/lib/xp';
 import { useHub, useHubActions } from '@/store/useHub';
 import { cardHeight } from './expand/cardHeights';
 import { ExpandedLayer, type ViewEntry } from './expand/ExpandedLayer';
@@ -84,11 +81,31 @@ const VIEW_TITLES: Readonly<Record<ExpandId, string>> = {
   progress: 'Progress',
 };
 
+/** "Day XXIV of XC" while the mission runs; the plain headline before and after it. */
+function dayCaption(clock: ReturnType<typeof missionClock>): { text: string; label: string } {
+  if (clock.stage !== 'active') {
+    const text = missionHeadline(clock);
+    return { text, label: text };
+  }
+  return {
+    text: `Day ${toRoman(clock.day)} of ${toRoman(MISSION_DAYS)}`,
+    label: `Day ${clock.day} of ${MISSION_DAYS}`,
+  };
+}
+
+/** "Fitness", "Fitness and Learning", "Fitness, Learning and Reading". */
+function listOf(names: string[]): string {
+  if (names.length < 2) {
+    return names.join('');
+  }
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+/** How long the content of a returning card fades in after its view closes. */
+const RETURN_MS = 450;
+
 /** True when the card of the id is on the screen now, so it can fly into its view. */
 function cardInView(id: ExpandId): boolean {
-  if (typeof document === 'undefined') {
-    return false;
-  }
   const card = document.querySelector(`[data-open-target="${id}"]`);
   if (!card) {
     return false;
@@ -97,22 +114,10 @@ function cardInView(id: ExpandId): boolean {
   return box.bottom > 0 && box.top < window.innerHeight;
 }
 
-/** "Day XXIV of XC · Phase 2" while the mission runs; the plain headline before and after it. */
-function dayCaption(clock: ReturnType<typeof missionClock>): { text: string; label: string } {
-  if (clock.stage !== 'active') {
-    const text = missionHeadline(clock);
-    return { text, label: text };
-  }
-  const phase = clock.phase ? ` · Phase ${clock.phase}` : '';
-  return {
-    text: `Day ${toRoman(clock.day)} of ${toRoman(MISSION_DAYS)}${phase}`,
-    label: `Day ${clock.day} of ${MISSION_DAYS}${clock.phase ? `, phase ${clock.phase}` : ''}`,
-  };
-}
-
 /**
- * Today: the DM count of the day, the pillar cards, the tick cards of the day, "Sign off the day"
- * and the progress chart. Each tick card opens into its expanded view with one continuous motion (spec 10).
+ * Today, by importance: the DM count of the day, the tick cards, "Sign off the day", then the pillar trends.
+ * Each tick card opens into its expanded view (spec 10). The cards are memoised, so a tick
+ * draws (and Motion measures) only the card that changed.
  */
 export function HomePage() {
   const today = useToday();
@@ -123,27 +128,35 @@ export function HomePage() {
   const { toggleTask, addChartCheck, signOffDay } = useHubActions();
   const expanded = expandedFrom(route);
   const openedByPush = useRef(false);
-  const [entry, setEntry] = useState<ViewEntry>(() => (expanded ? 'fade' : 'shared'));
+  const [tapped, setTapped] = useState<ExpandId | null>(null);
+  const [entry, setEntry] = useState<ViewEntry>('fade');
   const [seen, setSeen] = useState<ExpandId | null>(expanded);
   const [returning, setReturning] = useState<ExpandId | null>(null);
-  const [tapped, setTapped] = useState<ExpandId | null>(null);
 
-  // The view changed without a tap (Back, Forward, a typed hash): fly only when the card is on screen.
+  // The view changed. A close keeps the card ready for its flight back for a moment.
   if (seen !== expanded) {
     setSeen(expanded);
     if (seen !== null && expanded === null) {
       setReturning(seen);
     }
+    // Back, Forward or a typed hash: fly only when the card is on screen.
     if (expanded !== null && tapped !== expanded) {
       setEntry(!reduced && cardInView(expanded) ? 'shared' : 'fade');
     }
     setTapped(null);
   }
 
+  useEffect(() => {
+    if (returning === null) {
+      return;
+    }
+    const timer = window.setTimeout(() => setReturning(null), RETURN_MS);
+    return () => window.clearTimeout(timer);
+  }, [returning]);
+
   const view = useMemo(() => todayView(state, today, now), [state, today, now]);
   const cards = useMemo(() => pillarCards(state, today), [state, today]);
   const clock = useMemo(() => missionClock(today, state.startDate), [today, state.startDate]);
-  const level = useMemo(() => levelProgress(totalXp(state)).level, [state]);
   const line = lineForDay(clock.day);
   const caption = dayCaption(clock);
   const dm = state.days[today]?.dm ?? 0;
@@ -152,17 +165,21 @@ export function HomePage() {
   const headline = signOffHeadline(clock.stage === 'active' ? clock.day : null, view.ticksDone, view.ticksTotal);
   const outreach = view.modules.find((module) => module.id === 'outreach');
   const signoff = view.modules.find((module) => module.id === 'signoff');
+  const lastOfDay = view.ticksTotal - view.ticksDone === 1;
 
-  const open = (id: ExpandId) => {
-    const hash = routeHref('home', id);
-    if (window.location.hash === hash) {
-      return;
-    }
-    setTapped(id);
-    setEntry(reduced ? 'fade' : 'shared');
-    openedByPush.current = true;
-    window.location.hash = hash.slice(1);
-  };
+  const open = useCallback(
+    (id: ExpandId) => {
+      const hash = routeHref('home', id);
+      if (window.location.hash === hash) {
+        return;
+      }
+      setTapped(id);
+      setEntry(reduced ? 'fade' : 'shared');
+      openedByPush.current = true;
+      window.location.hash = hash.slice(1);
+    },
+    [reduced],
+  );
 
   const close = useCallback(() => {
     const action = closeAction(openedByPush.current);
@@ -176,90 +193,50 @@ export function HomePage() {
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   }, []);
 
-  const signOffNow = () => {
+  const onToggle = useCallback((task: string) => toggleTask(today, task), [toggleTask, today]);
+  const onChartCheck = useCallback(() => addChartCheck(today), [addChartCheck, today]);
+  const signOffNow = useCallback(() => {
     signOffDay(today);
-    buzz();
     open('signoff');
-  };
+  }, [open, signOffDay, today]);
 
-  const placeholder = (id: ExpandId, className?: string) => (
-    <div
-      aria-hidden="true"
-      className={cn('surface-card opacity-0', className)}
-      key={id}
-      style={{ height: cardHeight(id) }}
-    />
+  const placeholder = (id: ExpandId) => (
+    <div aria-hidden="true" className="surface-card opacity-0" key={id} style={{ height: cardHeight(id) }} />
   );
 
   const renderModule = (module: ModuleView) => {
     if (module.id === expanded) {
       return placeholder(module.id);
     }
-    const common = {
-      isOpen: false,
-      onOpen: () => open(module.id),
-      onToggle: (task: string) => toggleTask(today, task),
-      returning: returning === module.id,
-      view: module,
-    };
-    switch (module.id) {
-      case 'outreach':
-        return (
-          <PillarModule
-            {...common}
-            key={module.id}
-            pulseKey={pulse}
-            subline={module.note ? <p className="type-label text-hub-label">{module.note}</p> : null}
-          />
-        );
-      case 'learning':
-        return (
-          <PillarModule
-            {...common}
-            extraRows={
-              view.cardsDue > 0 ? (
-                <a
-                  className="type-body mt-1 flex min-h-11 items-center gap-3 rounded-control px-2 text-hub-text no-underline hover:bg-hub-inset"
-                  href={routeHref('learning', 'cards')}
-                >
-                  <BookOpen aria-hidden="true" className="size-4 shrink-0 text-hub-label" />
-                  Review {view.cardsDue} {view.cardsDue === 1 ? 'card' : 'cards'}
-                </a>
-              ) : null
-            }
-            key={module.id}
-          />
-        );
-      case 'trading':
-        return (
-          <PillarModule
-            {...common}
-            controls={
-              <PressButton
-                aria-label={`Add 1 chart check. ${module.note ?? ''}`}
-                className="px-3"
-                onClick={() => addChartCheck(today)}
-                tone="secondary"
-              >
-                +1 check
-              </PressButton>
-            }
-            format={signedR}
-            key={module.id}
-            whole={false}
-          />
-        );
-      default:
-        return <PillarModule {...common} key={module.id} />;
-    }
+    return (
+      <PillarModule
+        cardsDue={module.id === 'learning' ? view.cardsDue : undefined}
+        key={module.id}
+        lastOfDay={lastOfDay}
+        onChartCheck={module.id === 'trading' ? onChartCheck : undefined}
+        onOpen={open}
+        onToggle={onToggle}
+        returning={returning === module.id}
+        view={module}
+      />
+    );
   };
+
+  const tickModules = TICK_PILLARS.map((id) => view.modules.find((module) => module.id === id)).filter(
+    (module): module is ModuleView => module !== undefined,
+  );
+  // A card with no ticks today and nothing to do on it folds into one quiet line.
+  const hasWork = (module: ModuleView) =>
+    module.ticks.length > 0 || module.id === 'trading' || (module.id === 'learning' && view.cardsDue > 0) || module.id === expanded;
+  const shown = tickModules.filter(hasWork);
+  const resting = tickModules.filter((module) => !hasWork(module)).map((module) => module.name);
 
   const expandedModule = expanded ? view.modules.find((module) => module.id === expanded) : undefined;
   const titleId = expanded ? `view-title-${expanded}` : '';
 
   return (
     <>
-      <header className="mb-6 flex items-center justify-between gap-3">
+      <header className="mb-5 flex items-center justify-between gap-3">
         <a className="rounded-full no-underline lg:hidden" href={routeHref('home')}>
           <Wordmark />
           <span className="sr-only"> hub, Today</span>
@@ -278,15 +255,11 @@ export function HomePage() {
       </header>
 
       <section aria-labelledby="dm-today-title" className="mb-8">
-        <p className="type-label flex flex-wrap items-center gap-x-2 text-hub-label">
+        <p className="type-label text-hub-label">
           <span aria-hidden="true">{caption.text}</span>
           <span className="sr-only">{caption.label}</span>
-          <span aria-hidden="true">·</span>
-          <a className="text-hub-label underline-offset-4 hover:text-hub-text hover:underline" href={routeHref('progress')}>
-            Level {level}
-          </a>
         </p>
-        <div className="mt-2 flex items-end justify-between gap-4">
+        <div className="mt-1 flex items-end justify-between gap-4">
           <div className="min-w-0">
             <motion.p
               animate={pulse > 0 && !reduced ? PULSE : undefined}
@@ -303,12 +276,12 @@ export function HomePage() {
           <DmButtons date={today} large />
         </div>
         <ProgressBar
-          className="mt-4 h-1.5"
+          className="mt-4 h-2"
           fraction={state.dmTarget > 0 ? dm / state.dmTarget : 0}
           label={outreach?.barLabel ?? `${dm} DMs`}
           tone={dm >= state.dmTarget ? 'complete' : 'primary'}
         />
-        <p className="type-line mt-3 line-clamp-2 max-w-prose text-hub-label">{line.text}</p>
+        <p className="type-label mt-3 line-clamp-2 max-w-prose text-hub-label">{line.text}</p>
       </section>
 
       <InstallHint />
@@ -321,21 +294,17 @@ export function HomePage() {
 
       {view.allComplete ? <CompleteLine /> : null}
 
-      <PillarCards cards={cards} />
-
-      <LayoutGroup id="today">
+      <>
         <section aria-labelledby="ticks-title" className="mb-8">
-          <div className="mb-3 flex items-center justify-between gap-4">
-            <h2 className="type-section text-hub-text" id="ticks-title">
-              Today's ticks
-            </h2>
-            <span className="type-label text-hub-label">Tap to tick</span>
-          </div>
+          <h2 className="type-section mb-3 text-hub-text" id="ticks-title">
+            Today's ticks
+          </h2>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
-            {TICK_PILLARS.map((id) => view.modules.find((module) => module.id === id))
-              .filter((module): module is ModuleView => module !== undefined)
-              .map(renderModule)}
+            {shown.map(renderModule)}
           </div>
+          {resting.length > 0 ? (
+            <p className="type-label mt-3 px-1 text-hub-label">Nothing to tick today for {listOf(resting)}.</p>
+          ) : null}
         </section>
 
         {signoff ? (
@@ -344,9 +313,9 @@ export function HomePage() {
               placeholder('signoff')
             ) : (
               <SignOffCard
-                onOpen={() => open('signoff')}
+                        onOpen={open}
                 onSignOff={signOffNow}
-                onToggle={(task) => toggleTask(today, task)}
+                onToggle={onToggle}
                 returning={returning === 'signoff'}
                 signedOff={view.signedOff}
                 ticksDone={view.ticksDone}
@@ -357,11 +326,7 @@ export function HomePage() {
           </div>
         ) : null}
 
-        {expanded === 'progress' ? (
-          placeholder('progress')
-        ) : (
-          <ProgressChart maxInsights={1} onOpen={() => open('progress')} today={today} variant="compact" />
-        )}
+        <PillarCards cards={cards} />
 
         <AnimatePresence>
           {expanded ? (
@@ -382,9 +347,13 @@ export function HomePage() {
               ) : expanded === 'signoff' && expandedModule ? (
                 <SignOffView
                   headline={headline}
+                  lastOfDay={lastOfDay}
                   module={expandedModule}
-                  onSignOff={() => signOffDay(today)}
-                  onToggle={(task) => toggleTask(today, task)}
+                  onSignOff={() => {
+                    haptic('peak');
+                    signOffDay(today);
+                  }}
+                  onToggle={onToggle}
                   signedOff={view.signedOff}
                   today={today}
                 />
@@ -392,8 +361,9 @@ export function HomePage() {
                 <PillarView
                   cardsDue={view.cardsDue}
                   format={expandedModule.id === 'trading' ? signedR : undefined}
+                  lastOfDay={lastOfDay}
                   module={expandedModule}
-                  onToggle={(task) => toggleTask(today, task)}
+                  onToggle={onToggle}
                   today={today}
                   whole={expandedModule.id !== 'trading'}
                 />
@@ -401,7 +371,7 @@ export function HomePage() {
             </ExpandedLayer>
           ) : null}
         </AnimatePresence>
-      </LayoutGroup>
+      </>
     </>
   );
 }

@@ -28,20 +28,36 @@ function renderPage(page: PageId): ReactNode {
   return <Page />;
 }
 
-/** After the first paint, load the other pages in the background, so a tab change is instant. */
+/** The page a link like "#/outreach/funnel" opens, when it is one of the pages that load later. */
+function lazyPageOf(href: string | null): keyof typeof PAGES | null {
+  const id = href?.match(/^#\/([a-z]+)/)?.[1];
+  return id && id in PAGES ? (id as keyof typeof PAGES) : null;
+}
+
+/**
+ * The other pages load in the background, one at a time, a few seconds after the app opens,
+ * so the first taps on a phone do not wait behind them. A press on a link loads its page at once.
+ */
 function usePreloadPages() {
   useEffect(() => {
-    const start = () => {
-      for (const entry of Object.values(PAGES)) {
-        void entry.preload().catch(() => undefined);
+    const onPress = (event: PointerEvent) => {
+      const link = event.target instanceof Element ? event.target.closest('a[href^="#/"]') : null;
+      const page = lazyPageOf(link?.getAttribute('href') ?? null);
+      if (page) {
+        void PAGES[page].preload().catch(() => undefined);
       }
     };
-    if (typeof window.requestIdleCallback === 'function') {
-      const id = window.requestIdleCallback(start, { timeout: 2000 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const id = window.setTimeout(start, 1000);
-    return () => window.clearTimeout(id);
+    document.addEventListener('pointerdown', onPress, { passive: true });
+    const timers: number[] = [];
+    Object.values(PAGES).forEach((entry, index) => {
+      timers.push(window.setTimeout(() => void entry.preload().catch(() => undefined), 2500 + index * 400));
+    });
+    return () => {
+      document.removeEventListener('pointerdown', onPress);
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+    };
   }, []);
 }
 

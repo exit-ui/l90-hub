@@ -170,9 +170,11 @@ Home compact: chart area 200 px tall at 390 px, 240 px at 1280 px. Expanded char
 
 ### 6.1 Completion feedback (each tick)
 
-- Same frame: the check fills (scale 0.6 → 1, `CHECK_SPRING`), the big number rolls (9.4), the bar grows (≤ 300 ms).
-- `navigator.vibrate?.(8)` where the API exists. No sound.
-- Module complete: one rim glint (a light gradient sweeps along the border once, 400 ms) + the ratio becomes "Done". Never confetti on a single tick.
+- Press: the row tints and scales to 0.985 on `:active`, before the click (round 8).
+- Tick: the check pops (scale 0.3 → past 1 → 1, `CHECK_POP`) and one green ring grows out of it and fades (`RIPPLE`, 380 ms). Only after a tap, never on page load.
+- Haptics in 3 strengths (`src/lib/haptics.ts`): **tap** (a tick, +1 DM), **success** (the last tick of a card, the DM that reaches the target), **peak** (the last tick of the day, "Sign off"). Vibration API where it exists; on iPhone (no Vibration API) a hidden `<input type="checkbox" switch>` is clicked, which plays the iOS 18 system haptic. No sound.
+- Module complete: one rim glint (400 ms), the icon chip turns green and becomes a check, the ratio becomes "Done". Never confetti on a single tick.
+- +1 DM: a "+1" (or "+5") rises above the button and fades (`FLOAT_UP`, 380 ms), on Today and on the centre tab button.
 - +1 DM at the target (20th DM): the Outreach number pulses once (scale 1 → 1.04 → 1, 300 ms) and the hint says "Target hit. Each extra DM is a bonus."
 
 ### 6.2 Momentum and missed days
@@ -609,3 +611,13 @@ Round 7 (light fintech)
 107. Fitness shows the ring gauge (blue into green) for the week, the week chips, the "Gym attended today" switch (`role="switch"`, adds or removes a session of today), the 13-week history chips, the totals and the daily heatmap.
 108. Onboarding shows a back button, "Step N of M", a thin brand-green progress bar, one big title, the DM target stepper, the gym-day chips, a review list where each row opens its step, and a full-width brand-green button ("Continue", then "Start day 1"). The logic in `src/lib/onboarding.ts` is unchanged.
 109. Learning, Fitness, Trading, Method and Setup show a back button and a centred title below 1024 px.
+
+### Round 8: clean-up, feedback and speed
+
+110. Today is ordered by importance: the DM count, Today's ticks, Sign off the day, then My pillars. The compact progress chart is not on Today; it is the Progress tab.
+111. The hero caption is "Day XXIV of XC" only. Phase and level live on Progress.
+112. A tick card shows the icon, the name and "2 of 3" or "Done", then the ticks. It has no number and no bar: the DM count is in the hero and the pillar numbers are in My pillars.
+113. A card with no ticks today and nothing to do on it is not drawn. One line lists those pillars: "Nothing to tick today for Fitness and Learning."
+114. The tick cards and the sign-off card are memoised and there is no LayoutGroup, so a tick draws and measures only the card that changed.
+115. The tab bar has no backdrop blur. Its fill is 97 % opaque.
+116. The other pages load one at a time from 2.5 s after launch; a press on a link loads its page at once.

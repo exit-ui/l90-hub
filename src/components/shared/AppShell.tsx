@@ -2,14 +2,15 @@ import { BookOpen, ChartLine, Dumbbell, Ellipsis, House, type LucideIcon, Plus, 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type ReactNode, useRef, useState } from 'react';
 import { GradientDefs } from '@/components/charts/hub/GradientDefs';
+import { useAddDms } from '@/hooks/useAddDms';
 import { useBarVisible } from '@/hooks/useBarVisible';
+import { useFloatUp } from '@/hooks/useFloatUp';
 import { useToday } from '@/hooks/useToday';
-import { buzz } from '@/lib/haptics';
 import { BUTTON_TAP, FADE, NO_MOTION, SPRING } from '@/lib/motion';
 import { MORE_PAGES, PAGE_LABELS, type PageId, PRIMARY_PAGES, routeHref } from '@/lib/routes';
 import { cn } from '@/lib/utils';
-import { useHubActions } from '@/store/useHub';
 import { Wordmark } from './Brand';
+import { FloatUp } from './FloatUp';
 import { PressButton } from './PressButton';
 import { Sheet } from './Sheet';
 import { SampleBanner, SamplePreviewButtons } from './SamplePreview';
@@ -31,11 +32,8 @@ const DM_PAGES: readonly PageId[] = ['home', 'outreach'];
 
 function useAddDm() {
   const today = useToday();
-  const { addDm } = useHubActions();
-  return () => {
-    addDm(today, 1);
-    buzz();
-  };
+  const add = useAddDms(today);
+  return () => add(1);
 }
 
 interface TabLinkProps {
@@ -180,6 +178,7 @@ function TabBar({ page, onMore }: { page: PageId; onMore: () => void }) {
   const visible = useBarVisible(frame, page);
   const reduced = useReducedMotion();
   const addDm = useAddDm();
+  const { bubbles, show } = useFloatUp();
   const moreActive = MORE_PAGES.includes(page);
   const [home, outreach, progress] = PRIMARY_PAGES;
 
@@ -196,11 +195,15 @@ function TabBar({ page, onMore }: { page: PageId; onMore: () => void }) {
         <div className="mx-auto grid max-w-md grid-cols-5 items-center px-2 pt-1 pb-1">
           {home ? <TabLink id={home} page={page} /> : null}
           {outreach ? <TabLink id={outreach} page={page} /> : null}
-          <div className="flex justify-center">
+          <div className="relative flex justify-center">
+            <FloatUp bubbles={bubbles} className="-top-4" />
             <motion.button
               aria-label="Add 1 DM"
               className="shadow-brand flex size-15 -translate-y-4 cursor-pointer items-center justify-center rounded-full border-4 border-hub-bg-from bg-hub-brand text-hub-on-brand"
-              onClick={addDm}
+              onClick={() => {
+                addDm();
+                show('+1');
+              }}
               type="button"
               whileTap={BUTTON_TAP}
             >

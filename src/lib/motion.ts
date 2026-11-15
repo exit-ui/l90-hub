@@ -8,6 +8,12 @@
 export const SPRING = { type: 'spring', stiffness: 520, damping: 38, mass: 0.9 } as const;
 /** The check fill. */
 export const CHECK_SPRING = { type: 'spring', stiffness: 700, damping: 32, mass: 0.6 } as const;
+/** A tick: the check pops past full size and settles. */
+export const CHECK_POP = { type: 'spring', visualDuration: 0.28, bounce: 0.45 } as const;
+/** A tick: one green ring grows out of the check and fades. */
+export const RIPPLE = { duration: 0.38, ease: 'easeOut' } as const;
+/** "+1" rises above the button that added it and fades. */
+export const FLOAT_UP = { duration: 0.38, ease: 'easeOut' } as const;
 /** Card to expanded view: the shared elements. */
 export const EXPAND_OPEN = { type: 'spring', visualDuration: 0.35, bounce: 0.12 } as const;
 /** Expanded view to card. No overshoot into the grid. */

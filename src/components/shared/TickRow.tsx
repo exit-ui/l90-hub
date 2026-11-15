@@ -1,7 +1,8 @@
-import { buzz } from '@/lib/haptics';
 import { Check } from 'lucide-react';
-import { motion } from 'motion/react';
-import { CHECK_SPRING } from '@/lib/motion';
+import { motion, useReducedMotion } from 'motion/react';
+import { memo, useState } from 'react';
+import { haptic, type HapticKind } from '@/lib/haptics';
+import { CHECK_POP, RIPPLE } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
 interface TickRowProps {
@@ -12,29 +13,45 @@ interface TickRowProps {
   done: boolean;
   /** The one row to do now. It has a green inset bar and a dark cue. */
   isNext?: boolean;
-  onToggle: () => void;
+  /** The haptic when this tap marks the row done: "success" when it completes the card, "peak" for the day. */
+  doneHaptic?: HapticKind;
+  onToggle: (task: string) => void;
 }
 
 /**
  * One tick: a 24 px round check and the action, with the cue above it.
- * The full row is the target. A done row keeps its text, without a line through it.
+ * The press shows at once (CSS :active). A tick pops the check with a green ripple and a haptic.
+ * The pop only plays after a tap, never when the page opens.
  */
-export function TickRow({ task, cue, action, done, isNext = false, onToggle }: TickRowProps) {
+export const TickRow = memo(function TickRow({
+  task,
+  cue,
+  action,
+  done,
+  isNext = false,
+  doneHaptic = 'tap',
+  onToggle,
+}: TickRowProps) {
+  const reduced = useReducedMotion();
+  // Counts the taps that ticked the row, so the pop and the ripple replay on each one.
+  const [pops, setPops] = useState(0);
+  const popped = pops > 0 && done && !reduced;
   return (
     <button
       aria-label={task}
       aria-pressed={done}
-      className={cn(
-        'group/tick relative flex min-h-11 w-full cursor-pointer items-center gap-4 rounded-control px-1 py-1 text-left transition-colors hover:bg-hub-inset',
-      )}
+      className="group/tick relative flex min-h-11 w-full cursor-pointer touch-manipulation items-center gap-4 rounded-control px-1 py-1 text-left transition-[background-color,transform] duration-100 select-none hover:bg-hub-inset active:scale-[0.985] active:bg-hub-inset"
       data-next={isNext ? 'true' : undefined}
       onClick={() => {
-        onToggle();
-        buzz();
+        haptic(done ? 'tap' : doneHaptic);
+        if (!done) {
+          setPops((count) => count + 1);
+        }
+        onToggle(task);
       }}
       type="button"
     >
-      {isNext ? (
+      {isNext && !done ? (
         <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-hub-brand" />
       ) : null}
       <span
@@ -44,12 +61,22 @@ export function TickRow({ task, cue, action, done, isNext = false, onToggle }: T
           done ? 'bg-hub-success text-hub-on-success' : 'bg-transparent ring-check',
         )}
       >
+        {popped ? (
+          <motion.span
+            animate={{ scale: 2.2, opacity: 0 }}
+            className="absolute inset-0 rounded-full bg-hub-success"
+            initial={{ scale: 1, opacity: 0.45 }}
+            key={`ripple-${pops}`}
+            transition={RIPPLE}
+          />
+        ) : null}
         {done ? (
           <motion.span
             animate={{ scale: 1, opacity: 1 }}
-            className="flex items-center justify-center"
-            initial={{ scale: 0.6, opacity: 0 }}
-            transition={CHECK_SPRING}
+            className="relative flex items-center justify-center"
+            initial={popped ? { scale: 0.3, opacity: 0 } : false}
+            key={`check-${pops}`}
+            transition={CHECK_POP}
           >
             <Check className="size-4" strokeWidth={3} />
           </motion.span>
@@ -57,14 +84,14 @@ export function TickRow({ task, cue, action, done, isNext = false, onToggle }: T
       </span>
       <span aria-hidden="true" className="min-w-0 flex-1">
         {cue ? (
-          <span className={cn('block truncate type-label font-medium', isNext ? 'text-hub-text' : 'text-hub-label')}>
+          <span className={cn('block truncate type-label font-medium', isNext && !done ? 'text-hub-text' : 'text-hub-label')}>
             {cue}
           </span>
         ) : null}
         <span
           className={cn(
             'line-clamp-2 type-body text-pretty transition-colors duration-150',
-            done ? 'text-hub-label-strong' : 'text-hub-text',
+            done ? 'text-hub-label' : 'text-hub-text',
           )}
         >
           {action}
@@ -72,4 +99,4 @@ export function TickRow({ task, cue, action, done, isNext = false, onToggle }: T
       </span>
     </button>
   );
-}
+});

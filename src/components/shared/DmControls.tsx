@@ -2,11 +2,13 @@ import { Minus, Plus, SlidersHorizontal } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useId, useState } from 'react';
 import { parseWhole } from '@/lib/format';
-import { buzz } from '@/lib/haptics';
+import { useAddDms } from '@/hooks/useAddDms';
 import { DISCLOSE } from '@/lib/motion';
 import type { DateKey } from '@/store/types';
 import { useHub, useHubActions } from '@/store/useHub';
 import { Field, FieldInput } from './Field';
+import { useFloatUp } from '@/hooks/useFloatUp';
+import { FloatUp } from './FloatUp';
 import { GhostPill } from './GhostPill';
 import { PressButton } from './PressButton';
 
@@ -18,27 +20,40 @@ interface DmButtonsProps {
   large?: boolean;
 }
 
-/** A small "+5" pill and the round "+" button. The same pair on every screen. */
+/** A small "+5" pill and the round "+" button. The same pair on every screen. A "+1" rises on each tap. */
 export function DmButtons({ date, primary = true, large = false }: DmButtonsProps) {
-  const { addDm } = useHubActions();
-  const add = (amount: number) => {
-    addDm(date, amount);
-    buzz();
-  };
+  const add = useAddDms(date);
+  const { bubbles, show } = useFloatUp();
   return (
-    <div className="flex items-center gap-2">
-      <PressButton aria-label="Add 5 DMs" className="px-4" onClick={() => add(5)} tone="secondary">
-        +5
-      </PressButton>
-      <PressButton
-        aria-label="Add 1 DM"
-        className={large ? 'size-13 sm:size-13' : undefined}
-        iconOnly
-        onClick={() => add(1)}
-        tone={primary ? 'black' : 'secondary'}
-      >
-        <Plus aria-hidden="true" className="size-5" strokeWidth={2.5} />
-      </PressButton>
+    <div className="relative flex items-center gap-2">
+      <span className="relative">
+        <PressButton
+          aria-label="Add 5 DMs"
+          className="px-4"
+          onClick={() => {
+            add(5);
+            show('+5');
+          }}
+          tone="secondary"
+        >
+          +5
+        </PressButton>
+      </span>
+      <span className="relative">
+        <PressButton
+          aria-label="Add 1 DM"
+          className={large ? 'size-13 sm:size-13' : undefined}
+          iconOnly
+          onClick={() => {
+            add(1);
+            show('+1');
+          }}
+          tone={primary ? 'black' : 'secondary'}
+        >
+          <Plus aria-hidden="true" className="size-5" strokeWidth={2.5} />
+        </PressButton>
+      </span>
+      <FloatUp bubbles={bubbles} className="right-0 left-auto w-13" />
     </div>
   );
 }
