@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'motion/react';
+import type { CSSProperties } from 'react';
 import { cn } from '@/lib/utils';
 
 /** The colours of the pieces, in turn. */
@@ -18,28 +18,24 @@ interface BurstProps {
 
 /**
  * Small dots that fly out from the centre of the parent box and fade. Place it inside a relative box
- * and give it a new `key` to play it again. Transform and opacity only, so it stays smooth on a phone.
+ * and give it a new `key` to play it again. A CSS animation of transform and opacity only, so the
+ * phone's graphics chip runs it and the tap itself costs almost nothing. Reduced motion hides it (index.css).
  */
 export function Burst({ count = 8, distance = 26, size = 5, duration = 0.5, className }: BurstProps) {
-  const reduced = useReducedMotion();
-  if (reduced) {
-    return null;
-  }
   return (
-    <span aria-hidden="true" className={cn('pointer-events-none absolute inset-0 flex items-center justify-center', className)}>
+    <span aria-hidden="true" className={cn('burst pointer-events-none absolute inset-0 flex items-center justify-center', className)}>
       {Array.from({ length: count }, (_, index) => {
         const angle = (index / count) * Math.PI * 2 + (index % 2 ? 0.3 : 0);
         const reach = distance * (index % 2 ? 0.75 : 1);
-        return (
-          <motion.span
-            animate={{ x: Math.cos(angle) * reach, y: Math.sin(angle) * reach, scale: 0.4, opacity: 0 }}
-            className="absolute rounded-full"
-            initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
-            key={index}
-            style={{ width: size, height: size, background: COLOURS[index % COLOURS.length] }}
-            transition={{ duration, ease: [0.16, 1, 0.3, 1] }}
-          />
-        );
+        const style = {
+          width: size,
+          height: size,
+          background: COLOURS[index % COLOURS.length],
+          '--dx': `${(Math.cos(angle) * reach).toFixed(1)}px`,
+          '--dy': `${(Math.sin(angle) * reach).toFixed(1)}px`,
+          animationDuration: `${duration}s`,
+        } as CSSProperties;
+        return <span className="burst-piece absolute rounded-full" key={index} style={style} />;
       })}
     </span>
   );

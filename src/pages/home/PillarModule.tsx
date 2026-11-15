@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
-import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
+import { memo, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { Burst } from '@/components/shared/Burst';
 import { DoneBadge } from '@/components/shared/DoneBadge';
 import { PILLAR_ICONS } from '@/components/shared/pillarIcons';
@@ -36,6 +36,8 @@ interface PillarModuleProps {
   /** The open state of the view. The grid shows a placeholder while it is open, so this is false here. */
   isOpen?: boolean;
   className?: string;
+  /** Changes when extraRows, controls or subline change. The card redraws only when a prop changes. */
+  memoKey?: string;
 }
 
 /**
@@ -43,7 +45,7 @@ interface PillarModuleProps {
  * the ticks and a thin bar. A done card turns the pale done green with a green rim and a "Done" pill.
  * The surface, the name, the number and the bar fly into the view. The card never moves or reorders.
  */
-export function PillarModule({
+function PillarModuleBase({
   view,
   onToggle,
   onOpen,
@@ -56,6 +58,7 @@ export function PillarModule({
   returning = false,
   isOpen = false,
   className,
+  memoKey: _memoKey,
 }: PillarModuleProps) {
   const reduced = useReducedMotion();
   const titleId = useId();
@@ -99,13 +102,10 @@ export function PillarModule({
     >
       {glints > 0 && !reduced ? <span aria-hidden="true" className="rim-glint" key={glints} /> : null}
       {celebrate ? (
-        <motion.span
-          animate={{ opacity: 0 }}
+        <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[inherit] bg-hub-success-soft"
-          initial={{ opacity: 1 }}
+          className="flash-out-slow pointer-events-none absolute inset-0 rounded-[inherit] bg-hub-success-soft"
           key={`flash-${glints}`}
-          transition={{ duration: 0.9, ease: 'easeOut' }}
         />
       ) : null}
       <p aria-live="polite" className="sr-only">
@@ -238,3 +238,19 @@ export function PillarModule({
     </motion.section>
   );
 }
+
+const SLOTS = new Set(['extraRows', 'controls', 'subline', 'view']);
+
+/**
+ * Redraws a card only when its own content changed, so a tick draws one card, not every card.
+ * The slots (extraRows, controls, subline) are new elements on each draw: memoKey stands for them.
+ * The shared flight still works: the LayoutGroup on Today dirties every card when any member updates.
+ */
+export const PillarModule = memo(PillarModuleBase, (before, after) => {
+  for (const key of Object.keys({ ...before, ...after }) as (keyof PillarModuleProps)[]) {
+    if (!SLOTS.has(key) && before[key] !== after[key]) {
+      return false;
+    }
+  }
+  return before.view === after.view || JSON.stringify(before.view) === JSON.stringify(after.view);
+});

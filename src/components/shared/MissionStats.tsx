@@ -1,7 +1,7 @@
 import { type ReactNode, useMemo } from 'react';
 import { useToday } from '@/hooks/useToday';
 import { formatMedium } from '@/lib/dates';
-import { formatInteger, toRoman } from '@/lib/format';
+import { formatInteger } from '@/lib/format';
 import { momentumText } from '@/lib/moduleView';
 import { missionClock } from '@/lib/phases';
 import { momentum, totalDms } from '@/lib/streak';
@@ -48,7 +48,7 @@ export function MissionStats({ bare = false }: { bare?: boolean }) {
         <Stat label={before ? 'Days to the start' : 'Days left'}>
           <RollingNumber value={before ? clock.daysToStart : clock.daysLeft} />
         </Stat>
-        <Stat label="Phase">{clock.phase ? `${toRoman(clock.phase)} of III` : 'None'}</Stat>
+        <Stat label="Phase">{clock.phase ? `${clock.phase} of 3` : 'None'}</Stat>
         <Stat detail={`${formatInteger(level.toNext)} XP to level ${level.level + 1}`} label="Level">
           <RollingNumber value={level.level} />
         </Stat>

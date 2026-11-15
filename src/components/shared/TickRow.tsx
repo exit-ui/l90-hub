@@ -2,7 +2,7 @@ import { Check } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { memo, useState } from 'react';
 import { haptic, type HapticKind, hapticTarget } from '@/lib/haptics';
-import { CHECK_POP, RIPPLE } from '@/lib/motion';
+import { CHECK_POP } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 import { Burst } from './Burst';
 
@@ -55,13 +55,10 @@ export const TickRow = memo(function TickRow({
       type="button"
     >
       {popped ? (
-        <motion.span
-          animate={{ opacity: 0 }}
+        <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[inherit] bg-hub-success-soft"
-          initial={{ opacity: 1 }}
+          className="flash-out pointer-events-none absolute inset-0 rounded-[inherit] bg-hub-success-soft"
           key={`flash-${pops}`}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
         />
       ) : null}
       {isNext && !done ? (
@@ -75,13 +72,7 @@ export const TickRow = memo(function TickRow({
         )}
       >
         {popped ? (
-          <motion.span
-            animate={{ scale: 2.6, opacity: 0 }}
-            className="absolute inset-0 rounded-full bg-hub-success"
-            initial={{ scale: 1, opacity: 0.55 }}
-            key={`ripple-${pops}`}
-            transition={RIPPLE}
-          />
+          <span className="ripple-out absolute inset-0 rounded-full bg-hub-success" key={`ripple-${pops}`} />
         ) : null}
         {popped ? <Burst key={`burst-${pops}`} /> : null}
         {done ? (

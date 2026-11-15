@@ -936,3 +936,32 @@ body {
     font-weight: 400;
   }
 }
+
+/* Tap feedback drawn by CSS (transform and opacity only), so a tick costs almost no script time. */
+@keyframes hub-burst {
+  from { transform: translate(0, 0) scale(1); opacity: 1; }
+  to { transform: translate(var(--dx), var(--dy)) scale(0.4); opacity: 0; }
+}
+@keyframes hub-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes hub-ripple {
+  from { transform: scale(1); opacity: 0.55; }
+  to { transform: scale(2.6); opacity: 0; }
+}
+.burst-piece {
+  animation: hub-burst 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.flash-out {
+  animation: hub-fade-out 0.6s ease-out forwards;
+}
+.flash-out-slow {
+  animation: hub-fade-out 0.9s ease-out forwards;
+}
+.ripple-out {
+  animation: hub-ripple 0.38s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .burst, .flash-out, .flash-out-slow, .ripple-out { display: none; }
+}

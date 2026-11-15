@@ -1,6 +1,6 @@
 import { BookOpen, CircleCheck, Flame, UserRound } from 'lucide-react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 import { Wordmark } from '@/components/shared/Brand';
 import { DmButtons } from '@/components/shared/DmControls';
 import { Notice } from '@/components/shared/Notice';
@@ -15,7 +15,7 @@ import { useRisingEdge } from '@/hooks/useRisingEdge';
 import { useRoute } from '@/hooks/useRoute';
 import { useToday } from '@/hooks/useToday';
 import { formatLong } from '@/lib/dates';
-import { formatR, toRoman } from '@/lib/format';
+import { formatR } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { missionHeadline } from '@/lib/homeText';
 import { type ModuleView, momentumShort, todayView } from '@/lib/moduleView';
@@ -100,7 +100,7 @@ function cardInView(id: ExpandId): boolean {
   return box.bottom > 0 && box.top < window.innerHeight;
 }
 
-/** "Day XXIV of XC · Phase 2" while the mission runs; the plain headline before and after it. */
+/** "Day 24 of 90 · Phase 2" while the mission runs; the plain headline before and after it. */
 function dayCaption(clock: ReturnType<typeof missionClock>): { text: string; label: string } {
   if (clock.stage !== 'active') {
     const text = missionHeadline(clock);
@@ -108,10 +108,22 @@ function dayCaption(clock: ReturnType<typeof missionClock>): { text: string; lab
   }
   const phase = clock.phase ? ` · Phase ${clock.phase}` : '';
   return {
-    text: `Day ${toRoman(clock.day)} of ${toRoman(MISSION_DAYS)}${phase}`,
+    text: `Day ${clock.day} of ${MISSION_DAYS}${phase}`,
     label: `Day ${clock.day} of ${MISSION_DAYS}${clock.phase ? `, phase ${clock.phase}` : ''}`,
   };
 }
+
+/** The pillar row redraws only when its cards change. */
+const PillarCardsMemo = memo(PillarCards);
+
+/**
+ * A hidden member of the Today LayoutGroup that updates only when a view opens or closes.
+ * Its update dirties every card of the group, so the card that flies is measured even though
+ * the cards are memoised and do not draw again.
+ */
+const FlightTrigger = memo(function FlightTrigger({ open }: { open: ExpandId | null }) {
+  return <motion.div aria-hidden="true" className="hidden" layout layoutDependency={open} />;
+});
 
 /**
  * Today: the DM count of the day, the pillar cards, the tick cards of the day, "Sign off the day"
@@ -146,9 +158,11 @@ export function HomePage() {
   const view = useMemo(() => todayView(state, today, now), [state, today, now]);
   // Every tick of the day done, or the day signed off: a burst of colour over the screen.
   const party = useRisingEdge(view.allComplete) + useRisingEdge(view.signedOff);
-  const cards = useMemo(() => pillarCards(state, today), [state, today]);
+  // The parts that need not change on the same frame as a tick draw a moment later, in the background.
+  const lazy = useDeferredValue(state);
+  const cards = useMemo(() => pillarCards(lazy, today), [lazy, today]);
   const clock = useMemo(() => missionClock(today, state.startDate), [today, state.startDate]);
-  const level = useMemo(() => levelProgress(totalXp(state)).level, [state]);
+  const level = useMemo(() => levelProgress(totalXp(lazy)).level, [lazy]);
   const line = lineForDay(clock.day);
   const caption = dayCaption(clock);
   const dm = state.days[today]?.dm ?? 0;
@@ -159,16 +173,30 @@ export function HomePage() {
   const outreach = view.modules.find((module) => module.id === 'outreach');
   const signoff = view.modules.find((module) => module.id === 'signoff');
 
-  const open = (id: ExpandId) => {
-    const hash = routeHref('home', id);
-    if (window.location.hash === hash) {
-      return;
-    }
-    setTapped(id);
-    setEntry(reduced ? 'fade' : 'shared');
-    openedByPush.current = true;
-    window.location.hash = hash.slice(1);
-  };
+  const open = useCallback(
+    (id: ExpandId) => {
+      const hash = routeHref('home', id);
+      if (window.location.hash === hash) {
+        return;
+      }
+      setTapped(id);
+      setEntry(reduced ? 'fade' : 'shared');
+      openedByPush.current = true;
+      window.location.hash = hash.slice(1);
+    },
+    [reduced],
+  );
+  // One stable opener per view, so a memoised card does not draw again for a new function.
+  const opener = useMemo(
+    () =>
+      Object.fromEntries((Object.keys(VIEW_TITLES) as ExpandId[]).map((id) => [id, () => open(id)])) as Record<
+        ExpandId,
+        () => void
+      >,
+    [open],
+  );
+  const onToggle = useCallback((task: string) => toggleTask(today, task), [toggleTask, today]);
+  const onChartCheck = useCallback(() => addChartCheck(today), [addChartCheck, today]);
 
   const close = useCallback(() => {
     const action = closeAction(openedByPush.current);
@@ -182,11 +210,16 @@ export function HomePage() {
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   }, []);
 
-  const signOffNow = () => {
+  const signOffNow = useCallback(() => {
     haptic('peak');
     signOffDay(today);
     open('signoff');
-  };
+  }, [open, signOffDay, today]);
+
+  const chart = useMemo(
+    () => <ProgressChart maxInsights={1} onOpen={opener.progress} today={today} variant="compact" />,
+    [opener, today],
+  );
 
   const placeholder = (id: ExpandId, className?: string) => (
     <div
@@ -203,8 +236,8 @@ export function HomePage() {
     }
     const common = {
       isOpen: false,
-      onOpen: () => open(module.id),
-      onToggle: (task: string) => toggleTask(today, task),
+      onOpen: opener[module.id],
+      onToggle,
       returning: returning === module.id,
       view: module,
     };
@@ -214,6 +247,7 @@ export function HomePage() {
           <PillarModule
             {...common}
             key={module.id}
+            memoKey={module.note ?? ''}
             pulseKey={pulse}
             subline={module.note ? <p className="type-label text-hub-label">{module.note}</p> : null}
           />
@@ -234,6 +268,7 @@ export function HomePage() {
               ) : null
             }
             key={module.id}
+            memoKey={String(view.cardsDue)}
           />
         );
       case 'trading':
@@ -244,7 +279,7 @@ export function HomePage() {
               <PressButton
                 aria-label={`Add 1 chart check. ${module.note ?? ''}`}
                 className="px-3"
-                onClick={() => addChartCheck(today)}
+                onClick={onChartCheck}
                 tone="secondary"
               >
                 +1 check
@@ -252,6 +287,7 @@ export function HomePage() {
             }
             format={signedR}
             key={module.id}
+            memoKey={module.note ?? ''}
             whole={false}
           />
         );
@@ -339,9 +375,10 @@ export function HomePage() {
         </div>
       ) : null}
 
-      <PillarCards cards={cards} />
+      <PillarCardsMemo cards={cards} />
 
       <LayoutGroup id="today">
+        <FlightTrigger open={expanded} />
         <section aria-labelledby="ticks-title" className="mb-8">
           <div className="mb-3 flex items-center justify-between gap-4">
             <h2 className="type-section text-hub-text" id="ticks-title">
@@ -362,9 +399,9 @@ export function HomePage() {
               placeholder('signoff')
             ) : (
               <SignOffCard
-                onOpen={() => open('signoff')}
+                onOpen={opener.signoff}
                 onSignOff={signOffNow}
-                onToggle={(task) => toggleTask(today, task)}
+                onToggle={onToggle}
                 returning={returning === 'signoff'}
                 signedOff={view.signedOff}
                 ticksDone={view.ticksDone}
@@ -378,7 +415,7 @@ export function HomePage() {
         {expanded === 'progress' ? (
           placeholder('progress')
         ) : (
-          <ProgressChart maxInsights={1} onOpen={() => open('progress')} today={today} variant="compact" />
+          chart
         )}
 
         <AnimatePresence>

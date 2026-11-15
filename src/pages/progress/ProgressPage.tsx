@@ -6,7 +6,7 @@ import { navigate, useRoute } from '@/hooks/useRoute';
 import { useToday } from '@/hooks/useToday';
 import { STATUS_LABELS } from '@/lib/calendarGrid';
 import { formatShort } from '@/lib/dates';
-import { plural, toRoman } from '@/lib/format';
+import { plural } from '@/lib/format';
 import { MISSION_DAYS, missionClock } from '@/lib/phases';
 import { missionHeadline } from '@/lib/homeText';
 import { routeHref } from '@/lib/routes';
@@ -97,8 +97,7 @@ export function ProgressPage() {
   const clock = missionClock(today, startDate);
   const caption = clock.stage === 'active' ? (
     <>
-      <span aria-hidden="true">{`Day ${toRoman(clock.day)} of ${toRoman(MISSION_DAYS)}`}</span>
-      <span className="sr-only">{`Day ${clock.day} of ${MISSION_DAYS}`}</span>
+      {`Day ${clock.day} of ${MISSION_DAYS}`}
     </>
   ) : (
     missionHeadline(clock)

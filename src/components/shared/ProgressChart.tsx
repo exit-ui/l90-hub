@@ -1,7 +1,8 @@
 import { Menu } from '@base-ui/react/menu';
 import { Check, ChevronDown, ChevronRight, Layers } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useEffect, useId, useMemo, useRef } from 'react';
+import { memo, useDeferredValue, useEffect, useId, useMemo, useRef } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { rememberCardHeight } from '@/pages/home/expand/cardHeights';
 import { MotionChart } from '@/components/charts/hub/MotionChart';
 import { useChartPrefs } from '@/hooks/useChartPrefs';
@@ -24,7 +25,7 @@ import {
   type Range,
 } from '@/lib/progressSeries';
 import { cn } from '@/lib/utils';
-import type { DateKey } from '@/store/types';
+import type { DateKey, HubState } from '@/store/types';
 import { useHub } from '@/store/useHub';
 
 interface ProgressChartProps {
@@ -197,23 +198,41 @@ interface CardOptions {
  * The motion chart card: a metric menu, a 7D · 30D · 90D control, the chart,
  * the insights and the data as a table. The full variant also has the compare mode.
  */
-export function ProgressChart({
+export function ProgressChart(props: ProgressChartProps & CardOptions) {
+  const data = useHub(
+    useShallow((state) => ({
+      days: state.days,
+      weekTemplate: state.weekTemplate,
+      startDate: state.startDate,
+      fitness: state.fitness,
+      learning: state.learning,
+      trades: state.trades,
+      dmTarget: state.dmTarget,
+      fitTarget: state.fitTarget,
+      learnTarget: state.learnTarget,
+    })),
+  );
+  // A tick or a DM changes the data. The chart follows a moment later, in the background,
+  // so the tap itself draws at once.
+  const deferred = useDeferredValue(data);
+  return <ChartCard {...props} data={deferred} />;
+}
+
+type ChartData = Pick<
+  HubState,
+  'days' | 'weekTemplate' | 'startDate' | 'fitness' | 'learning' | 'trades' | 'dmTarget' | 'fitTarget' | 'learnTarget'
+>;
+
+const ChartCard = memo(function ChartCard({
   today,
   variant,
   className,
   onOpen,
   maxInsights = 2,
   embedded = false,
-}: ProgressChartProps & CardOptions) {
-  const days = useHub((state) => state.days);
-  const weekTemplate = useHub((state) => state.weekTemplate);
-  const startDate = useHub((state) => state.startDate);
-  const fitness = useHub((state) => state.fitness);
-  const learning = useHub((state) => state.learning);
-  const trades = useHub((state) => state.trades);
-  const dmTarget = useHub((state) => state.dmTarget);
-  const fitTarget = useHub((state) => state.fitTarget);
-  const learnTarget = useHub((state) => state.learnTarget);
+  data,
+}: ProgressChartProps & CardOptions & { data: ChartData }) {
+  const { days, weekTemplate, startDate, fitness, learning, trades, dmTarget, fitTarget, learnTarget } = data;
   const [prefs, setPrefs] = useChartPrefs();
   const wide = useMediaQuery('(min-width: 1024px)');
   const phone = useMediaQuery('(max-width: 639px)');
@@ -394,7 +413,7 @@ export function ProgressChart({
       {content}
     </motion.section>
   );
-}
+});
 
 interface ChartTableProps {
   summary: string;

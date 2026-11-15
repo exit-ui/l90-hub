@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'motion/react';
-import { useEffect, useId, useRef, useState } from 'react';
+import { memo, useEffect, useId, useRef, useState } from 'react';
 import { DoneBadge } from '@/components/shared/DoneBadge';
 import { PressButton } from '@/components/shared/PressButton';
 import { TickRow } from '@/components/shared/TickRow';
@@ -60,7 +60,7 @@ interface SignOffCardProps {
  * "Sign off the day": a ring with the ticks of the day, one line and the explicit sign-off button.
  * The header opens the Sign-off view. Only the button records the sign-off; a tick never does.
  */
-export function SignOffCard({
+function SignOffCardBase({
   view,
   ticksDone,
   ticksTotal,
@@ -182,3 +182,13 @@ export function SignOffCard({
     </motion.section>
   );
 }
+
+/** Redraws only when its content changed. */
+export const SignOffCard = memo(SignOffCardBase, (before, after) => {
+  for (const key of Object.keys({ ...before, ...after }) as (keyof SignOffCardProps)[]) {
+    if (key !== 'view' && before[key] !== after[key]) {
+      return false;
+    }
+  }
+  return before.view === after.view || JSON.stringify(before.view) === JSON.stringify(after.view);
+});

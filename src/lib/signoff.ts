@@ -5,7 +5,6 @@ import { PHASE_LENGTH, phaseOfDay } from './phases';
 import { dayXp } from './progressSeries';
 import { momentum } from './streak';
 import { tasksDone, tasksForDate } from './status';
-import { toRoman } from './format';
 
 export const STREAK_MILESTONES: readonly number[] = [7, 14, 30];
 const ALL_DONE_DAYS = 7;
@@ -73,7 +72,7 @@ function phaseProgress(state: SignOffState, today: DateKey): string | null {
   }
   const inPhase = day - (phase - 1) * PHASE_LENGTH;
   const percent = Math.round((inPhase / PHASE_LENGTH) * 100);
-  return `Phase ${toRoman(phase)} is ${percent} % complete.`;
+  return `Phase ${phase} is ${percent} % complete.`;
 }
 
 /**

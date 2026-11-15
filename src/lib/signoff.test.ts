@@ -47,7 +47,7 @@ describe('signOffHighlights', () => {
 
   it('always has the phase progress during the mission', () => {
     const hub = state();
-    expect(signOffHighlights(hub, addDays(START, 14))).toEqual(['Phase I is 50 % complete.']);
+    expect(signOffHighlights(hub, addDays(START, 14))).toEqual(['Phase 1 is 50 % complete.']);
     expect(signOffHighlights(hub, addDays(START, -3))).toEqual([]);
   });
 });
