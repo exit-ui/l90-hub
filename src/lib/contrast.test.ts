@@ -148,3 +148,40 @@ describe('contrast of the v3 pillar colours', () => {
     }
   });
 });
+
+describe('contrast of the v4 dark glass', () => {
+  const pillars = ['outreach', 'fitness', 'learning', 'reading', 'trading', 'signoff'];
+  const hex = (value: string): Rgb => {
+    const parsed = parseCssColor(value);
+    if (!parsed) {
+      throw new Error(`Not a colour: ${value}`);
+    }
+    return composite(parsed, [0, 0, 0]);
+  };
+
+  /** The brightest place of a glass card: its tint at full strength over the darker base. */
+  function peak(pillar: string): Rgb {
+    const block = new RegExp(`\\.pillar-${pillar}\\s*\\{([^}]*)\\}`).exec(css.slice(css.indexOf('v4: dark glass')))?.[1] ?? '';
+    const read = (name: string) => new RegExp(`${name}:\\s*([^;]+);`).exec(block)?.[1]?.trim() ?? '';
+    const alpha = Number.parseFloat(read('--gl-a')) / 100;
+    const tint = hex(read('--gl-tint'));
+    const base = hex(read('--gl-b1'));
+    return [0, 1, 2].map((index) => Math.round((tint[index] ?? 0) * alpha + (base[index] ?? 0) * (1 - alpha))) as unknown as Rgb;
+  }
+
+  it('keeps white text and 80 % white text at 4.5:1 or more at the brightest place of every glass card', () => {
+    for (const pillar of pillars) {
+      const background = peak(pillar);
+      expect(contrast(WHITE, background)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(composite([255, 255, 255, 0.8] as unknown as Rgba, background), background)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('keeps white text readable on the lime card in both themes', () => {
+    for (const stop of ['#1f3d0c', '#3d6b12', '#4d7c15']) {
+      expect(contrast(WHITE, hex(stop))).toBeGreaterThanOrEqual(4.5);
+    }
+    const lime = composite([163, 230, 53, 0.38] as unknown as Rgba, hex('#10140a'));
+    expect(contrast(WHITE, lime)).toBeGreaterThanOrEqual(4.5);
+  });
+});

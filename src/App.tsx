@@ -1,12 +1,12 @@
 import { MotionConfig } from 'motion/react';
-import { type ReactNode, Suspense, useEffect, useLayoutEffect } from 'react';
+import { type ReactNode, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { AppShell } from '@/components/shared/AppShell';
 import { useRoute } from '@/hooks/useRoute';
 import { useApplyTheme } from '@/hooks/useTheme';
 import { lazyPage } from '@/lib/lazyPage';
 import { useAfter } from '@/hooks/useAfter';
 import { analyticsFrom } from '@/lib/pillarAnalytics';
-import { expandedFrom, type PageId, redirectHash } from '@/lib/routes';
+import { expandedFrom, PAGE_IDS, type PageId, redirectHash } from '@/lib/routes';
 import { HomePage } from '@/pages/home/HomePage';
 import { OnboardingPage } from '@/pages/onboarding/OnboardingPage';
 import { useHub } from '@/store/useHub';
@@ -89,8 +89,24 @@ function useRedirects() {
 /** How long a view takes to land. The page behind it becomes inert after that, not in the first frame. */
 const VIEW_LAND_MS = 400;
 
+/**
+ * Which way the user moved between pages: 1 for a page further along the tab order, -1 for one before it,
+ * 0 on the first page. It sets which side the parts of the new page rise in from (v4).
+ */
+function usePageDirection(page: PageId): number {
+  const [last, setLast] = useState({ page, dir: 0 });
+  if (last.page !== page) {
+    setLast({ page, dir: PAGE_IDS.indexOf(page) >= PAGE_IDS.indexOf(last.page) ? 1 : -1 });
+  }
+  return last.dir;
+}
+
+/** How far the parts of a page travel sideways as they rise in. */
+const PAGE_SLIDE_PX = 18;
+
 export default function App() {
   const route = useRoute();
+  const direction = usePageDirection(route.page);
   const viewOpen = expandedFrom(route) !== null || analyticsFrom(route) !== null;
   const shellInert = useAfter(viewOpen, VIEW_LAND_MS);
   const onboarded = useHub((state) => state.onboarded);
@@ -111,7 +127,7 @@ export default function App() {
         {/* The page swaps at once, like a native tab bar. Then it settles from its top-left corner and
             its parts rise in, 50 ms apart (v3: the page first, then the details). */}
         <Suspense fallback={null}>
-          <div className="page-enter" key={route.page}>
+          <div className="page-enter" key={route.page} style={{ ['--dx' as string]: `${direction * PAGE_SLIDE_PX}px` }}>
             {renderPage(route.page)}
           </div>
         </Suspense>

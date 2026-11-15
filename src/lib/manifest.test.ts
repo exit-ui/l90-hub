@@ -41,11 +41,11 @@ describe('the web app manifest', () => {
   });
 });
 
-describe('the light status bar', () => {
-  it('sets the theme colour and a dark status bar text in index.html', () => {
+describe('the dark status bar', () => {
+  it('sets the dark theme colour and a black status bar in index.html', () => {
     const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
     expect(html).toContain(`<meta name="theme-color" content="${APP_BACKGROUND}" />`);
-    expect(html).toContain('<meta name="apple-mobile-web-app-status-bar-style" content="default" />');
+    expect(html).toContain('<meta name="apple-mobile-web-app-status-bar-style" content="black" />');
     expect(html).not.toContain('class="dark"');
   });
 });

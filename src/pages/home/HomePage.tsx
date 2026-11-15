@@ -1,12 +1,9 @@
-import { Flame, UserRound } from 'lucide-react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { Flame } from 'lucide-react';
+import { AnimatePresence, useReducedMotion } from 'motion/react';
 import { memo, useCallback, useDeferredValue, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Burst } from '@/components/shared/Burst';
-import { DmButtons } from '@/components/shared/DmControls';
 import { Notice } from '@/components/shared/Notice';
-import { RollingNumber } from '@/components/shared/RollingNumber';
-import { useIncrease } from '@/hooks/useIncrease';
 import { useNow } from '@/hooks/useNow';
 import { useRisingEdge } from '@/hooks/useRisingEdge';
 import { useRoute } from '@/hooks/useRoute';
@@ -15,18 +12,21 @@ import { formatR } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { missionHeadline } from '@/lib/homeText';
 import { momentumShort, type TodayView, todayView } from '@/lib/moduleView';
-import { PULSE } from '@/lib/motion';
+import { pulse } from '@/lib/pulse';
 import { MISSION_DAYS, missionClock } from '@/lib/phases';
 import { pillarCards } from '@/lib/pillarCards';
 import { closeAction, type ExpandId, expandedFrom, routeHref } from '@/lib/routes';
 import type { Momentum } from '@/lib/streak';
 import { signOffHeadline } from '@/lib/signoff';
 import { cn } from '@/lib/utils';
+import { levelProgress, totalXp } from '@/lib/xp';
 import type { DateKey } from '@/store/types';
 import { useHub, useHubActions } from '@/store/useHub';
 import { ExpandedLayer, type ViewEntry } from './expand/ExpandedLayer';
 import { PillarView, ProgressView, SignOffView, ViewTitle } from './expand/views';
+import { DmHero } from './DmHero';
 import { InstallHint } from './InstallHint';
+import { LevelRing } from './LevelRing';
 import { PillarCards } from './PillarCards';
 import { TodoList } from './TodoList';
 
@@ -104,6 +104,18 @@ function openView(id: ExpandId) {
 
 function openSignOff() {
   openView('signoff');
+}
+
+function openOutreach() {
+  openView('outreach');
+}
+
+/** The greeting for the hour of the day. */
+function greetingFor(hour: number): string {
+  if (hour >= 5 && hour < 12) {
+    return 'Good morning';
+  }
+  return hour >= 12 && hour < 18 ? 'Good afternoon' : 'Good evening';
 }
 
 function closeView() {
@@ -216,16 +228,12 @@ export const HomePage = memo(function HomePage() {
   const cards = useMemo(() => pillarCards(lazy, today), [lazy, today]);
   const clock = useMemo(() => missionClock(today, state.startDate), [today, state.startDate]);
   const caption = dayCaption(clock);
-  const dm = state.days[today]?.dm ?? 0;
-  const bumps = useIncrease(dm);
-  // The number pulses one time when the DMs reach the target.
-  const pulse = state.dmTarget > 0 && dm >= state.dmTarget ? 1 : 0;
-  const fraction = state.dmTarget > 0 ? Math.min(1, dm / state.dmTarget) : 0;
-  const outreach = view.modules.find((module) => module.id === 'outreach');
+  const level = useMemo(() => levelProgress(totalXp(lazy)), [lazy]);
 
   const onToggle = useCallback((task: string) => toggleTask(today, task), [toggleTask, today]);
   const signOffNow = useCallback(() => {
     haptic('peak');
+    pulse();
     signOffDay(today);
     // Sign off, then open the Sign-off view with the summary, the win and tomorrow (no-op when it is open).
     openView('signoff');
@@ -239,61 +247,15 @@ export const HomePage = memo(function HomePage() {
             <span aria-hidden="true">{caption.text}</span>
             <span className="sr-only">{caption.label}</span>
           </p>
-          <h1 className="type-title text-hub-text">Today</h1>
+          <h1 className="type-title text-hub-text">{greetingFor(now.getHours())}</h1>
         </div>
         <div className="flex items-center gap-2">
           <MomentumChip momentum={view.momentum} />
-          <a
-            aria-label="Open Setup"
-            className="press flex size-11 items-center justify-center rounded-full bg-hub-surface text-hub-text no-underline shadow-hub"
-            href={routeHref('setup')}
-          >
-            <UserRound aria-hidden="true" className="size-5" strokeWidth={1.7} />
-          </a>
+          <LevelRing fraction={level.fraction} level={level.level} />
         </div>
       </header>
 
-      <section aria-labelledby="dm-today-title" className="surface-card mb-6 grid gap-4 p-5">
-        <div className="flex items-end justify-between gap-4">
-          <button
-            aria-label={`${dm} of ${state.dmTarget} DMs today. Open Outreach.`}
-            className="min-w-0 cursor-pointer text-left"
-            data-open-target="outreach"
-            onClick={() => openView('outreach')}
-            type="button"
-          >
-            <motion.span
-              animate={pulse > 0 && !reduced ? PULSE : undefined}
-              aria-hidden="true"
-              className="type-hero num block origin-left text-hub-text"
-              key={`hero-pulse-${pulse}`}
-            >
-              <motion.span
-                animate={bumps > 0 && !reduced ? { scale: [1, 1.12, 1] } : undefined}
-                className="inline-block origin-bottom-left"
-                key={`bump-${bumps}`}
-                transition={{ duration: 0.32, ease: 'easeOut' }}
-              >
-                <RollingNumber value={dm} />
-              </motion.span>
-              <span className="text-hub-faint">/{state.dmTarget}</span>
-            </motion.span>
-            <span aria-hidden="true" className="type-body mt-1 block text-hub-label" id="dm-today-title">
-              DMs
-            </span>
-          </button>
-          <DmButtons date={today} large />
-        </div>
-        <div aria-label={outreach?.barLabel ?? `${dm} DMs`} className="h-2 overflow-hidden rounded-full bg-hub-track" role="img">
-          <div
-            className="h-full rounded-full transition-[width] duration-500 ease-out"
-            style={{
-              width: `${Math.round(fraction * 100)}%`,
-              background: 'linear-gradient(90deg, var(--pillar-outreach-solid), var(--hub-success))',
-            }}
-          />
-        </div>
-      </section>
+      <DmHero date={today} onOpen={openOutreach} />
 
       <InstallHint />
 
@@ -312,8 +274,6 @@ export const HomePage = memo(function HomePage() {
           )
         : null}
 
-      <PillarCards cards={cards} onOpen={openView} />
-
       <TodoList
         cardsDue={view.cardsDue}
         modules={view.modules}
@@ -322,6 +282,8 @@ export const HomePage = memo(function HomePage() {
         onToggle={onToggle}
         signedOff={view.signedOff}
       />
+
+      <PillarCards cards={cards} onOpen={openView} />
 
       <HomeSheets onSignOff={signOffNow} onToggle={onToggle} today={today} view={view} />
     </>

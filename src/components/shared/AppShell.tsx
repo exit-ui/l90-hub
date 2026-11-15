@@ -2,6 +2,7 @@ import { BookOpen, ChartLine, Dumbbell, Ellipsis, House, type LucideIcon, Plus, 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type ReactNode, useRef, useState } from 'react';
 import { GradientDefs } from '@/components/charts/hub/GradientDefs';
+import { GlowLayer } from '@/components/shared/GlowLayer';
 import { useAddDms } from '@/hooks/useAddDms';
 import { useBarVisible } from '@/hooks/useBarVisible';
 import { useFloatUp } from '@/hooks/useFloatUp';
@@ -219,7 +220,7 @@ function TabBar({ page, onMore }: { page: PageId; onMore: () => void }) {
           <motion.button
             aria-label="Add 1 DM"
             ref={hapticTarget}
-            className="pillar-outreach flex size-13 cursor-pointer items-center justify-center rounded-full"
+            className="fab flex size-13 cursor-pointer items-center justify-center rounded-full"
             onClick={() => {
               addDm();
               show('+1');
@@ -227,7 +228,7 @@ function TabBar({ page, onMore }: { page: PageId; onMore: () => void }) {
             type="button"
             whileTap={BUTTON_TAP}
           >
-            <Plus aria-hidden="true" className="size-6 text-white" strokeWidth={2.4} />
+            <Plus aria-hidden="true" className="size-6" strokeWidth={2.6} />
           </motion.button>
         </div>
         {progress ? <TabLink id={progress} page={page} /> : null}
@@ -266,7 +267,7 @@ export function AppShell({ page, children, inert = false }: AppShellProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   return (
     <div className="min-h-dvh overflow-x-clip" inert={inert}>
-      <div aria-hidden="true" className="page-glows" />
+      <GlowLayer />
       <GradientDefs />
       <a
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-full focus:bg-hub-surface focus:px-4 focus:py-3"

@@ -2,7 +2,7 @@
  * The web app manifest of the hub. Plain data with no imports, so vite.config.ts can use it too.
  * The colours are the page background token (--hub-bg-from) in src/index.css.
  */
-export const APP_BACKGROUND = '#f4f5f2';
+export const APP_BACKGROUND = '#05060a';
 
 export interface ManifestIcon {
   src: string;

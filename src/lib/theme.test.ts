@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { applyTheme, parseThemeChoice, resolveTheme, THEME_BACKGROUND } from './theme';
 
 describe('theme', () => {
-  it('reads a stored choice and falls back to light', () => {
+  it('reads a stored choice and falls back to dark', () => {
     expect(parseThemeChoice('dark')).toBe('dark');
+    expect(parseThemeChoice('light')).toBe('light');
     expect(parseThemeChoice('system')).toBe('system');
-    expect(parseThemeChoice(null)).toBe('light');
-    expect(parseThemeChoice('blue')).toBe('light');
+    expect(parseThemeChoice(null)).toBe('dark');
+    expect(parseThemeChoice('blue')).toBe('dark');
   });
 
   it('follows the device only for the automatic choice', () => {

@@ -13,6 +13,7 @@ import {
 import { PILLAR_LABELS } from '@/lib/pillars';
 import { ExpandedLayer, type ViewEntry } from '@/pages/home/expand/ExpandedLayer';
 import { ViewTitle } from '@/pages/home/expand/views';
+import { AllTicksCard } from './AllTicksCard';
 import { PillarAnalytics } from './PillarAnalytics';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { PillTabs } from '@/components/shared/PillTabs';
@@ -98,6 +99,9 @@ function MissionGrid() {
   );
 }
 
+/** How many days of data a pillar card's sparkline shows. */
+const SPARK_DAYS = 12;
+
 /** The unit word under a pillar total. */
 const TOTAL_WORD: Readonly<Record<AnalyticsPillar, string>> = {
   outreach: 'DMs sent',
@@ -129,9 +133,14 @@ function PillarGrid({ onOpen, today }: { onOpen: (id: AnalyticsPillar) => void; 
     () =>
       ANALYTICS_PILLARS.map((id) => {
         const metric = metricsOf(id, state)[0]!;
-        const total = pillarStats(state, id, metric, 90, today).total;
+        const stats = pillarStats(state, id, metric, 90, today);
+        const total = stats.total;
         const value = id === 'learning' ? `${Math.round((total / 60) * 10) / 10}` : formatValue(Math.round(total * 10) / 10, { ...metric, unit: '' });
-        return { id, value, unit: id === 'learning' ? ' h' : id === 'trading' ? ' R' : '' };
+        // The last 12 days with data, as bar heights from 12 % to 100 % of the tallest. Plain bars: no animation.
+        const recent = stats.points.flatMap((point) => (point.value === null ? [] : [Math.abs(point.value)])).slice(-SPARK_DAYS);
+        const top = Math.max(1, ...recent);
+        const spark = recent.map((v) => Math.max(12, Math.round((v / top) * 100)));
+        return { id, value, spark, unit: id === 'learning' ? ' h' : id === 'trading' ? ' R' : '' };
       }),
     [state, today],
   );
@@ -156,12 +165,19 @@ function PillarGrid({ onOpen, today }: { onOpen: (id: AnalyticsPillar) => void; 
                   <PillarGlyph delayMs={420 + index * 80} id={item.id} play={1} size={20} />
                 </span>
               </span>
-              <span aria-hidden="true" className="grid">
-                <span className="num text-[30px] leading-9 font-bold tracking-tight text-white">
-                  {item.value}
-                  <span className="text-lg text-white/60">{item.unit}</span>
+              <span aria-hidden="true" className="flex w-full items-end justify-between gap-3">
+                <span className="grid">
+                  <span className="num text-[30px] leading-9 font-bold tracking-tight whitespace-nowrap text-white">
+                    {item.value}
+                    <span className="text-lg text-white/60">{item.unit}</span>
+                  </span>
+                  <span className="type-caption text-white">{TOTAL_WORD[item.id]}</span>
                 </span>
-                <span className="type-caption text-white">{TOTAL_WORD[item.id]}</span>
+                <span className={cn('flex h-8.5 items-end', item.id === 'outreach' ? 'gap-0.75' : 'gap-0.5')}>
+                  {(item.id === 'outreach' ? item.spark : item.spark.slice(-7)).map((height, index) => (
+                    <span className={cn('hatch rounded-full', item.id === 'outreach' ? 'w-1.25' : 'w-1')} key={index} style={{ height: `${height}%` }} />
+                  ))}
+                </span>
               </span>
             </button>
           </li>
@@ -187,6 +203,7 @@ const OverviewTab = memo(function OverviewTab({
   return (
     <div className="grid gap-5 sm:gap-8 md:gap-12">
       <PillarGrid onOpen={onOpen} today={today} />
+      <AllTicksCard today={today} />
       {heavyReady ? (
         <>
           <ProgressChart today={today} variant="full" />
@@ -252,7 +269,7 @@ export function ProgressPage() {
         tabs={[
           {
             id: OVERVIEW_TAB,
-            label: 'Overview',
+            label: 'Pillars',
             content: <OverviewTab onOpen={openPillar} today={today} />,
           },
           { id: DAYS_TAB, label: 'Days', content: <DaysTab segment={daySegment} /> },

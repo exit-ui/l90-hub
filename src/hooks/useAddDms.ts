@@ -1,4 +1,5 @@
 import { haptic } from '@/lib/haptics';
+import { pulse } from '@/lib/pulse';
 import type { DateKey } from '@/store/types';
 import { useHub, useHubActions } from '@/store/useHub';
 
@@ -14,5 +15,6 @@ export function useAddDms(date: DateKey): (amount: number) => void {
     const reaches = dmTarget > 0 && before < dmTarget && before + amount >= dmTarget;
     haptic(reaches ? 'success' : 'tap');
     addDm(date, amount);
+    pulse();
   };
 }

@@ -21,9 +21,9 @@ export function isThemeChoice(value: unknown): value is ThemeChoice {
   return THEME_CHOICES.some((choice) => choice === value);
 }
 
-/** A stored value that is missing or wrong gives "light", the look the app had first. */
+/** A stored value that is missing or wrong gives "dark", the v4 look. A stored choice is kept. */
 export function parseThemeChoice(raw: string | null): ThemeChoice {
-  return isThemeChoice(raw) ? raw : 'light';
+  return isThemeChoice(raw) ? raw : 'dark';
 }
 
 export function resolveTheme(choice: ThemeChoice, systemDark: boolean): Theme {

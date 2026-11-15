@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { PillarGlyph } from '@/components/shared/PillarGlyph';
 import type { PillarCard } from '@/lib/pillarCards';
-import type { ExpandId } from '@/lib/routes';
+import { type ExpandId, routeHref } from '@/lib/routes';
 
 /** The calm line of a pillar with no data yet. No zero, no blame. */
 const EMPTY_TEXT: Readonly<Record<PillarCard['id'], string>> = {
@@ -59,9 +59,14 @@ function PillarCardButton({ card, onOpen, index }: { card: PillarCard; onOpen: (
 function PillarCardsBase({ cards, onOpen }: { cards: readonly PillarCard[]; onOpen: (id: ExpandId) => void }) {
   return (
     <section aria-labelledby="pillars-title" className="mb-2">
-      <h2 className="sr-only" id="pillars-title">
-        My pillars
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="type-section text-hub-text" id="pillars-title">
+          Pillars
+        </h2>
+        <a className="tap inline-flex items-center rounded-full px-2 type-label text-hub-label no-underline hover:text-hub-text" href={routeHref('progress')}>
+          See all ›
+        </a>
+      </div>
       <ul className="scroll-row -mx-4 flex snap-x gap-3 px-4 pt-1 pb-11 md:-mx-6 md:px-6 lg:mx-0 lg:grid lg:grid-cols-4 lg:px-0">
         {cards.map((card, index) => (
           <li className="shrink-0 lg:min-w-0" key={card.id}>
