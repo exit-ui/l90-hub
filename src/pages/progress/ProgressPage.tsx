@@ -1,5 +1,5 @@
 import { AnimatePresence, useReducedMotion } from 'motion/react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { PillarGlyph } from '@/components/shared/PillarGlyph';
 import {
@@ -181,6 +181,8 @@ export function ProgressPage() {
   const reduced = useReducedMotion();
   const first = route.page === 'progress' ? route.segments[0] : undefined;
   const pillar = analyticsFrom(route);
+  // The chart and the 90-day grid draw one render after the cards, so the page shows at once.
+  const heavyReady = useDeferredValue(true, false);
   const openedByPush = useRef(false);
   const [entry, setEntry] = useState<ViewEntry>(() => (pillar ? 'fade' : 'grow'));
   const openPillar = useCallback(
@@ -227,9 +229,15 @@ export function ProgressPage() {
             content: (
               <div className="grid gap-5 sm:gap-8 md:gap-12">
                 <PillarGrid onOpen={openPillar} today={today} />
-                <ProgressChart today={today} variant="full" />
-                <MissionStats />
-                <MissionGrid />
+                {heavyReady ? (
+                  <>
+                    <ProgressChart today={today} variant="full" />
+                    <MissionStats />
+                    <MissionGrid />
+                  </>
+                ) : (
+                  <div aria-hidden="true" className="min-h-[640px]" />
+                )}
               </div>
             ),
           },

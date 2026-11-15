@@ -1075,25 +1075,21 @@ body {
 
 /* Motion: the page lands first, then its parts rise in, 50 ms apart. */
 @keyframes hub-page-in {
-  from { opacity: 0.4; transform: scale(0.965); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0.55; }
+  to { opacity: 1; }
 }
 @keyframes hub-rise {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: none; }
 }
-.page-enter {
-  animation: hub-page-in 0.3s cubic-bezier(0.2, 0.85, 0.25, 1) backwards;
-  transform-origin: 0 0;
-}
-.page-enter > * { animation: hub-rise 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
-.page-enter > *:nth-child(1) { animation-delay: 160ms; }
-.page-enter > *:nth-child(2) { animation-delay: 210ms; }
-.page-enter > *:nth-child(3) { animation-delay: 260ms; }
-.page-enter > *:nth-child(4) { animation-delay: 310ms; }
-.page-enter > *:nth-child(5) { animation-delay: 360ms; }
-.page-enter > *:nth-child(6) { animation-delay: 410ms; }
-.page-enter > *:nth-child(n + 7) { animation-delay: 460ms; }
+.page-enter { animation: hub-page-in 0.16s ease-out backwards; }
+/* The parts rise 30 ms apart and are all in 450 ms after the tap. The first one starts at once. */
+.page-enter > * { animation: hub-rise 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.page-enter > *:nth-child(2) { animation-delay: 30ms; }
+.page-enter > *:nth-child(3) { animation-delay: 60ms; }
+.page-enter > *:nth-child(4) { animation-delay: 90ms; }
+.page-enter > *:nth-child(5) { animation-delay: 120ms; }
+.page-enter > *:nth-child(n + 6) { animation-delay: 150ms; }
 .rise { animation: hub-rise 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation-delay: var(--delay, 0ms); }
 
 /* Playful icon moves: each plays once when its icon mounts with data-play, or on a tap. */

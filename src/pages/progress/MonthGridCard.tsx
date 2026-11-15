@@ -1,5 +1,5 @@
+import { memo } from 'react';
 import { Card } from '@/components/shared/Card';
-import { PressButton } from '@/components/shared/PressButton';
 import {
   type CalendarDay,
   dayCellLabel,
@@ -18,17 +18,20 @@ interface DayCellProps {
   onSelect: (date: DateKey) => void;
 }
 
-/** One day: the date number, the mission day number, the DM count and the status. */
-function DayCell({ cell, selected, onSelect }: DayCellProps) {
+/**
+ * One day: the date number, the mission day number, the DM count and the status.
+ * A plain button with a CSS press and a memo: a tap on a day draws the two cells that change, not all of them.
+ */
+const DayCell = memo(function DayCell({ cell, selected, onSelect }: DayCellProps) {
   const style = STATUS_STYLE[cell.status];
   const Icon = style.icon;
   return (
-    <PressButton
+    <button
       aria-current={cell.isToday ? 'date' : undefined}
       aria-label={dayCellLabel(cell)}
       aria-pressed={selected}
       className={cn(
-        'h-auto min-h-16 w-full min-w-0! flex-col gap-1 rounded-control border border-transparent px-0 py-2 type-label leading-none font-medium',
+        'inline-flex h-auto min-h-16 w-full min-w-0 cursor-pointer touch-manipulation select-none flex-col items-center justify-center gap-1 rounded-control border border-transparent px-0 py-2 type-label leading-none font-medium transition-[background-color,transform] duration-100 active:scale-[0.96]',
         style.cell,
         cell.isToday && 'ring-2 ring-hub-brand ring-inset',
         selected && 'border-transparent bg-hub-brand text-hub-on-brand',
@@ -37,7 +40,7 @@ function DayCell({ cell, selected, onSelect }: DayCellProps) {
       onClick={() => onSelect(cell.date)}
       tabIndex={selected ? 0 : -1}
       title={`${cell.isReview ? 'Review day' : `Day ${cell.day}`}: ${STATUS_LABELS[cell.status]}`}
-      tone="ghost"
+      type="button"
     >
       <span className="flex items-center gap-1">
         <span className={cn('type-body font-semibold', !selected && 'text-hub-text')}>
@@ -49,9 +52,9 @@ function DayCell({ cell, selected, onSelect }: DayCellProps) {
         {cell.isReview ? 'Review' : `D${cell.day}`}
       </span>
       {cell.isFuture ? null : <span className="type-label">{cell.dm} DM</span>}
-    </PressButton>
+    </button>
   );
-}
+});
 
 interface MonthGridCardProps {
   grid: MonthGrid;
@@ -62,7 +65,7 @@ interface MonthGridCardProps {
 }
 
 /** The days of one calendar month in weeks of 7 cells, with Monday first. */
-export function MonthGridCard({ grid, cells, selected, onSelect, className }: MonthGridCardProps) {
+export const MonthGridCard = memo(function MonthGridCard({ grid, cells, selected, onSelect, className }: MonthGridCardProps) {
   const titleId = `month-${grid.month}`;
   return (
     <Card aria-labelledby={titleId} className={cn('p-2 md:p-6', className)}>
@@ -96,4 +99,4 @@ export function MonthGridCard({ grid, cells, selected, onSelect, className }: Mo
       </div>
     </Card>
   );
-}
+});

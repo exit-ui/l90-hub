@@ -631,8 +631,13 @@ Round 8's items 112 to 114 are replaced by 117 to 128. The design came from the 
 121. "To do" holds every tick of the day in one list, in pillar order, each with a ring in its pillar colour. A tap saves the tick at once; the row shows its check and a burst for 300 ms, then slides away. Nothing is crossed out. "N done" shows the done rows; a tap undoes one. A keyboard tick moves the focus to the next row.
 122. When nothing is left, a green "All clear" card offers "Sign off". The round moon button next to "N left" opens the Sign-off view at any time.
 123. The tab bar floats: a white rounded bar 10 px above the safe area, icons only. The active page sits in a pill of its pillar colour; the centre button is the Outreach gradient and adds 1 DM in one tap.
-124. Page motion: the page settles from its top-left corner in 300 ms, then its parts rise in 50 ms apart. A view grows out of its card; its content rises in after 300 ms, when the view has landed.
+124. Page motion: the page fades in at once (160 ms); its parts rise in 30 ms apart and are all in 450 ms after the tap, the first starting immediately. A view grows out of its card; its content rises in after 200 ms, when the view has landed.
 125. The view header is the pillar's gradient card with the big number, the icon and a white bar.
 126. Progress opens with the five pillar cards (Outreach across the top) with mission totals. A tap opens the pillar's analytics at #/progress/pillar/<id>: the total with the change against the days before (R in R, counts in %), 7D / 30D / 90D, the metric chips the record holds, a bar chart (days at the goal in the pillar gradient; R below zero goes down), best day, goal hit or active days, streak, daily average and a breakdown (funnel, session types, time by subject, books, outcomes and rules followed). Only stored data is shown.
 127. Each pillar icon has one small move (the plane takes off, the weight lifts, the tassel swings, the pages flutter, the line climbs, the moon tilts). It plays once when its card or view appears. All moves are CSS and stop with reduced motion.
 128. A tick blocks the main thread for about 2.5 ms (median, desktop, production build).
+129. The Days grid draws plain, memoised buttons: a tap on a day draws the two cells that change, not all 91.
+130. Progress draws the pillar cards first; the chart, the mission numbers and the 90-day grid draw one render later (useDeferredValue), so the page shows at once.
+131. The iPhone haptic scan reads every position first and then writes, one style pass for the page.
+132. Measured on a production build on a desktop: a page change takes 25 to 46 ms of script (was 32 to 63); the first part of a page shows after about 55 ms and all parts after about 250 ms (was up to 880 ms).
+

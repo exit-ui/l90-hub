@@ -35,12 +35,12 @@ export const OVERLAY_FADE = {
 } as const;
 /** Content that is not shared, inside an expanded view. */
 /** Content inside a view rises in once the view has landed (v3: the page first, then the details). */
-export const CONTENT_IN = { duration: 0.32, delay: 0.3, ease: [0.2, 0.8, 0.2, 1] } as const;
+export const CONTENT_IN = { duration: 0.28, delay: 0.2, ease: [0.2, 0.8, 0.2, 1] } as const;
 export const CONTENT_OUT = { duration: 0.1, ease: 'easeOut' } as const;
 /** The Close button and the grabber show near the end of the flight, so they never look stretched. */
 export const CHROME_IN = { duration: 0.1, delay: 0.25, ease: 'easeOut' } as const;
 /** Tick rows in an expanded view: 30 ms apart from 120 ms. Item 7 and later use the item-6 delay. */
-export const STAGGER = { step: 0.04, start: 0.32, max: 6 } as const;
+export const STAGGER = { step: 0.04, start: 0.22, max: 6 } as const;
 /** Generic fades and every reduced-motion fallback. */
 export const FADE = { duration: 0.15, ease: 'easeOut' } as const;
 

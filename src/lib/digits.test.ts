@@ -30,10 +30,10 @@ describe('digitColumns', () => {
 });
 
 describe('staggerDelay', () => {
-  it('starts at 320 ms (after the view lands), steps 40 ms and stops after item 6', () => {
-    expect(staggerDelay(0)).toBeCloseTo(0.32);
-    expect(staggerDelay(1)).toBeCloseTo(0.36);
-    expect(staggerDelay(5)).toBeCloseTo(0.52);
-    expect(staggerDelay(9)).toBeCloseTo(0.52);
+  it('starts at 220 ms (after the view lands), steps 40 ms and stops after item 6', () => {
+    expect(staggerDelay(0)).toBeCloseTo(0.22);
+    expect(staggerDelay(1)).toBeCloseTo(0.26);
+    expect(staggerDelay(5)).toBeCloseTo(0.42);
+    expect(staggerDelay(9)).toBeCloseTo(0.42);
   });
 });

@@ -63,7 +63,7 @@ const OVERLAY = 'data-haptic-overlay';
  * A ref callback that makes taps on the element play the iPhone haptic. Does nothing elsewhere.
  * Use it on buttons: `<button ref={hapticTarget}>`.
  */
-export function hapticTarget(element: HTMLElement | null): void {
+export function hapticTarget(element: HTMLElement | null, isStatic?: boolean): void {
   if (!element || !isIos() || element.querySelector(`:scope > [${OVERLAY}]`)) {
     return;
   }
@@ -109,7 +109,7 @@ export function hapticTarget(element: HTMLElement | null): void {
     });
   });
   label.append(input);
-  if (getComputedStyle(element).position === 'static') {
+  if (isStatic ?? getComputedStyle(element).position === 'static') {
     element.style.position = 'relative';
   }
   element.append(label);
@@ -132,12 +132,16 @@ export function hapticEverything(root: HTMLElement = document.body): void {
   let queued = false;
   const scan = () => {
     queued = false;
-    for (const element of root.querySelectorAll<HTMLElement>(TARGETS)) {
-      if (!element.hasAttribute(DONE)) {
-        element.setAttribute(DONE, '');
-        hapticTarget(element);
-      }
+    const fresh = [...root.querySelectorAll<HTMLElement>(TARGETS)].filter((element) => !element.hasAttribute(DONE));
+    if (fresh.length === 0) {
+      return;
     }
+    // Read every position first, then write: one style pass for the whole page, not one per control.
+    const positions = fresh.map((element) => getComputedStyle(element).position === 'static');
+    fresh.forEach((element, index) => {
+      element.setAttribute(DONE, '');
+      hapticTarget(element, positions[index]);
+    });
   };
   scan();
   // New controls come and go with each page; scan once per frame at most.

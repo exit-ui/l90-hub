@@ -1,4 +1,4 @@
-import { type KeyboardEvent, type ReactNode, useMemo, useRef } from 'react';
+import { type KeyboardEvent, type ReactNode, useCallback, useMemo, useRef } from 'react';
 import { Notice } from '@/components/shared/Notice';
 import { TaskCard } from '@/components/shared/TaskCard';
 import { navigate } from '@/hooks/useRoute';
@@ -67,7 +67,7 @@ export function DaysTab({ segment }: DaysTabProps) {
   const selected = selectedDay(segment, today, startDate, review);
   const selectedMonth = monthKey(selected);
 
-  const select = (date: DateKey) => navigate('progress', 'days', date);
+  const select = useCallback((date: DateKey) => navigate('progress', 'days', date), []);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const from = event.target instanceof HTMLElement ? event.target.dataset.date : undefined;
