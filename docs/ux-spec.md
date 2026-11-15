@@ -641,3 +641,7 @@ Round 8's items 112 to 114 are replaced by 117 to 128. The design came from the 
 131. The iPhone haptic scan reads every position first and then writes, one style pass for the page.
 132. Measured on a production build on a desktop: a page change takes 25 to 46 ms of script (was 32 to 63); the first part of a page shows after about 55 ms and all parts after about 250 ms (was up to 880 ms).
 
+133. The page body of Today does not listen to the route. Only HomeSheets does, so opening or closing a view draws the view and nothing behind it. The Progress overview is memoised for the same reason.
+134. A view reports when it has landed (its grow has ended, or 450 ms have passed). Its heavy parts wait for that: the 14-day chart, the Progress view chart and the analytics chart, stats and breakdown. A placeholder of the same height holds the space.
+135. The page behind a view becomes inert 400 ms after the view opens (once it has landed), and at once when the view closes.
+136. Measured on a production build on a desktop, opening a view takes 10 to 25 ms of script (was 26 to 40) and its first frame comes after 25 to 45 ms (was 44 to 62). A recording on an iPhone showed the first frame 150 to 170 ms after the tap, the grow skipped, and one frame where the Progress analytics view vanished; the work above is aimed at those.

@@ -9,9 +9,10 @@ import {
   useIsPresent,
   useTransform,
 } from 'motion/react';
-import { type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
+import { type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { SheetLandedContext } from '@/hooks/useSheetLanded';
 import {
   CHROME_IN,
   CONTENT_OUT,
@@ -116,6 +117,14 @@ export function ExpandedLayer({ id, entry, titleId, title, onClose, children }: 
 
   const present = useIsPresent();
   useScrollLock(present);
+
+  // The view has landed when its grow ends (or after a fallback time). The heavy parts of a view wait for it,
+  // so the grow runs on a light page and the phone does not skip it.
+  const [landed, setLanded] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setLanded(true), 450);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   // A growing view starts at the tapped card: its transform origin is the card's top-left corner.
   useLayoutEffect(() => {
@@ -230,6 +239,7 @@ export function ExpandedLayer({ id, entry, titleId, title, onClose, children }: 
                 : false
           }
           layoutId={entry === 'shared' ? `card-${id}` : undefined}
+          onAnimationComplete={() => setLanded(true)}
           onDragEnd={onDragEnd}
           onKeyDown={trapFocus}
           ref={panel}
@@ -270,7 +280,7 @@ export function ExpandedLayer({ id, entry, titleId, title, onClose, children }: 
               </motion.button>
             </div>
           </div>
-          {children}
+          <SheetLandedContext value={landed}>{children}</SheetLandedContext>
         </motion.div>
       </div>
     </>,

@@ -1,6 +1,7 @@
 import { useReducedMotion } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { PillarGlyph } from '@/components/shared/PillarGlyph';
+import { useSheetLanded } from '@/hooks/useSheetLanded';
 import { formatShort } from '@/lib/dates';
 import {
   ANALYTICS_RANGES,
@@ -25,6 +26,7 @@ const RANGE_WORDS: Readonly<Record<AnalyticsRange, string>> = { 7: 'last 7 days'
  */
 export function PillarAnalytics({ pillar, today }: { pillar: AnalyticsPillar; today: DateKey }) {
   const reduced = useReducedMotion();
+  const landed = useSheetLanded();
   const state = useHub(
     useShallow((hub) => ({
       days: hub.days,
@@ -86,7 +88,7 @@ export function PillarAnalytics({ pillar, today }: { pillar: AnalyticsPillar; to
         </div>
       </section>
 
-      <div className="rise grid gap-2" style={{ ['--delay' as string]: '320ms' }}>
+      <div className="rise grid gap-2" style={{ ['--delay' as string]: '200ms' }}>
         <div aria-label="Range" className="flex w-fit gap-0.5 rounded-full bg-hub-chip p-1" role="group">
           {ANALYTICS_RANGES.map((value) => (
             <button
@@ -123,71 +125,77 @@ export function PillarAnalytics({ pillar, today }: { pillar: AnalyticsPillar; to
         ) : null}
       </div>
 
-      <section aria-label="Chart" className="rise surface-card grid gap-2 p-4" style={{ ['--delay' as string]: '380ms' }}>
-        <div className="flex justify-between type-label text-hub-label">
-          <span>Avg {formatValue(Math.round(stats.average * 10) / 10, metric)}</span>
-          {metric.goal !== null ? <span>Goal {formatValue(metric.goal, metric)}</span> : null}
-        </div>
-        <div aria-hidden="true" className={cn('flex h-36 items-stretch', range === 90 ? 'gap-px' : range === 30 ? 'gap-0.5' : 'gap-2')} key={filterKey}>
-          {stats.points.map((point, index) => {
-            const value = point.value ?? 0;
-            // A day still to come is a faint stub, so the whole range reads as a timeline.
-            const height = point.value === null ? (point.date > today ? 4 : 0) : Math.max(3, Math.round((Math.abs(value) / scale) * (signed ? 50 : 100)));
-            const met = metric.goal === null ? value > 0 : value >= metric.goal;
-            const fill = point.value === null ? 'bg-hub-chart-future' : met ? 'bar-pillar' : 'bg-[var(--soft)]';
-            const style = { height: `${height}%`, animationDelay: reduced ? '0ms' : `${380 + Math.min(index, 40) * 12}ms` };
-            return (
-              <div className="flex min-w-0 flex-1 flex-col" key={point.date}>
-                <div className={cn('flex flex-col justify-end', signed ? 'h-1/2' : 'h-full')}>
-                  {value >= 0 ? <div className={cn('bar-grow rounded-t-md rounded-b-xs', fill)} style={style} /> : null}
-                </div>
-                {signed ? (
-                  <div className="flex h-1/2 flex-col border-t border-hub-hairline">
-                    {value < 0 ? <div className="bar-grow-down rounded-b-md bg-hub-negative/70" style={style} /> : null}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-        <div className="flex justify-between type-caption text-hub-label">
-          <span>{first ? formatShort(first) : ''}</span>
-          <span>{range === 90 ? 'Day 90' : 'Today'}</span>
-        </div>
-      </section>
-
-      <dl className="rise grid grid-cols-2 gap-3" style={{ ['--delay' as string]: '440ms' }}>
-        {statList.map((stat) => (
-          <div className="surface-card grid gap-1 p-4" key={stat.label}>
-            <dt className="type-caption text-hub-label">{stat.label}</dt>
-            <dd className="num text-[22px] leading-7 font-bold tracking-tight text-hub-text">{stat.value}</dd>
-          </div>
-        ))}
-      </dl>
-
-      <section aria-label={breakdown.title} className="rise surface-card grid gap-3 p-5" style={{ ['--delay' as string]: '500ms' }}>
-        <h3 className="type-name text-hub-text">{breakdown.title}</h3>
-        {breakdown.rows.length === 0 || breakdown.rows.every((row) => row.value === 0) ? (
-          <p className="type-body text-hub-label">Nothing logged in {RANGE_WORDS[range]} yet.</p>
-        ) : (
-          breakdown.rows.map((row, index) => (
-            <div className="grid gap-1.5" key={row.label}>
-              <div className="flex justify-between gap-3 type-body">
-                <span className="truncate font-medium text-hub-text">{row.label}</span>
-                <span className="num text-hub-label">{row.text}</span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-hub-track">
-                <div
-                  className="bar-wide bar-pillar h-full rounded-full"
-                  key={`${filterKey}-${row.label}`}
-                  style={{ width: `${Math.round((row.value / breakdownMax) * 100)}%`, animationDelay: `${560 + index * 60}ms` }}
-                />
-              </div>
+      {landed ? (
+        <>
+          <section aria-label="Chart" className="rise surface-card grid gap-2 p-4" style={{ ['--delay' as string]: '0ms' }}>
+            <div className="flex justify-between type-label text-hub-label">
+              <span>Avg {formatValue(Math.round(stats.average * 10) / 10, metric)}</span>
+              {metric.goal !== null ? <span>Goal {formatValue(metric.goal, metric)}</span> : null}
             </div>
-          ))
-        )}
-        {breakdown.note ? <p className="type-label text-hub-label">{breakdown.note}</p> : null}
-      </section>
+            <div aria-hidden="true" className={cn('flex h-36 items-stretch', range === 90 ? 'gap-px' : range === 30 ? 'gap-0.5' : 'gap-2')} key={filterKey}>
+              {stats.points.map((point, index) => {
+                const value = point.value ?? 0;
+                // A day still to come is a faint stub, so the whole range reads as a timeline.
+                const height = point.value === null ? (point.date > today ? 4 : 0) : Math.max(3, Math.round((Math.abs(value) / scale) * (signed ? 50 : 100)));
+                const met = metric.goal === null ? value > 0 : value >= metric.goal;
+                const fill = point.value === null ? 'bg-hub-chart-future' : met ? 'bar-pillar' : 'bg-[var(--soft)]';
+                const style = { height: `${height}%`, animationDelay: reduced ? '0ms' : `${40 + Math.min(index, 40) * 12}ms` };
+                return (
+                  <div className="flex min-w-0 flex-1 flex-col" key={point.date}>
+                    <div className={cn('flex flex-col justify-end', signed ? 'h-1/2' : 'h-full')}>
+                      {value >= 0 ? <div className={cn('bar-grow rounded-t-md rounded-b-xs', fill)} style={style} /> : null}
+                    </div>
+                    {signed ? (
+                      <div className="flex h-1/2 flex-col border-t border-hub-hairline">
+                        {value < 0 ? <div className="bar-grow-down rounded-b-md bg-hub-negative/70" style={style} /> : null}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex justify-between type-caption text-hub-label">
+              <span>{first ? formatShort(first) : ''}</span>
+              <span>{range === 90 ? 'Day 90' : 'Today'}</span>
+            </div>
+          </section>
+
+          <dl className="rise grid grid-cols-2 gap-3" style={{ ['--delay' as string]: '60ms' }}>
+            {statList.map((stat) => (
+              <div className="surface-card grid gap-1 p-4" key={stat.label}>
+                <dt className="type-caption text-hub-label">{stat.label}</dt>
+                <dd className="num text-[22px] leading-7 font-bold tracking-tight text-hub-text">{stat.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <section aria-label={breakdown.title} className="rise surface-card grid gap-3 p-5" style={{ ['--delay' as string]: '120ms' }}>
+            <h3 className="type-name text-hub-text">{breakdown.title}</h3>
+            {breakdown.rows.length === 0 || breakdown.rows.every((row) => row.value === 0) ? (
+              <p className="type-body text-hub-label">Nothing logged in {RANGE_WORDS[range]} yet.</p>
+            ) : (
+              breakdown.rows.map((row, index) => (
+                <div className="grid gap-1.5" key={row.label}>
+                  <div className="flex justify-between gap-3 type-body">
+                    <span className="truncate font-medium text-hub-text">{row.label}</span>
+                    <span className="num text-hub-label">{row.text}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-hub-track">
+                    <div
+                      className="bar-wide bar-pillar h-full rounded-full"
+                      key={`${filterKey}-${row.label}`}
+                      style={{ width: `${Math.round((row.value / breakdownMax) * 100)}%`, animationDelay: `${180 + index * 60}ms` }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+            {breakdown.note ? <p className="type-label text-hub-label">{breakdown.note}</p> : null}
+          </section>
+        </>
+      ) : (
+        <div aria-hidden="true" className="min-h-[640px]" />
+      )}
     </div>
   );
 }

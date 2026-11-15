@@ -1,5 +1,5 @@
 import { AnimatePresence, useReducedMotion } from 'motion/react';
-import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { PillarGlyph } from '@/components/shared/PillarGlyph';
 import {
@@ -172,6 +172,35 @@ function PillarGrid({ onOpen, today }: { onOpen: (id: AnalyticsPillar) => void; 
 }
 
 /**
+ * The Overview tab. It is memoised: opening or closing a pillar's analytics changes the route, and this
+ * keeps the cards, the chart and the 90-day grid from drawing again behind the view (spec 133).
+ * The chart and the grid draw one render after the cards, so the page shows at once.
+ */
+const OverviewTab = memo(function OverviewTab({
+  today,
+  onOpen,
+}: {
+  today: string;
+  onOpen: (id: AnalyticsPillar) => void;
+}) {
+  const heavyReady = useDeferredValue(true, false);
+  return (
+    <div className="grid gap-5 sm:gap-8 md:gap-12">
+      <PillarGrid onOpen={onOpen} today={today} />
+      {heavyReady ? (
+        <>
+          <ProgressChart today={today} variant="full" />
+          <MissionStats />
+          <MissionGrid />
+        </>
+      ) : (
+        <div aria-hidden="true" className="min-h-[640px]" />
+      )}
+    </div>
+  );
+});
+
+/**
  * Progress: the full motion chart with the compare mode, the mission numbers,
  * the 90-day grid, and the days of the mission on the "Days" tab.
  */
@@ -181,8 +210,6 @@ export function ProgressPage() {
   const reduced = useReducedMotion();
   const first = route.page === 'progress' ? route.segments[0] : undefined;
   const pillar = analyticsFrom(route);
-  // The chart and the 90-day grid draw one render after the cards, so the page shows at once.
-  const heavyReady = useDeferredValue(true, false);
   const openedByPush = useRef(false);
   const [entry, setEntry] = useState<ViewEntry>(() => (pillar ? 'fade' : 'grow'));
   const openPillar = useCallback(
@@ -226,20 +253,7 @@ export function ProgressPage() {
           {
             id: OVERVIEW_TAB,
             label: 'Overview',
-            content: (
-              <div className="grid gap-5 sm:gap-8 md:gap-12">
-                <PillarGrid onOpen={openPillar} today={today} />
-                {heavyReady ? (
-                  <>
-                    <ProgressChart today={today} variant="full" />
-                    <MissionStats />
-                    <MissionGrid />
-                  </>
-                ) : (
-                  <div aria-hidden="true" className="min-h-[640px]" />
-                )}
-              </div>
-            ),
+            content: <OverviewTab onOpen={openPillar} today={today} />,
           },
           { id: DAYS_TAB, label: 'Days', content: <DaysTab segment={daySegment} /> },
         ]}

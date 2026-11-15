@@ -4,6 +4,7 @@ import { AppShell } from '@/components/shared/AppShell';
 import { useRoute } from '@/hooks/useRoute';
 import { useApplyTheme } from '@/hooks/useTheme';
 import { lazyPage } from '@/lib/lazyPage';
+import { useAfter } from '@/hooks/useAfter';
 import { analyticsFrom } from '@/lib/pillarAnalytics';
 import { expandedFrom, type PageId, redirectHash } from '@/lib/routes';
 import { HomePage } from '@/pages/home/HomePage';
@@ -85,8 +86,13 @@ function useRedirects() {
   }, []);
 }
 
+/** How long a view takes to land. The page behind it becomes inert after that, not in the first frame. */
+const VIEW_LAND_MS = 400;
+
 export default function App() {
   const route = useRoute();
+  const viewOpen = expandedFrom(route) !== null || analyticsFrom(route) !== null;
+  const shellInert = useAfter(viewOpen, VIEW_LAND_MS);
   const onboarded = useHub((state) => state.onboarded);
   useRedirects();
   useApplyTheme();
@@ -101,7 +107,7 @@ export default function App() {
   }
   return (
     <MotionConfig reducedMotion="user">
-      <AppShell inert={expandedFrom(route) !== null || analyticsFrom(route) !== null} page={route.page}>
+      <AppShell inert={shellInert} page={route.page}>
         {/* The page swaps at once, like a native tab bar. Then it settles from its top-left corner and
             its parts rise in, 50 ms apart (v3: the page first, then the details). */}
         <Suspense fallback={null}>

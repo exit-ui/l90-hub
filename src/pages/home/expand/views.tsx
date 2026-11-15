@@ -23,6 +23,7 @@ import {
 import { pillarMetric } from '@/lib/pillars';
 import { type PageId, routeHref } from '@/lib/routes';
 import { signOffHighlights, signOffNumbers, tomorrowFirstTask } from '@/lib/signoff';
+import { useSheetLanded } from '@/hooks/useSheetLanded';
 import { doneHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 import type { DateKey } from '@/store/types';
@@ -174,6 +175,8 @@ export function PillarView({ module, today, cardsDue, onToggle, format, whole, l
   const limit = useHub((state) => state.chartCheckLimit);
   const { addChartCheck } = useHubActions();
   const link = PAGE_LINKS[module.id];
+  // The chart draws after the view has landed, so the grow runs on a light page (spec 134).
+  const landed = useSheetLanded();
 
   return (
     <>
@@ -229,7 +232,11 @@ export function PillarView({ module, today, cardsDue, onToggle, format, whole, l
           </div>
         ) : null}
 
-        <MetricChart insight metric={pillarMetric(module.id)} range={14} title="Last 14 days" />
+        {landed ? (
+          <MetricChart insight metric={pillarMetric(module.id)} range={14} title="Last 14 days" />
+        ) : (
+          <div aria-hidden="true" className="min-h-80" />
+        )}
         <PageLink page={link.page} segments={link.segments}>
           {link.text}
         </PageLink>
@@ -339,10 +346,17 @@ export function SignOffView({ module, today, signedOff, headline, onToggle, onSi
 
 /** The expanded chart: the full chart with compare mode, the mission numbers and the page link. */
 export function ProgressView({ today }: { today: DateKey }) {
+  const landed = useSheetLanded();
   return (
     <Content className="mt-4 grid gap-5 sm:gap-6 md:gap-8">
-      <ProgressChart embedded today={today} variant="full" />
-      <MissionStats bare />
+      {landed ? (
+        <>
+          <ProgressChart embedded today={today} variant="full" />
+          <MissionStats bare />
+        </>
+      ) : (
+        <div aria-hidden="true" className="min-h-[640px]" />
+      )}
       <PageLink page="progress">Open the Progress page</PageLink>
     </Content>
   );
