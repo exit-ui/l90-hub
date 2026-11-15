@@ -4,6 +4,7 @@ import { AppShell } from '@/components/shared/AppShell';
 import { useRoute } from '@/hooks/useRoute';
 import { useApplyTheme } from '@/hooks/useTheme';
 import { lazyPage } from '@/lib/lazyPage';
+import { analyticsFrom } from '@/lib/pillarAnalytics';
 import { expandedFrom, type PageId, redirectHash } from '@/lib/routes';
 import { HomePage } from '@/pages/home/HomePage';
 import { OnboardingPage } from '@/pages/onboarding/OnboardingPage';
@@ -100,10 +101,13 @@ export default function App() {
   }
   return (
     <MotionConfig reducedMotion="user">
-      <AppShell inert={expandedFrom(route) !== null} page={route.page}>
-        {/* The page swaps at once, like a native tab bar. A fade here showed an empty frame on each change. */}
+      <AppShell inert={expandedFrom(route) !== null || analyticsFrom(route) !== null} page={route.page}>
+        {/* The page swaps at once, like a native tab bar. Then it settles from its top-left corner and
+            its parts rise in, 50 ms apart (v3: the page first, then the details). */}
         <Suspense fallback={null}>
-          <div key={route.page}>{renderPage(route.page)}</div>
+          <div className="page-enter" key={route.page}>
+            {renderPage(route.page)}
+          </div>
         </Suspense>
       </AppShell>
     </MotionConfig>

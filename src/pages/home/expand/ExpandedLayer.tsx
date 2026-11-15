@@ -26,8 +26,14 @@ import {
 import type { ExpandId } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
-/** "shared": the card flies into the view. "fade": a deep link, a reload, or a card out of view. */
-export type ViewEntry = 'shared' | 'fade';
+/**
+ * "grow": the view grows out of the card that was tapped, from that card's corner (v3).
+ * "shared": the card flies into the view (layoutId). "fade": a deep link, a reload, or a card out of view.
+ */
+export type ViewEntry = 'grow' | 'shared' | 'fade';
+
+/** The scale a growing view starts from. */
+const GROW_FROM = 0.3;
 
 interface ExpandedLayerProps {
   id: ExpandId;
@@ -110,6 +116,21 @@ export function ExpandedLayer({ id, entry, titleId, title, onClose, children }: 
 
   const present = useIsPresent();
   useScrollLock(present);
+
+  // A growing view starts at the tapped card: its transform origin is the card's top-left corner.
+  useLayoutEffect(() => {
+    const element = panel.current;
+    const card = document.querySelector<HTMLElement>(`[data-open-target="${id}"]`);
+    if (entry !== 'grow' || !element || !card) {
+      return;
+    }
+    const from = card.getBoundingClientRect();
+    const x = from.left + from.width * 0.25 - element.offsetLeft;
+    const y = from.top + from.height * 0.25 - element.offsetTop;
+    element.style.transformOrigin = `${Math.round(x)}px ${Math.round(y)}px`;
+    // Only on open: the origin is read once, before the first frame.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!present) {
@@ -201,7 +222,13 @@ export function ExpandedLayer({ id, entry, titleId, title, onClose, children }: 
           dragListener={false}
           exit={{ opacity: 0, transition: reduced ? FADE : CONTENT_OUT }}
           id={`view-${id}`}
-          initial={entry === 'fade' ? { opacity: 0, scale: reduced ? 1 : 0.98 } : false}
+          initial={
+            entry === 'fade'
+              ? { opacity: 0, scale: reduced ? 1 : 0.98 }
+              : entry === 'grow'
+                ? { opacity: reduced ? 0 : 0.2, scale: reduced ? 1 : GROW_FROM }
+                : false
+          }
           layoutId={entry === 'shared' ? `card-${id}` : undefined}
           onDragEnd={onDragEnd}
           onKeyDown={trapFocus}

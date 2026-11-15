@@ -96,7 +96,7 @@ export const TickRow = memo(function TickRow({
         <span
           className={cn(
             'line-clamp-2 type-body text-pretty transition-colors duration-150',
-            done ? 'text-hub-label line-through decoration-hub-label/60' : 'text-hub-text',
+            done ? 'text-hub-label' : 'text-hub-text',
           )}
         >
           {action}

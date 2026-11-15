@@ -1,45 +1,33 @@
-import { BookOpen, CircleCheck, Flame, UserRound } from 'lucide-react';
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
-import { memo, useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
-import { Wordmark } from '@/components/shared/Brand';
+import { Flame, UserRound } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Burst } from '@/components/shared/Burst';
 import { DmButtons } from '@/components/shared/DmControls';
 import { Notice } from '@/components/shared/Notice';
-import { PressButton } from '@/components/shared/PressButton';
-import { ProgressBar } from '@/components/shared/ProgressBar';
-import { ProgressChart } from '@/components/shared/ProgressChart';
 import { RollingNumber } from '@/components/shared/RollingNumber';
-import { Burst } from '@/components/shared/Burst';
 import { useIncrease } from '@/hooks/useIncrease';
 import { useNow } from '@/hooks/useNow';
 import { useRisingEdge } from '@/hooks/useRisingEdge';
 import { useRoute } from '@/hooks/useRoute';
 import { useToday } from '@/hooks/useToday';
-import { formatLong } from '@/lib/dates';
 import { formatR } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { missionHeadline } from '@/lib/homeText';
-import { type ModuleView, momentumShort, todayView } from '@/lib/moduleView';
-import { CHECK_SPRING, FADE, PULSE } from '@/lib/motion';
+import { momentumShort, todayView } from '@/lib/moduleView';
+import { PULSE } from '@/lib/motion';
 import { MISSION_DAYS, missionClock } from '@/lib/phases';
 import { pillarCards } from '@/lib/pillarCards';
-import type { PillarId } from '@/lib/pillars';
 import { closeAction, type ExpandId, expandedFrom, routeHref } from '@/lib/routes';
 import type { Momentum } from '@/lib/streak';
 import { signOffHeadline } from '@/lib/signoff';
-import { lineForDay } from '@/lib/summary';
 import { cn } from '@/lib/utils';
-import { levelProgress, totalXp } from '@/lib/xp';
 import { useHub, useHubActions } from '@/store/useHub';
-import { cardHeight } from './expand/cardHeights';
 import { ExpandedLayer, type ViewEntry } from './expand/ExpandedLayer';
 import { PillarView, ProgressView, SignOffView, ViewTitle } from './expand/views';
 import { InstallHint } from './InstallHint';
 import { PillarCards } from './PillarCards';
-import { PillarModule } from './PillarModule';
-import { SignOffCard } from './SignOffCard';
-
-/** The tick cards of the day, in pillar order. Sign-off has its own card below them. */
-const TICK_PILLARS: readonly PillarId[] = ['outreach', 'fitness', 'learning', 'reading', 'trading'];
+import { TodoList } from './TodoList';
 
 /** The momentum chip: a flame and one number. The label holds all the words. A tap opens Progress. */
 function MomentumChip({ momentum }: { momentum: Momentum }) {
@@ -53,23 +41,6 @@ function MomentumChip({ momentum }: { momentum: Momentum }) {
       <Flame aria-hidden="true" className="size-4 text-hub-amber" />
       <span className={cn('num', text.recover && 'text-hub-amber')}>{text.text}</span>
     </a>
-  );
-}
-
-/** One calm green line when every module is done. It comes in one time. */
-function CompleteLine() {
-  const reduced = useReducedMotion();
-  return (
-    <motion.p
-      animate={{ opacity: 1, y: 0 }}
-      className="type-body rim-positive mb-8 flex items-center gap-3 rounded-card px-4 py-3 text-hub-positive"
-      initial={reduced ? { opacity: 0 } : { opacity: 0, y: 8 }}
-      role="status"
-      transition={reduced ? FADE : CHECK_SPRING}
-    >
-      <CircleCheck aria-hidden="true" className="size-5 shrink-0" />
-      All modules are done today. Rest and come back tomorrow.
-    </motion.p>
   );
 }
 
@@ -87,7 +58,7 @@ const VIEW_TITLES: Readonly<Record<ExpandId, string>> = {
   progress: 'Progress',
 };
 
-/** True when the card of the id is on the screen now, so it can fly into its view. */
+/** True when the card of the id is on the screen now, so its view can grow out of it. */
 function cardInView(id: ExpandId): boolean {
   if (typeof document === 'undefined') {
     return false;
@@ -113,21 +84,10 @@ function dayCaption(clock: ReturnType<typeof missionClock>): { text: string; lab
   };
 }
 
-/** The pillar row redraws only when its cards change. */
-const PillarCardsMemo = memo(PillarCards);
-
 /**
- * A hidden member of the Today LayoutGroup that updates only when a view opens or closes.
- * Its update dirties every card of the group, so the card that flies is measured even though
- * the cards are memoised and do not draw again.
- */
-const FlightTrigger = memo(function FlightTrigger({ open }: { open: ExpandId | null }) {
-  return <motion.div aria-hidden="true" className="hidden" layout layoutDependency={open} />;
-});
-
-/**
- * Today: the DM count of the day, the pillar cards, the tick cards of the day, "Sign off the day"
- * and the progress chart. Each tick card opens into its expanded view with one continuous motion (spec 10).
+ * Today (v3, spec round 9): the day and the streak, the DM card, the four pillar cards in their gradients
+ * and one "To do" list. A pillar card opens its view, which grows out of the card; the content of the view
+ * rises in once it has landed. A ticked row leaves the list; "N done" brings it back for an undo.
  */
 export function HomePage() {
   const today = useToday();
@@ -135,22 +95,18 @@ export function HomePage() {
   const state = useHub();
   const route = useRoute();
   const reduced = useReducedMotion();
-  const { toggleTask, addChartCheck, signOffDay } = useHubActions();
+  const { toggleTask, signOffDay } = useHubActions();
   const expanded = expandedFrom(route);
   const openedByPush = useRef(false);
-  const [entry, setEntry] = useState<ViewEntry>(() => (expanded ? 'fade' : 'shared'));
+  const [entry, setEntry] = useState<ViewEntry>(() => (expanded ? 'fade' : 'grow'));
   const [seen, setSeen] = useState<ExpandId | null>(expanded);
-  const [returning, setReturning] = useState<ExpandId | null>(null);
   const [tapped, setTapped] = useState<ExpandId | null>(null);
 
-  // The view changed without a tap (Back, Forward, a typed hash): fly only when the card is on screen.
+  // The view changed without a tap (Back, Forward, a typed hash): grow only when the card is on screen.
   if (seen !== expanded) {
     setSeen(expanded);
-    if (seen !== null && expanded === null) {
-      setReturning(seen);
-    }
     if (expanded !== null && tapped !== expanded) {
-      setEntry(!reduced && cardInView(expanded) ? 'shared' : 'fade');
+      setEntry(!reduced && cardInView(expanded) ? 'grow' : 'fade');
     }
     setTapped(null);
   }
@@ -158,20 +114,18 @@ export function HomePage() {
   const view = useMemo(() => todayView(state, today, now), [state, today, now]);
   // Every tick of the day done, or the day signed off: a burst of colour over the screen.
   const party = useRisingEdge(view.allComplete) + useRisingEdge(view.signedOff);
-  // The parts that need not change on the same frame as a tick draw a moment later, in the background.
+  // The pillar cards need not change on the same frame as a tick: they draw a moment later.
   const lazy = useDeferredValue(state);
   const cards = useMemo(() => pillarCards(lazy, today), [lazy, today]);
   const clock = useMemo(() => missionClock(today, state.startDate), [today, state.startDate]);
-  const level = useMemo(() => levelProgress(totalXp(lazy)).level, [lazy]);
-  const line = lineForDay(clock.day);
   const caption = dayCaption(clock);
   const dm = state.days[today]?.dm ?? 0;
   const bumps = useIncrease(dm);
   // The number pulses one time when the DMs reach the target.
   const pulse = state.dmTarget > 0 && dm >= state.dmTarget ? 1 : 0;
+  const fraction = state.dmTarget > 0 ? Math.min(1, dm / state.dmTarget) : 0;
   const headline = signOffHeadline(clock.stage === 'active' ? clock.day : null, view.ticksDone, view.ticksTotal);
   const outreach = view.modules.find((module) => module.id === 'outreach');
-  const signoff = view.modules.find((module) => module.id === 'signoff');
 
   const open = useCallback(
     (id: ExpandId) => {
@@ -180,23 +134,14 @@ export function HomePage() {
         return;
       }
       setTapped(id);
-      setEntry(reduced ? 'fade' : 'shared');
+      setEntry(reduced ? 'fade' : 'grow');
       openedByPush.current = true;
       window.location.hash = hash.slice(1);
     },
     [reduced],
   );
-  // One stable opener per view, so a memoised card does not draw again for a new function.
-  const opener = useMemo(
-    () =>
-      Object.fromEntries((Object.keys(VIEW_TITLES) as ExpandId[]).map((id) => [id, () => open(id)])) as Record<
-        ExpandId,
-        () => void
-      >,
-    [open],
-  );
   const onToggle = useCallback((task: string) => toggleTask(today, task), [toggleTask, today]);
-  const onChartCheck = useCallback(() => addChartCheck(today), [addChartCheck, today]);
+  const openSignOff = useCallback(() => open('signoff'), [open]);
 
   const close = useCallback(() => {
     const action = closeAction(openedByPush.current);
@@ -210,108 +155,31 @@ export function HomePage() {
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   }, []);
 
+  // Sign off, then open the Sign-off view with the summary, the win and tomorrow (no-op when it is open).
   const signOffNow = useCallback(() => {
     haptic('peak');
     signOffDay(today);
     open('signoff');
   }, [open, signOffDay, today]);
 
-  const chart = useMemo(
-    () => <ProgressChart maxInsights={1} onOpen={opener.progress} today={today} variant="compact" />,
-    [opener, today],
-  );
-
-  const placeholder = (id: ExpandId, className?: string) => (
-    <div
-      aria-hidden="true"
-      className={cn('surface-card opacity-0', className)}
-      key={id}
-      style={{ height: cardHeight(id) }}
-    />
-  );
-
-  const renderModule = (module: ModuleView) => {
-    if (module.id === expanded) {
-      return placeholder(module.id);
-    }
-    const common = {
-      isOpen: false,
-      onOpen: opener[module.id],
-      onToggle,
-      returning: returning === module.id,
-      view: module,
-    };
-    switch (module.id) {
-      case 'outreach':
-        return (
-          <PillarModule
-            {...common}
-            key={module.id}
-            memoKey={module.note ?? ''}
-            pulseKey={pulse}
-            subline={module.note ? <p className="type-label text-hub-label">{module.note}</p> : null}
-          />
-        );
-      case 'learning':
-        return (
-          <PillarModule
-            {...common}
-            extraRows={
-              view.cardsDue > 0 ? (
-                <a
-                  className="type-body mt-1 flex min-h-11 items-center gap-3 rounded-control px-2 text-hub-text no-underline hover:bg-hub-inset"
-                  href={routeHref('learning', 'cards')}
-                >
-                  <BookOpen aria-hidden="true" className="size-4 shrink-0 text-hub-label" />
-                  Review {view.cardsDue} {view.cardsDue === 1 ? 'card' : 'cards'}
-                </a>
-              ) : null
-            }
-            key={module.id}
-            memoKey={String(view.cardsDue)}
-          />
-        );
-      case 'trading':
-        return (
-          <PillarModule
-            {...common}
-            controls={
-              <PressButton
-                aria-label={`Add 1 chart check. ${module.note ?? ''}`}
-                className="px-3"
-                onClick={onChartCheck}
-                tone="secondary"
-              >
-                +1 check
-              </PressButton>
-            }
-            format={signedR}
-            key={module.id}
-            memoKey={module.note ?? ''}
-            whole={false}
-          />
-        );
-      default:
-        return <PillarModule {...common} key={module.id} />;
-    }
-  };
-
   const expandedModule = expanded ? view.modules.find((module) => module.id === expanded) : undefined;
   const titleId = expanded ? `view-title-${expanded}` : '';
 
   return (
     <>
-      <header className="mb-6 flex items-center justify-between gap-3">
-        <a className="rounded-full no-underline lg:hidden" href={routeHref('home')}>
-          <Wordmark />
-          <span className="sr-only"> hub, Today</span>
-        </a>
-        <p className="type-label hidden text-hub-label lg:block">{formatLong(today)}</p>
+      <header className="mb-5 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="type-label text-hub-label">
+            <span aria-hidden="true">{caption.text}</span>
+            <span className="sr-only">{caption.label}</span>
+          </p>
+          <h1 className="type-title text-hub-text">Today</h1>
+        </div>
         <div className="flex items-center gap-2">
           <MomentumChip momentum={view.momentum} />
           <a
             aria-label="Open Setup"
-            className="press flex size-11 items-center justify-center rounded-full bg-hub-chip text-hub-label no-underline hover:text-hub-text"
+            className="press flex size-11 items-center justify-center rounded-full bg-hub-surface text-hub-text no-underline shadow-hub"
             href={routeHref('setup')}
           >
             <UserRound aria-hidden="true" className="size-5" strokeWidth={1.7} />
@@ -319,20 +187,19 @@ export function HomePage() {
         </div>
       </header>
 
-      <section aria-labelledby="dm-today-title" className="mb-8">
-        <p className="type-label flex flex-wrap items-center gap-x-2 text-hub-label">
-          <span aria-hidden="true">{caption.text}</span>
-          <span className="sr-only">{caption.label}</span>
-          <span aria-hidden="true">·</span>
-          <a className="text-hub-label underline-offset-4 hover:text-hub-text hover:underline" href={routeHref('progress')}>
-            Level {level}
-          </a>
-        </p>
-        <div className="mt-2 flex items-end justify-between gap-4">
-          <div className="min-w-0">
-            <motion.p
+      <section aria-labelledby="dm-today-title" className="surface-card mb-6 grid gap-4 p-5">
+        <div className="flex items-end justify-between gap-4">
+          <button
+            aria-label={`${dm} of ${state.dmTarget} DMs today. Open Outreach.`}
+            className="min-w-0 cursor-pointer text-left"
+            data-open-target="outreach"
+            onClick={() => open('outreach')}
+            type="button"
+          >
+            <motion.span
               animate={pulse > 0 && !reduced ? PULSE : undefined}
-              className="type-hero num origin-left text-hub-text"
+              aria-hidden="true"
+              className="type-hero num block origin-left text-hub-text"
               key={`hero-pulse-${pulse}`}
             >
               <motion.span
@@ -344,122 +211,90 @@ export function HomePage() {
                 <RollingNumber value={dm} />
               </motion.span>
               <span className="text-hub-faint">/{state.dmTarget}</span>
-            </motion.p>
-            <h1 className="type-body mt-1 text-hub-label" id="dm-today-title">
-              DMs sent today
-            </h1>
-          </div>
+            </motion.span>
+            <span aria-hidden="true" className="type-body mt-1 block text-hub-label" id="dm-today-title">
+              DMs
+            </span>
+          </button>
           <DmButtons date={today} large />
         </div>
-        <ProgressBar
-          className="mt-4 h-1.5"
-          fraction={state.dmTarget > 0 ? dm / state.dmTarget : 0}
-          label={outreach?.barLabel ?? `${dm} DMs`}
-          tone={dm >= state.dmTarget ? 'complete' : 'primary'}
-        />
-        <p className="type-line mt-3 line-clamp-2 max-w-prose text-hub-label">{line.text}</p>
+        <div aria-label={outreach?.barLabel ?? `${dm} DMs`} className="h-2 overflow-hidden rounded-full bg-hub-track" role="img">
+          <div
+            className="h-full rounded-full transition-[width] duration-500 ease-out"
+            style={{
+              width: `${Math.round(fraction * 100)}%`,
+              background: 'linear-gradient(90deg, var(--pillar-outreach-solid), var(--hub-success))',
+            }}
+          />
+        </div>
       </section>
 
       <InstallHint />
 
       {view.momentum.state === 'recover' ? (
-        <Notice announce={false} className="mb-8" kind="NOTE">
+        <Notice announce={false} className="mb-6" kind="NOTE">
           You missed yesterday. Send the DMs today to keep the streak.
         </Notice>
       ) : null}
 
-      {view.allComplete ? <CompleteLine /> : null}
-      {party > 0 && !reduced ? (
-        <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-50" key={`party-${party}`}>
-          <Burst count={28} distance={170} duration={1.2} size={9} />
-        </div>
-      ) : null}
+      {party > 0 && !reduced
+        ? createPortal(
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-50" key={`party-${party}`}>
+              <Burst count={28} distance={170} duration={1.2} size={9} />
+            </div>,
+            document.body,
+          )
+        : null}
 
-      <PillarCardsMemo cards={cards} />
+      <PillarCards cards={cards} onOpen={open} />
 
-      <LayoutGroup id="today">
-        <FlightTrigger open={expanded} />
-        <section aria-labelledby="ticks-title" className="mb-8">
-          <div className="mb-3 flex items-center justify-between gap-4">
-            <h2 className="type-section text-hub-text" id="ticks-title">
-              Today's ticks
-            </h2>
-            <span className="type-label text-hub-label">Tap to tick</span>
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
-            {TICK_PILLARS.map((id) => view.modules.find((module) => module.id === id))
-              .filter((module): module is ModuleView => module !== undefined)
-              .map(renderModule)}
-          </div>
-        </section>
+      <TodoList
+        cardsDue={view.cardsDue}
+        modules={view.modules}
+        onOpenSignOff={openSignOff}
+        onSignOff={signOffNow}
+        onToggle={onToggle}
+        signedOff={view.signedOff}
+      />
 
-        {signoff ? (
-          <div className="mb-8">
-            {expanded === 'signoff' ? (
-              placeholder('signoff')
-            ) : (
-              <SignOffCard
-                onOpen={opener.signoff}
+      <AnimatePresence>
+        {expanded ? (
+          <ExpandedLayer
+            entry={entry}
+            id={expanded}
+            key={expanded}
+            onClose={close}
+            title={
+              <ViewTitle id={expanded} titleId={titleId}>
+                {VIEW_TITLES[expanded]}
+              </ViewTitle>
+            }
+            titleId={titleId}
+          >
+            {expanded === 'progress' ? (
+              <ProgressView today={today} />
+            ) : expanded === 'signoff' && expandedModule ? (
+              <SignOffView
+                headline={headline}
+                module={expandedModule}
                 onSignOff={signOffNow}
                 onToggle={onToggle}
-                returning={returning === 'signoff'}
                 signedOff={view.signedOff}
-                ticksDone={view.ticksDone}
-                ticksTotal={view.ticksTotal}
-                view={signoff}
+                today={today}
               />
-            )}
-          </div>
+            ) : expandedModule ? (
+              <PillarView
+                cardsDue={view.cardsDue}
+                format={expandedModule.id === 'trading' ? signedR : undefined}
+                module={expandedModule}
+                onToggle={onToggle}
+                today={today}
+                whole={expandedModule.id !== 'trading'}
+              />
+            ) : null}
+          </ExpandedLayer>
         ) : null}
-
-        {expanded === 'progress' ? (
-          placeholder('progress')
-        ) : (
-          chart
-        )}
-
-        <AnimatePresence>
-          {expanded ? (
-            <ExpandedLayer
-              entry={entry}
-              id={expanded}
-              key={expanded}
-              onClose={close}
-              title={
-                <ViewTitle id={expanded} titleId={titleId}>
-                  {VIEW_TITLES[expanded]}
-                </ViewTitle>
-              }
-              titleId={titleId}
-            >
-              {expanded === 'progress' ? (
-                <ProgressView today={today} />
-              ) : expanded === 'signoff' && expandedModule ? (
-                <SignOffView
-                  headline={headline}
-                  module={expandedModule}
-                  onSignOff={() => {
-                    haptic('peak');
-                    signOffDay(today);
-                  }}
-                  onToggle={(task) => toggleTask(today, task)}
-                  signedOff={view.signedOff}
-                  today={today}
-                />
-              ) : expandedModule ? (
-                <PillarView
-                  cardsDue={view.cardsDue}
-                  format={expandedModule.id === 'trading' ? signedR : undefined}
-                  module={expandedModule}
-                  onToggle={(task) => toggleTask(today, task)}
-                  today={today}
-                  whole={expandedModule.id !== 'trading'}
-                />
-              ) : null}
-            </ExpandedLayer>
-          ) : null}
-        </AnimatePresence>
-      </LayoutGroup>
+      </AnimatePresence>
     </>
   );
 }

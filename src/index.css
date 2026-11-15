@@ -762,8 +762,20 @@
   padding-top: calc(env(safe-area-inset-top) + 24px);
 }
 @utility pb-shell {
-  /* The tab bar never covers content: bar 64 + 32 air, plus the inset. */
-  padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
+  /* The floating tab bar never covers content: bar 68 + 10 below it + 32 air, plus the inset. */
+  padding-bottom: calc(env(safe-area-inset-bottom) + 110px);
+}
+@utility pb-tabbar-float {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+}
+/* The floating white tab bar of v3. No blur: a solid surface is cheap to draw while scrolling. */
+@utility tab-float {
+  border-radius: 34px;
+  background: var(--hub-surface);
+  box-shadow: inset 0 0 0 1px var(--hub-glass-edge), 0 1px 2px rgb(15 30 20 / 0.05), 0 16px 36px rgb(15 30 20 / 0.12);
+}
+@utility shadow-hub {
+  box-shadow: var(--hub-shadow);
 }
 @utility pb-tabbar {
   padding-bottom: env(safe-area-inset-bottom);
@@ -964,4 +976,151 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .burst, .flash-out, .flash-out-slow, .ripple-out { display: none; }
+}
+
+/* ---------- v3: pillar gradients, page glows and motion (docs/ux-spec.md round 9) ---------- */
+:root {
+  /* One deep gradient per pillar. White text passes 4.5:1 on the darker two thirds. */
+  --pillar-outreach: linear-gradient(140deg, #0b2e1b 0%, #12583a 55%, #187d49 100%);
+  --pillar-fitness: linear-gradient(140deg, #5a1a0b 0%, #9a3412 55%, #c2410c 100%);
+  --pillar-learning: linear-gradient(140deg, #14123d 0%, #312e81 50%, #6d28d9 100%);
+  --pillar-reading: linear-gradient(140deg, #062b2a 0%, #0f5f5a 55%, #0f7f75 100%);
+  --pillar-trading: linear-gradient(140deg, #070b24 0%, #1e2a78 50%, #4f46e5 100%);
+  --pillar-signoff: linear-gradient(140deg, #0c0e24 0%, #2a1f5c 55%, #7a3fbf 100%);
+  /* The solid colour of each pillar: the ring of a to-do row and the chart bars. */
+  --pillar-outreach-solid: #1f9d5c;
+  --pillar-fitness-solid: #d9531a;
+  --pillar-learning-solid: #6d28d9;
+  --pillar-reading-solid: #13958a;
+  --pillar-trading-solid: #4f46e5;
+  --pillar-signoff-solid: #7a3fbf;
+  /* The pale tint of each pillar: a selected chip and a bar below the goal. */
+  --pillar-outreach-soft: #d6f2e1;
+  --pillar-fitness-soft: #f3ded3;
+  --pillar-learning-soft: #e4ddf8;
+  --pillar-reading-soft: #d3eeea;
+  --pillar-trading-soft: #ddddf8;
+  --pillar-signoff-soft: #e6dcf5;
+  /* The light glow in the top corner of a pillar card and the accent of its icon. */
+  --pillar-outreach-halo: #b6f5cf;
+  --pillar-fitness-halo: #ffd2b0;
+  --pillar-learning-halo: #d8ccff;
+  --pillar-reading-halo: #b4f5ec;
+  --pillar-trading-halo: #c7d0ff;
+  --pillar-signoff-halo: #e0ccff;
+  /* Two soft glows behind every page: green top left, violet lower right. */
+  --hub-glow-a: rgb(61 220 132 / 0.22);
+  --hub-glow-b: rgb(109 40 217 / 0.12);
+}
+:root[data-theme="dark"] {
+  --pillar-outreach-solid: #3ddc84;
+  --pillar-fitness-solid: #f08a4b;
+  --pillar-learning-solid: #a78bfa;
+  --pillar-reading-solid: #2cc3b3;
+  --pillar-trading-solid: #818cf8;
+  --pillar-signoff-solid: #c4a1f5;
+  --pillar-outreach-soft: rgb(61 220 132 / 0.18);
+  --pillar-fitness-soft: rgb(232 105 43 / 0.2);
+  --pillar-learning-soft: rgb(139 92 246 / 0.22);
+  --pillar-reading-soft: rgb(44 195 179 / 0.2);
+  --pillar-trading-soft: rgb(99 102 241 / 0.24);
+  --pillar-signoff-soft: rgb(150 100 230 / 0.22);
+  --hub-glow-a: rgb(61 220 132 / 0.1);
+  --hub-glow-b: rgb(109 40 217 / 0.16);
+}
+
+/* A pillar card: the gradient, a light glow in the top right corner and white text. */
+@utility pillar-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #ffffff;
+  border-radius: 24px;
+  &::before {
+    content: "";
+    position: absolute;
+    right: -40px;
+    top: -48px;
+    z-index: -1;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--halo) 55%, transparent), transparent);
+  }
+}
+.pillar-outreach { background: var(--pillar-outreach); --halo: var(--pillar-outreach-halo); --solid: var(--pillar-outreach-solid); --soft: var(--pillar-outreach-soft); box-shadow: 0 14px 28px rgb(15 61 36 / 0.26); }
+.pillar-fitness { background: var(--pillar-fitness); --halo: var(--pillar-fitness-halo); --solid: var(--pillar-fitness-solid); --soft: var(--pillar-fitness-soft); box-shadow: 0 14px 28px rgb(154 52 18 / 0.26); }
+.pillar-learning { background: var(--pillar-learning); --halo: var(--pillar-learning-halo); --solid: var(--pillar-learning-solid); --soft: var(--pillar-learning-soft); box-shadow: 0 14px 28px rgb(49 46 129 / 0.28); }
+.pillar-reading { background: var(--pillar-reading); --halo: var(--pillar-reading-halo); --solid: var(--pillar-reading-solid); --soft: var(--pillar-reading-soft); box-shadow: 0 14px 28px rgb(15 95 90 / 0.26); }
+.pillar-trading { background: var(--pillar-trading); --halo: var(--pillar-trading-halo); --solid: var(--pillar-trading-solid); --soft: var(--pillar-trading-soft); box-shadow: 0 14px 28px rgb(30 42 120 / 0.28); }
+.pillar-signoff { background: var(--pillar-signoff); --halo: var(--pillar-signoff-halo); --solid: var(--pillar-signoff-solid); --soft: var(--pillar-signoff-soft); box-shadow: 0 14px 28px rgb(42 31 92 / 0.28); }
+/* Only the colour variables, for a white surface that uses the pillar colour (a to-do ring, a chip). */
+.tone-outreach { --solid: var(--pillar-outreach-solid); --soft: var(--pillar-outreach-soft); }
+.tone-fitness { --solid: var(--pillar-fitness-solid); --soft: var(--pillar-fitness-soft); }
+.tone-learning { --solid: var(--pillar-learning-solid); --soft: var(--pillar-learning-soft); }
+.tone-reading { --solid: var(--pillar-reading-solid); --soft: var(--pillar-reading-soft); }
+.tone-trading { --solid: var(--pillar-trading-solid); --soft: var(--pillar-trading-soft); }
+.tone-signoff { --solid: var(--pillar-signoff-solid); --soft: var(--pillar-signoff-soft); }
+
+/* The two page glows. Fixed and static (no blur, no animation), so scrolling stays cheap. */
+@utility page-glows {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(420px 420px at 0% 0%, var(--hub-glow-a), transparent 70%),
+    radial-gradient(480px 480px at 100% 70%, var(--hub-glow-b), transparent 70%);
+}
+
+/* Motion: the page lands first, then its parts rise in, 50 ms apart. */
+@keyframes hub-page-in {
+  from { opacity: 0.4; transform: scale(0.965); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hub-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.page-enter {
+  animation: hub-page-in 0.3s cubic-bezier(0.2, 0.85, 0.25, 1) backwards;
+  transform-origin: 0 0;
+}
+.page-enter > * { animation: hub-rise 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.page-enter > *:nth-child(1) { animation-delay: 160ms; }
+.page-enter > *:nth-child(2) { animation-delay: 210ms; }
+.page-enter > *:nth-child(3) { animation-delay: 260ms; }
+.page-enter > *:nth-child(4) { animation-delay: 310ms; }
+.page-enter > *:nth-child(5) { animation-delay: 360ms; }
+.page-enter > *:nth-child(6) { animation-delay: 410ms; }
+.page-enter > *:nth-child(n + 7) { animation-delay: 460ms; }
+.rise { animation: hub-rise 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation-delay: var(--delay, 0ms); }
+
+/* Playful icon moves: each plays once when its icon mounts with data-play, or on a tap. */
+@keyframes glyph-fly { 0%, 100% { transform: none; } 45% { transform: translate(5px, -5px) rotate(-6deg); } }
+@keyframes glyph-lift { 0%, 100% { transform: none; } 40%, 60% { transform: translateY(-6px); } }
+@keyframes glyph-swing { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(22deg); } 65% { transform: rotate(-14deg); } }
+@keyframes glyph-flap { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.82); } }
+@keyframes glyph-climb { from { stroke-dashoffset: 60; } to { stroke-dashoffset: 0; } }
+@keyframes glyph-moon { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-16deg) scale(1.06); } }
+[data-play] .g-fly { animation: glyph-fly 0.6s ease-in-out var(--glyph-delay, 0ms); transform-box: fill-box; }
+[data-play] .g-lift { animation: glyph-lift 0.6s ease-in-out var(--glyph-delay, 0ms); }
+[data-play] .g-swing { animation: glyph-swing 0.8s ease-in-out var(--glyph-delay, 0ms); transform-origin: 58px 26px; }
+[data-play] .g-flap { animation: glyph-flap 0.5s ease-in-out var(--glyph-delay, 0ms); transform-origin: 32px 32px; }
+[data-play] .g-climb { animation: glyph-climb 0.7s ease-out var(--glyph-delay, 0ms) both; }
+[data-play] .g-moon { animation: glyph-moon 0.7s ease-in-out var(--glyph-delay, 0ms); transform-origin: 32px 32px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter, .page-enter > *, .rise, [data-play] * { animation: none !important; }
+}
+
+/* v3 analytics bars: the pillar gradient for a day at the goal; bars grow in after the view lands. */
+.bar-pillar { background: linear-gradient(180deg, color-mix(in srgb, var(--solid) 70%, white), var(--solid)); }
+@keyframes hub-bar-up { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes hub-bar-wide { from { transform: scaleX(0); } to { transform: none; } }
+.bar-grow { animation: hub-bar-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; transform-origin: bottom; }
+.bar-grow-down { animation: hub-bar-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; transform-origin: top; }
+.bar-wide { animation: hub-bar-wide 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; transform-origin: left; }
+@media (prefers-reduced-motion: reduce) {
+  .bar-grow, .bar-grow-down, .bar-wide { animation: none; }
 }

@@ -1,4 +1,19 @@
-import { useMemo } from 'react';
+import { AnimatePresence, useReducedMotion } from 'motion/react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+import { PillarGlyph } from '@/components/shared/PillarGlyph';
+import {
+  ANALYTICS_PILLARS,
+  type AnalyticsPillar,
+  analyticsFrom,
+  formatValue,
+  metricsOf,
+  pillarStats,
+} from '@/lib/pillarAnalytics';
+import { PILLAR_LABELS } from '@/lib/pillars';
+import { ExpandedLayer, type ViewEntry } from '@/pages/home/expand/ExpandedLayer';
+import { ViewTitle } from '@/pages/home/expand/views';
+import { PillarAnalytics } from './PillarAnalytics';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { PillTabs } from '@/components/shared/PillTabs';
 import { ProgressChart } from '@/components/shared/ProgressChart';
@@ -83,6 +98,79 @@ function MissionGrid() {
   );
 }
 
+/** The unit word under a pillar total. */
+const TOTAL_WORD: Readonly<Record<AnalyticsPillar, string>> = {
+  outreach: 'DMs sent',
+  fitness: 'sessions',
+  learning: 'hours studied',
+  reading: 'chapters',
+  trading: 'result',
+};
+
+/**
+ * The five pillars as gradient cards (v3), Outreach across the top. Each shows the mission total and
+ * opens its analytics, which grow out of the card.
+ */
+function PillarGrid({ onOpen, today }: { onOpen: (id: AnalyticsPillar) => void; today: string }) {
+  const state = useHub(
+    useShallow((hub) => ({
+      days: hub.days,
+      startDate: hub.startDate,
+      fitness: hub.fitness,
+      learning: hub.learning,
+      trades: hub.trades,
+      chapterNotes: hub.chapterNotes,
+      funnel: hub.funnel,
+      dmTarget: hub.dmTarget,
+      chartCheckLimit: hub.chartCheckLimit,
+    })),
+  );
+  const totals = useMemo(
+    () =>
+      ANALYTICS_PILLARS.map((id) => {
+        const metric = metricsOf(id, state)[0]!;
+        const total = pillarStats(state, id, metric, 90, today).total;
+        const value = id === 'learning' ? `${Math.round((total / 60) * 10) / 10}` : formatValue(Math.round(total * 10) / 10, { ...metric, unit: '' });
+        return { id, value, unit: id === 'learning' ? ' h' : id === 'trading' ? ' R' : '' };
+      }),
+    [state, today],
+  );
+  return (
+    <section aria-labelledby="pillar-grid-title" className="grid gap-3">
+      <h2 className="sr-only" id="pillar-grid-title">
+        Pillars
+      </h2>
+      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        {totals.map((item, index) => (
+          <li className={item.id === 'outreach' ? 'col-span-2 lg:col-span-1' : undefined} key={item.id}>
+            <button
+              aria-label={`${PILLAR_LABELS[item.id]}: ${item.value}${item.unit} ${TOTAL_WORD[item.id]}. Open the analytics.`}
+              className={cn('pillar-card press flex h-32 w-full cursor-pointer flex-col justify-between p-4 text-left', `pillar-${item.id}`)}
+              data-open-target={item.id}
+              onClick={() => onOpen(item.id)}
+              type="button"
+            >
+              <span aria-hidden="true" className="flex w-full items-start justify-between gap-2">
+                <span className="type-label font-semibold text-white">{PILLAR_LABELS[item.id]}</span>
+                <span className="flex size-9 items-center justify-center rounded-xl bg-white/15">
+                  <PillarGlyph delayMs={420 + index * 80} id={item.id} play={1} size={20} />
+                </span>
+              </span>
+              <span aria-hidden="true" className="grid">
+                <span className="num text-[30px] leading-9 font-bold tracking-tight text-white">
+                  {item.value}
+                  <span className="text-lg text-white/60">{item.unit}</span>
+                </span>
+                <span className="type-caption text-white">{TOTAL_WORD[item.id]}</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 /**
  * Progress: the full motion chart with the compare mode, the mission numbers,
  * the 90-day grid, and the days of the mission on the "Days" tab.
@@ -90,7 +178,30 @@ function MissionGrid() {
 export function ProgressPage() {
   const route = useRoute();
   const today = useToday();
+  const reduced = useReducedMotion();
   const first = route.page === 'progress' ? route.segments[0] : undefined;
+  const pillar = analyticsFrom(route);
+  const openedByPush = useRef(false);
+  const [entry, setEntry] = useState<ViewEntry>(() => (pillar ? 'fade' : 'grow'));
+  const openPillar = useCallback(
+    (id: AnalyticsPillar) => {
+      setEntry(reduced ? 'fade' : 'grow');
+      openedByPush.current = true;
+      navigate('progress', 'pillar', id);
+    },
+    [reduced],
+  );
+  const closePillar = useCallback(() => {
+    if (openedByPush.current) {
+      openedByPush.current = false;
+      window.history.back();
+      return;
+    }
+    const { pathname, search } = window.location;
+    window.history.replaceState(null, '', `${pathname}${search}${routeHref('progress')}`);
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  }, []);
+  const titleId = pillar ? `analytics-title-${pillar}` : '';
   const tab = first === DAYS_TAB ? DAYS_TAB : OVERVIEW_TAB;
   const daySegment = tab === DAYS_TAB ? route.segments[1] : undefined;
   const startDate = useHub((state) => state.startDate);
@@ -115,6 +226,7 @@ export function ProgressPage() {
             label: 'Overview',
             content: (
               <div className="grid gap-5 sm:gap-8 md:gap-12">
+                <PillarGrid onOpen={openPillar} today={today} />
                 <ProgressChart today={today} variant="full" />
                 <MissionStats />
                 <MissionGrid />
@@ -125,6 +237,24 @@ export function ProgressPage() {
         ]}
         value={tab}
       />
+      <AnimatePresence>
+        {pillar ? (
+          <ExpandedLayer
+            entry={entry}
+            id={pillar}
+            key={pillar}
+            onClose={closePillar}
+            title={
+              <ViewTitle id={`analytics-${pillar}`} titleId={titleId}>
+                {PILLAR_LABELS[pillar]}
+              </ViewTitle>
+            }
+            titleId={titleId}
+          >
+            <PillarAnalytics pillar={pillar} today={today} />
+          </ExpandedLayer>
+        ) : null}
+      </AnimatePresence>
     </>
   );
 }

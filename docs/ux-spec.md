@@ -621,3 +621,18 @@ Round 7 (light fintech)
 114. The tick cards and the sign-off card are memoised and there is no LayoutGroup, so a tick draws and measures only the card that changed.
 115. The tab bar has no backdrop blur. Its fill is 97 % opaque.
 116. The other pages load one at a time from 2.5 s after launch; a press on a link loads its page at once.
+
+### Round 9: the v3 redesign (calm, colourful, quick)
+Round 8's items 112 to 114 are replaced by 117 to 128. The design came from the v3 mock-up; the old version is kept at the git tag `pre-v3`.
+117. Each pillar has one deep gradient (tokens `--pillar-<id>`), a solid colour, a pale tint and a halo colour. White text sits on the darker two thirds of a gradient.
+118. Two static glows sit behind every page: green top left, violet lower right. No blur and no animation.
+119. Today, top to bottom: the day ("Day 24 of 90 · Phase 1") and "Today", the streak chip and Setup; the DM card (number, +5, +, a gradient bar); the install hint and the missed-day notice when they apply; the four pillar cards in their gradients; "To do".
+120. A pillar card shows its name, its playful icon, the number and one short line. A tap opens the pillar's view, which grows out of the card from its top-left area. A tap on the DM number opens the Outreach view.
+121. "To do" holds every tick of the day in one list, in pillar order, each with a ring in its pillar colour. A tap saves the tick at once; the row shows its check and a burst for 300 ms, then slides away. Nothing is crossed out. "N done" shows the done rows; a tap undoes one. A keyboard tick moves the focus to the next row.
+122. When nothing is left, a green "All clear" card offers "Sign off". The round moon button next to "N left" opens the Sign-off view at any time.
+123. The tab bar floats: a white rounded bar 10 px above the safe area, icons only. The active page sits in a pill of its pillar colour; the centre button is the Outreach gradient and adds 1 DM in one tap.
+124. Page motion: the page settles from its top-left corner in 300 ms, then its parts rise in 50 ms apart. A view grows out of its card; its content rises in after 300 ms, when the view has landed.
+125. The view header is the pillar's gradient card with the big number, the icon and a white bar.
+126. Progress opens with the five pillar cards (Outreach across the top) with mission totals. A tap opens the pillar's analytics at #/progress/pillar/<id>: the total with the change against the days before (R in R, counts in %), 7D / 30D / 90D, the metric chips the record holds, a bar chart (days at the goal in the pillar gradient; R below zero goes down), best day, goal hit or active days, streak, daily average and a breakdown (funnel, session types, time by subject, books, outcomes and rules followed). Only stored data is shown.
+127. Each pillar icon has one small move (the plane takes off, the weight lifts, the tassel swings, the pages flutter, the line climbs, the moon tilts). It plays once when its card or view appears. All moves are CSS and stop with reduced motion.
+128. A tick blocks the main thread for about 2.5 ms (median, desktop, production build).

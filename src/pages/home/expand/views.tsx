@@ -8,7 +8,7 @@ import { MissionStats } from '@/components/shared/MissionStats';
 import { PressButton } from '@/components/shared/PressButton';
 import { MetricChart } from '@/components/shared/MetricChart';
 import { ProgressChart } from '@/components/shared/ProgressChart';
-import { ProgressBar } from '@/components/shared/ProgressBar';
+import { PillarGlyph } from '@/components/shared/PillarGlyph';
 import { RollingNumber } from '@/components/shared/RollingNumber';
 import { TickRow } from '@/components/shared/TickRow';
 import type { ModuleView, TickView } from '@/lib/moduleView';
@@ -43,14 +43,14 @@ export function ViewTitle({ id, titleId, children }: { id: string; titleId: stri
   );
 }
 
-/** Content that is not shared fades in after the container starts to move. */
+/** Content rises in once the view has landed: the page first, then the details (v3). */
 function Content({ children, className }: { children: ReactNode; className?: string }) {
   const reduced = useReducedMotion();
   return (
     <motion.div
-      animate={{ opacity: 1 }}
+      animate={{ opacity: 1, y: 0 }}
       className={className}
-      initial={{ opacity: 0 }}
+      initial={reduced ? { opacity: 0 } : { opacity: 0, y: 14 }}
       transition={reduced ? FADE : CONTENT_IN}
     >
       {children}
@@ -58,6 +58,10 @@ function Content({ children, className }: { children: ReactNode; className?: str
   );
 }
 
+/**
+ * The top of a view: the pillar's gradient card with the big number, the playful icon and a white bar.
+ * The icon plays its move once the view has landed.
+ */
 function SharedHeader({
   module,
   format,
@@ -67,32 +71,28 @@ function SharedHeader({
   format?: (value: number) => string;
   whole?: boolean;
 }) {
+  const reduced = useReducedMotion();
   return (
-    <>
-      <div className="mt-2 flex items-center justify-between gap-3">
-        <motion.p
-          className="inline-flex w-fit items-baseline gap-2"
-          layoutId={`number-${module.id}`}
-          transition={EXPAND_OPEN}
-        >
-          <RollingNumber
-            className={cn('type-hero transition-colors duration-300', module.complete ? 'text-hub-positive' : 'text-hub-text')}
-            format={format}
-            value={module.value}
-            whole={whole}
-          />
-          <span className="type-body text-hub-label">{module.unit}</span>
-        </motion.p>
-        {module.complete ? <DoneBadge /> : null}
+    <div className={cn('pillar-card mt-2 grid gap-4 p-5', `pillar-${module.id}`)}>
+      <div className="flex items-start justify-between gap-3">
+        <p className="inline-flex min-w-0 items-baseline gap-2">
+          <RollingNumber className="type-hero text-white" format={format} value={module.value} whole={whole} />
+          <span className="type-body text-white">{module.unit}</span>
+        </p>
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/15">
+          <PillarGlyph delayMs={320} id={module.id} play={reduced ? 0 : 1} size={28} />
+        </span>
       </div>
-      <motion.div className="mt-4" layoutId={`bar-${module.id}`} transition={EXPAND_OPEN}>
-        <ProgressBar
-          fraction={module.fraction}
-          label={module.barLabel}
-          tone={module.barTone === 'complete' ? 'complete' : module.barTone === 'limit' ? 'limit' : 'primary'}
-        />
-      </motion.div>
-    </>
+      <div className="flex items-center gap-3">
+        <span aria-hidden="true" className="h-2 flex-1 overflow-hidden rounded-full bg-white/20">
+          <span
+            className="block h-full rounded-full bg-white transition-[width] duration-500"
+            style={{ width: `${Math.round(Math.min(1, Math.max(0, module.fraction)) * 100)}%` }}
+          />
+        </span>
+        {module.complete ? <DoneBadge /> : <span className="type-label text-white">{module.barLabel}</span>}
+      </div>
+    </div>
   );
 }
 

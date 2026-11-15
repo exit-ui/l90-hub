@@ -108,3 +108,43 @@ describe('contrast of the dark theme', () => {
     expect(contrast(on('--hub-on-success', fill), fill)).toBeGreaterThanOrEqual(3);
   });
 });
+
+/** The v3 value of a token in the dark theme: the last dark block that sets it wins. */
+function v3DarkToken(name: string): Rgba {
+  const blocks = [...css.matchAll(/:root\[data-theme="dark"\]\s*\{([^}]*)\}/g)].map((match) => match[1] ?? '');
+  for (const block of blocks.reverse()) {
+    const match = new RegExp(`${name}:\\s*([^;]+);`).exec(block);
+    const value = parseCssColor(match?.[1] ?? '');
+    if (value) {
+      return value;
+    }
+  }
+  return token(name);
+}
+
+describe('contrast of the v3 pillar colours', () => {
+  const pillars = ['outreach', 'fitness', 'learning', 'reading', 'trading', 'signoff'];
+
+  it('keeps white text at 4.5:1 or more on every stop of every pillar gradient', () => {
+    for (const pillar of pillars) {
+      const gradient = new RegExp(`--pillar-${pillar}:\\s*linear-gradient\\(([^;]+)\\);`).exec(css)?.[1] ?? '';
+      const stops = gradient.match(/#[0-9a-f]{6}/gi) ?? [];
+      expect(stops.length).toBeGreaterThanOrEqual(3);
+      for (const stop of stops) {
+        const colour = parseCssColor(stop);
+        expect(colour).not.toBeNull();
+        expect(contrast(WHITE, composite(colour!, WHITE))).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
+  it('keeps each pillar ring and active tab icon at 3:1 or more on a card, in both themes', () => {
+    const lightCard = opaque('--hub-surface', WHITE);
+    const darkPage = composite(darkToken('--hub-bg-from'), [0, 0, 0]);
+    const darkCard = composite(darkToken('--hub-surface'), darkPage);
+    for (const pillar of pillars) {
+      expect(contrast(opaque(`--pillar-${pillar}-solid`, lightCard), lightCard)).toBeGreaterThanOrEqual(3);
+      expect(contrast(composite(v3DarkToken(`--pillar-${pillar}-solid`), darkCard), darkCard)).toBeGreaterThanOrEqual(3);
+    }
+  });
+});

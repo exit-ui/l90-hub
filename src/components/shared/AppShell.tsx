@@ -28,6 +28,18 @@ const PAGE_ICONS: Readonly<Record<PageId, LucideIcon>> = {
   setup: Settings,
 };
 
+/** The pillar colour of each page: the pill behind the active tab icon (v3). */
+const PAGE_TONES: Readonly<Record<PageId, string>> = {
+  home: 'tone-outreach',
+  outreach: 'tone-outreach',
+  progress: 'tone-learning',
+  learning: 'tone-learning',
+  fitness: 'tone-fitness',
+  trading: 'tone-trading',
+  method: 'tone-signoff',
+  setup: 'tone-signoff',
+};
+
 /** The pages that hold +1 DM in their own content. The sidebar hides its button there. */
 const DM_PAGES: readonly PageId[] = ['home', 'outreach'];
 
@@ -42,22 +54,29 @@ interface TabLinkProps {
   page: PageId;
 }
 
-/** One slot of the phone tab bar: an icon and a 12 px label. The active page is dark, the others grey. */
+/**
+ * One slot of the phone tab bar (v3): an icon only. The active page sits in a pill of its pillar colour;
+ * the name is the accessible name.
+ */
 function TabLink({ id, page }: TabLinkProps) {
   const Icon = PAGE_ICONS[id];
   const active = id === page;
   return (
     <motion.a
       aria-current={active ? 'page' : undefined}
-      className={cn(
-        'flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-control type-caption no-underline transition-colors',
-        active ? 'font-semibold text-hub-text' : 'font-medium text-hub-label hover:text-hub-text',
-      )}
+      aria-label={PAGE_LABELS[id]}
+      className={cn('flex min-h-12 min-w-0 items-center justify-center no-underline', PAGE_TONES[id])}
       href={routeHref(id)}
       whileTap={BUTTON_TAP}
     >
-      <Icon aria-hidden="true" className="size-6" strokeWidth={active ? 2 : 1.7} />
-      {PAGE_LABELS[id]}
+      <span
+        className={cn(
+          'flex h-10 w-13 items-center justify-center rounded-full transition-colors duration-200',
+          active ? 'bg-[var(--soft)] text-[var(--solid)]' : 'text-hub-label',
+        )}
+      >
+        <Icon aria-hidden="true" className="size-6" strokeWidth={active ? 2.3 : 1.8} />
+      </span>
     </motion.a>
   );
 }
@@ -185,49 +204,51 @@ function TabBar({ page, onMore }: { page: PageId; onMore: () => void }) {
 
   return (
     <motion.div
-      animate={{ y: visible ? 0 : '130%' }}
-      className="fixed inset-x-0 bottom-0 z-40 lg:hidden"
+      animate={{ y: visible ? 0 : '140%' }}
+      className="fixed inset-x-0 bottom-0 z-40 px-4 pb-tabbar-float lg:hidden"
       data-bar-visible={visible ? 'true' : 'false'}
       initial={false}
       ref={frame}
       transition={reduced ? NO_MOTION : SPRING}
     >
-      <nav aria-label="Pages" className="glass pb-tabbar">
-        <div className="mx-auto grid max-w-md grid-cols-5 items-center px-2 pt-1 pb-1">
-          {home ? <TabLink id={home} page={page} /> : null}
-          {outreach ? <TabLink id={outreach} page={page} /> : null}
-          <div className="relative flex justify-center">
-            <FloatUp bubbles={bubbles} className="-top-4" />
-            <motion.button
-              aria-label="Add 1 DM"
-              ref={hapticTarget}
-              className="shadow-brand flex size-15 -translate-y-4 cursor-pointer items-center justify-center rounded-full border-4 border-hub-bg-from bg-hub-brand text-hub-on-brand"
-              onClick={() => {
-                addDm();
-                show('+1');
-              }}
-              type="button"
-              whileTap={BUTTON_TAP}
-            >
-              <Plus aria-hidden="true" className="size-6" strokeWidth={2.2} />
-            </motion.button>
-          </div>
-          {progress ? <TabLink id={progress} page={page} /> : null}
+      <nav aria-label="Pages" className="tab-float mx-auto grid h-17 max-w-md grid-cols-5 items-center px-1">
+        {home ? <TabLink id={home} page={page} /> : null}
+        {outreach ? <TabLink id={outreach} page={page} /> : null}
+        <div className="relative flex justify-center">
+          <FloatUp bubbles={bubbles} className="-top-6" />
           <motion.button
-            aria-current={moreActive ? 'page' : undefined}
-            aria-haspopup="dialog"
-            className={cn(
-              'flex min-h-12 min-w-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-control type-caption transition-colors',
-              moreActive ? 'font-semibold text-hub-text' : 'font-medium text-hub-label hover:text-hub-text',
-            )}
-            onClick={onMore}
+            aria-label="Add 1 DM"
+            ref={hapticTarget}
+            className="pillar-outreach flex size-13 cursor-pointer items-center justify-center rounded-full"
+            onClick={() => {
+              addDm();
+              show('+1');
+            }}
             type="button"
             whileTap={BUTTON_TAP}
           >
-            <Ellipsis aria-hidden="true" className="size-6" strokeWidth={moreActive ? 2 : 1.7} />
-            More
+            <Plus aria-hidden="true" className="size-6 text-white" strokeWidth={2.4} />
           </motion.button>
         </div>
+        {progress ? <TabLink id={progress} page={page} /> : null}
+        <motion.button
+          aria-current={moreActive ? 'page' : undefined}
+          aria-haspopup="dialog"
+          aria-label="More"
+          className={cn('flex min-h-12 min-w-0 cursor-pointer items-center justify-center', PAGE_TONES[page])}
+          onClick={onMore}
+          type="button"
+          whileTap={BUTTON_TAP}
+        >
+          <span
+            className={cn(
+              'flex h-10 w-13 items-center justify-center rounded-full transition-colors duration-200',
+              moreActive ? 'bg-[var(--soft)] text-[var(--solid)]' : 'text-hub-label',
+            )}
+          >
+            <Ellipsis aria-hidden="true" className="size-6" strokeWidth={moreActive ? 2.3 : 1.8} />
+          </span>
+        </motion.button>
       </nav>
     </motion.div>
   );
@@ -245,6 +266,7 @@ export function AppShell({ page, children, inert = false }: AppShellProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   return (
     <div className="min-h-dvh overflow-x-clip" inert={inert}>
+      <div aria-hidden="true" className="page-glows" />
       <GradientDefs />
       <a
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-full focus:bg-hub-surface focus:px-4 focus:py-3"
