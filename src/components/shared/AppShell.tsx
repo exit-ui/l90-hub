@@ -2,6 +2,7 @@ import { BookOpen, ChartLine, Dumbbell, Ellipsis, House, type LucideIcon, Plus, 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type ReactNode, useRef, useState } from 'react';
 import { GradientDefs } from '@/components/charts/hub/GradientDefs';
+import { FocusBar, FocusHost } from '@/components/focus/FocusHost';
 import { GlowLayer } from '@/components/shared/GlowLayer';
 import { useAddDms } from '@/hooks/useAddDms';
 import { useBarVisible } from '@/hooks/useBarVisible';
@@ -283,10 +284,12 @@ export function AppShell({ page, children, inert = false }: AppShellProps) {
           tabIndex={-1}
         >
           <SampleBanner />
+          <FocusBar />
           {children}
         </main>
       </div>
       <TabBar onMore={() => setMoreOpen(true)} page={page} />
+      <FocusHost />
       <MoreSheet onOpenChange={setMoreOpen} open={moreOpen} page={page} />
     </div>
   );

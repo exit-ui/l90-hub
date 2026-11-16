@@ -21,11 +21,13 @@ import type {
   Session,
   Setup,
   Snapshot,
+  Timer,
   Trade,
   Weekday,
 } from '@/store/types';
 import { normalizeBooks } from './books';
 import { isDateKey } from './dates';
+import { MAX_FOCUS_MINUTES, MAX_TIMER_MINUTES } from './focus';
 
 export const STORAGE_KEY = 'l90-hub';
 
@@ -84,6 +86,15 @@ function readDay(value: unknown): DayRecord {
       }
     }
   }
+  const focus: Record<string, number> = {};
+  if (isRecord(value.focus)) {
+    for (const [task, minutes] of Object.entries(value.focus)) {
+      const rounded = whole(minutes, 0);
+      if (rounded > 0) {
+        focus[task] = Math.min(rounded, MAX_FOCUS_MINUTES);
+      }
+    }
+  }
   return {
     dm: whole(value.dm, 0),
     done,
@@ -93,6 +104,27 @@ function readDay(value: unknown): DayRecord {
     vetSend: whole(value.vetSend, 0),
     vetSkip: whole(value.vetSkip, 0),
     signedOff: flag(value.signedOff),
+    ...(Object.keys(focus).length > 0 ? { focus } : {}),
+  };
+}
+
+/** A timer record that is whole and in range, or null. */
+function readTimer(value: unknown): Timer | null {
+  if (!isRecord(value) || typeof value.task !== 'string' || !isDateKey(value.date)) {
+    return null;
+  }
+  const minutes = whole(value.minutes, 0);
+  if (minutes < 1) {
+    return null;
+  }
+  const planned = Math.min(minutes, MAX_TIMER_MINUTES);
+  const endsAt = typeof value.endsAt === 'number' && Number.isFinite(value.endsAt) ? value.endsAt : null;
+  return {
+    task: value.task,
+    date: value.date,
+    minutes: planned,
+    endsAt,
+    remainingMs: Math.min(Math.max(0, finite(value.remainingMs, 0)), planned * 60_000),
   };
 }
 
@@ -320,6 +352,7 @@ export function sanitizeState(input: unknown): HubState {
     weekTemplate,
     books: normalizeBooks(list(input.books, readBook, base.books)),
     chapterNotes: list(input.chapterNotes, readNote, base.chapterNotes),
+    timer: readTimer(input.timer),
   };
 }
 

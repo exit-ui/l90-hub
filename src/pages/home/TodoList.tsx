@@ -1,6 +1,7 @@
 import { ArrowRight, Check } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { memo, useEffect, useRef, useState } from 'react';
+import { TimerButton } from '@/components/focus/TimerButton';
 import { Burst } from '@/components/shared/Burst';
 import { PillarGlyph } from '@/components/shared/PillarGlyph';
 import { doneHaptic, haptic } from '@/lib/haptics';
@@ -10,6 +11,7 @@ import type { PillarId } from '@/lib/pillars';
 import { pulse } from '@/lib/pulse';
 import { routeHref } from '@/lib/routes';
 import { cn } from '@/lib/utils';
+import { isSampleMode } from '@/store/sample';
 
 /** How long a ticked row or card stays, checked, before it leaves. The store is written at once. */
 const LEAVE_MS = 300;
@@ -93,7 +95,8 @@ function TodoListBase({ modules, onToggle, cardsDue, signedOff, onSignOff, onOpe
   const items = itemsOf(modules);
   const [leaving, setLeaving] = useState<readonly string[]>([]);
   const [leavingNext, setLeavingNext] = useState<TodoItem | null>(null);
-  const [showDone, setShowDone] = useState(false);
+  // The sample data opens the done list so the demo shows all of it; the real app keeps it folded.
+  const [showDone, setShowDone] = useState(isSampleMode);
   const list = useRef<HTMLUListElement>(null);
   const focusAfter = useRef<number | null>(null);
   const timers = useRef<number[]>([]);
@@ -173,7 +176,8 @@ function TodoListBase({ modules, onToggle, cardsDue, signedOff, onSignOff, onOpe
                 <p className="line-clamp-3 text-[21px] leading-6.5 font-bold tracking-tight text-white">{next.action}</p>
                 {next.cue ? <p className="type-label mt-1 truncate text-white/80">{next.cue}</p> : null}
               </div>
-              <div className="relative flex justify-end">
+              <div className="relative flex items-center justify-between">
+                <TimerButton task={next.task} variant="card" />
                 {leavingNext ? (
                   <span aria-hidden="true" className="pointer-events-none absolute right-6 bottom-6">
                     <Burst />
@@ -239,13 +243,13 @@ function TodoListBase({ modules, onToggle, cardsDue, signedOff, onSignOff, onOpe
                 const isLeaving = leaving.includes(item.task);
                 return (
                   <motion.li
-                    className={cn('overflow-hidden', `tone-${item.pillar}`)}
+                    className={cn('flex items-center overflow-hidden', `tone-${item.pillar}`)}
                     exit={reduced ? { opacity: 0, transition: FADE } : { opacity: 0, x: 28, height: 0, transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1] } }}
                     key={item.task}
                   >
                     <button
                       aria-label={`${item.task}. Mark as done.`}
-                      className="relative flex min-h-14 w-full cursor-pointer touch-manipulation items-center gap-4 rounded-[18px] px-3 py-2 text-left transition-[background-color,transform] duration-100 active:scale-[0.985] active:bg-hub-inset"
+                      className="relative flex min-h-14 min-w-0 flex-1 cursor-pointer touch-manipulation items-center gap-4 rounded-[18px] px-3 py-2 text-left transition-[background-color,transform] duration-100 active:scale-[0.985] active:bg-hub-inset"
                       data-todo
                       onClick={(event) => tick(item, index, event.detail === 0)}
                       type="button"
@@ -275,6 +279,7 @@ function TodoListBase({ modules, onToggle, cardsDue, signedOff, onSignOff, onOpe
                         )}
                       </span>
                     </button>
+                    <TimerButton task={item.task} variant="row" />
                   </motion.li>
                 );
               })}

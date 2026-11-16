@@ -266,7 +266,7 @@ function DayCard({ shape, target }: { shape: DayShape; target: number }) {
             </dd>
           </div>
           <div className={cn('rounded-[18px] p-3', tile)}>
-            <dt className={cn('type-caption', sub)}>Focus</dt>
+            <dt className={cn('type-caption', sub)}>Sessions</dt>
             <dd className="num text-[22px] leading-7 font-bold tracking-tight">
               {shape.minutes}
               <span className={cn('type-label font-normal', sub)}> min</span>

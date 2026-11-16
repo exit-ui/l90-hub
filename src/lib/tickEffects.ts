@@ -70,7 +70,13 @@ type TickState = Pick<HubState, 'days' | 'fitness' | 'learning' | 'books' | 'cha
  * a gym task logs a gym session, a Linux, Python or code task logs a learning session,
  * a reading task adds one chapter to the current book. A second tap reverses both.
  */
-export function toggleTaskState(state: TickState, date: DateKey, task: string): Partial<TickState> {
+export function toggleTaskState(
+  state: TickState,
+  date: DateKey,
+  task: string,
+  /** The length of the logged session. A timer passes the minutes it timed; a plain tick logs an hour. */
+  sessionMinutes: number = TICK_SESSION_MINUTES,
+): Partial<TickState> {
   if (!isDateKey(date)) {
     return {};
   }
@@ -88,14 +94,14 @@ export function toggleTaskState(state: TickState, date: DateKey, task: string): 
     change.fitness = ticking
       ? [
           ...state.fitness,
-          { date, type: nextGymType(state.fitness), minutes: TICK_SESSION_MINUTES, note: '' },
+          { date, type: nextGymType(state.fitness), minutes: sessionMinutes, note: '' },
         ]
       : withoutLastOn(state.fitness, date);
   } else if (isStudyTask(task)) {
     change.learning = ticking
       ? [
           ...state.learning,
-          { date, type: lastTopic(state.learning), minutes: TICK_SESSION_MINUTES, note: '' },
+          { date, type: lastTopic(state.learning), minutes: sessionMinutes, note: '' },
         ]
       : withoutLastOn(state.learning, date);
   } else if (pillarOfTask(task) === 'reading') {

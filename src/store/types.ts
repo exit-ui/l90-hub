@@ -10,6 +10,22 @@ export interface DayRecord {
   vetSkip: number;
   /** True after "Sign off the day". A tick on a sign-off task does not set it. Older records have no flag. */
   signedOff?: boolean;
+  /** Focus-timer minutes of the day, by task text. Older records have none. */
+  focus?: Record<string, number>;
+}
+
+/**
+ * The one focus timer. It holds time stamps, not a count, so it runs on while the phone is locked.
+ * Running: `endsAt` is set. Paused: `endsAt` is null and `remainingMs` holds what is left.
+ * It is finished when `endsAt` has passed (or `remainingMs` is 0). `minutes` is what it credits.
+ */
+export interface Timer {
+  task: string;
+  /** The day the timer started. The minutes and the tick go to this day. */
+  date: DateKey;
+  minutes: number;
+  endsAt: number | null;
+  remainingMs: number;
 }
 
 export interface Session {
@@ -150,6 +166,8 @@ export interface HubState {
   weekTemplate: Record<Weekday, string[]>;
   books: Book[];
   chapterNotes: ChapterNote[];
+  /** The running, paused or just-finished focus timer. Null when there is none. */
+  timer: Timer | null;
 }
 
 export type NoticeKind = 'WARNING' | 'CAUTION' | 'NOTE';

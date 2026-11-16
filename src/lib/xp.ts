@@ -1,4 +1,5 @@
 import type { HubState } from '@/store/types';
+import { focusOf } from './focus';
 import { totalDms } from './streak';
 
 export const XP_VALUES = {
@@ -10,6 +11,8 @@ export const XP_VALUES = {
   chapter: 15,
   cardReview: 2,
   milestone: 40,
+  /** One XP for each minute that the focus timer ran. It comes on top of the task and its session. */
+  focusMinute: 1,
 } as const;
 
 export const XP_RULES: readonly { label: string; xp: number }[] = [
@@ -21,6 +24,7 @@ export const XP_RULES: readonly { label: string; xp: number }[] = [
   { label: 'Chapter read', xp: XP_VALUES.chapter },
   { label: 'Card review', xp: XP_VALUES.cardReview },
   { label: 'Lesson or milestone complete', xp: XP_VALUES.milestone },
+  { label: 'Focus timer, each minute', xp: XP_VALUES.focusMinute },
 ];
 
 type XpInput = Pick<
@@ -37,6 +41,7 @@ export function totalXp(state: XpInput): number {
   );
   const wins = records.filter((record) => record.win.trim() !== '').length;
   const chapters = state.books.reduce((sum, book) => sum + book.read, 0);
+  const focusMinutes = records.reduce((sum, record) => sum + focusOf(record), 0);
   const milestones =
     state.lessons.filter((item) => item.done).length +
     state.workMilestones.filter((item) => item.done).length;
@@ -48,7 +53,8 @@ export function totalXp(state: XpInput): number {
     state.learning.length * XP_VALUES.learning +
     chapters * XP_VALUES.chapter +
     state.cardReviews * XP_VALUES.cardReview +
-    milestones * XP_VALUES.milestone
+    milestones * XP_VALUES.milestone +
+    focusMinutes * XP_VALUES.focusMinute
   );
 }
 

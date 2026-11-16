@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import { persist, type PersistStorage, type StorageValue } from 'zustand/middleware';
 import { addBook, moveBook, normalizeBooks, readChapter, setChapters, currentBook } from '@/lib/books';
 import { addDays, isDateKey, monthKey, pinToday, todayKey } from '@/lib/dates';
+import {
+  completeTimerState,
+  pauseTimer as pauseTimerAt,
+  resumeTimer as resumeTimerAt,
+  startTimer as startTimerAt,
+  stopTimerEarly,
+} from '@/lib/focus';
 import { reviewCard } from '@/lib/leitner';
 import { toggleAttendance } from '@/lib/sessions';
 import { toggleTaskState } from '@/lib/tickEffects';
@@ -45,6 +52,16 @@ export interface HubActions {
   toggleTask: (date: DateKey, task: string) => void;
   /** Records the sign-off of the date. Only "Sign off the day" calls it; a tick never does. */
   signOffDay: (date: DateKey) => void;
+  /** Starts the one focus timer for a task. Does nothing while a timer is already there. */
+  startTimer: (task: string, date: DateKey, minutes: number) => void;
+  pauseTimer: () => void;
+  resumeTimer: () => void;
+  /** "Finish now": ends the timer and keeps the whole minutes that have passed (none under one minute). */
+  stopTimer: () => void;
+  /** Throws the timer away. Nothing is logged. */
+  cancelTimer: () => void;
+  /** Collects a finished timer. With `tick`, the task is ticked too. */
+  completeTimer: (tick: boolean) => void;
   setWin: (date: DateKey, text: string) => void;
   setNext: (date: DateKey, text: string) => void;
   addChartCheck: (date: DateKey) => void;
@@ -183,6 +200,17 @@ export const useHub = create<HubStore>()(
           set((state) => ({
             days: withDay(state.days, date, (record) => ({ ...record, signedOff: true })),
           })),
+        startTimer: (task, date, minutes) =>
+          set((state) =>
+            state.timer || !isDateKey(date) || task.trim() === ''
+              ? {}
+              : { timer: startTimerAt(task, date, minutes, Date.now()) },
+          ),
+        pauseTimer: () => set((state) => (state.timer ? { timer: pauseTimerAt(state.timer, Date.now()) } : {})),
+        resumeTimer: () => set((state) => (state.timer ? { timer: resumeTimerAt(state.timer, Date.now()) } : {})),
+        stopTimer: () => set((state) => (state.timer ? { timer: stopTimerEarly(state.timer, Date.now()) } : {})),
+        cancelTimer: () => set({ timer: null }),
+        completeTimer: (tick) => set((state) => completeTimerState(state, tick, Date.now())),
         setWin: (date, text) =>
           set((state) => ({
             days: withDay(state.days, date, (record) => ({ ...record, win: text })),

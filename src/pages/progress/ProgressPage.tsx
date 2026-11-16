@@ -14,6 +14,7 @@ import { PILLAR_LABELS } from '@/lib/pillars';
 import { ExpandedLayer, type ViewEntry } from '@/pages/home/expand/ExpandedLayer';
 import { ViewTitle } from '@/pages/home/expand/views';
 import { AllTicksCard } from './AllTicksCard';
+import { FocusCard } from './FocusCard';
 import { PillarAnalytics } from './PillarAnalytics';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { PillTabs } from '@/components/shared/PillTabs';
@@ -204,6 +205,7 @@ const OverviewTab = memo(function OverviewTab({
     <div className="grid gap-5 sm:gap-8 md:gap-12">
       <PillarGrid onOpen={onOpen} today={today} />
       <AllTicksCard today={today} />
+      <FocusCard today={today} />
       {heavyReady ? (
         <>
           <ProgressChart today={today} variant="full" />

@@ -1,5 +1,6 @@
 import { normalizeBooks } from '@/lib/books';
 import { addDays, rangeOfDays, weekdayOf } from '@/lib/dates';
+import { pillarOfTask } from '@/lib/pillars';
 import { createDefaultState } from './defaults';
 import type { DateKey, HubState, Trade } from './types';
 
@@ -104,6 +105,24 @@ export function createSampleState(today: DateKey, full = false): HubState {
       });
     }
   });
+
+  // Timed minutes on about half of the ticked days. A second number source keeps the rest of the sample as it was.
+  const focusNext = sequence(31);
+  for (const date of past) {
+    const record = state.days[date];
+    if (!record || record.dm === 0) {
+      continue;
+    }
+    const focus: Record<string, number> = {};
+    for (const task of state.weekTemplate[weekdayOf(date)]) {
+      if (record.done[task] === true && pillarOfTask(task) !== 'signoff' && focusNext() < 0.5) {
+        focus[task] = 5 * (2 + Math.floor(focusNext() * 9));
+      }
+    }
+    if (Object.keys(focus).length > 0) {
+      record.focus = focus;
+    }
+  }
 
   const firstTask = state.weekTemplate[weekdayOf(today)][0];
   state.days[today] = full

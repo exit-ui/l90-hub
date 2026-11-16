@@ -247,6 +247,7 @@ export function createDefaultState(): HubState {
     weekTemplate: defaultWeekTemplate(),
     books,
     chapterNotes: [],
+    timer: null,
   };
 }
 
