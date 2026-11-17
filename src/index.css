@@ -1239,11 +1239,24 @@ body {
   box-shadow: 0 0 0 6px rgb(61 220 132 / 0.12), 0 10px 26px rgb(61 220 132 / 0.4);
 }
 
-/* The ruler of the Log sheet. */
-.ruler { touch-action: none; user-select: none; cursor: grab; }
+/* The ruler of the Log and Focus sheets. Its ends fade out, so the ticks do not stop at a hard edge. */
+.ruler {
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 16%, #000 84%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 16%, #000 84%, transparent);
+}
 .ruler:active { cursor: grabbing; }
 
+/* An icon that takes the place of another (Pause and Resume, the check on the timer chip): it turns in and settles. */
+@keyframes icon-swap {
+  from { opacity: 0; transform: scale(0.5) rotate(-24deg); }
+  to { opacity: 1; transform: none; }
+}
+.icon-swap { animation: icon-swap 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
-  .glow, .glow-pulse-a, .glow-pulse-b, .seg-fresh, .un-in, .un-out { animation: none !important; }
+  .glow, .glow-pulse-a, .glow-pulse-b, .seg-fresh, .un-in, .un-out, .icon-swap { animation: none !important; }
   .arc-fill, .arc-dot { transition: none; }
 }

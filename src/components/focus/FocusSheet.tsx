@@ -169,7 +169,7 @@ function RunningView({ timer, now }: { timer: Timer; now: number }) {
             }}
             tone="primary"
           >
-            <Play aria-hidden="true" className="size-4" fill="currentColor" /> Resume
+            <Play aria-hidden="true" className="icon-swap size-4" fill="currentColor" /> Resume
           </PressButton>
         ) : (
           <PressButton
@@ -180,7 +180,7 @@ function RunningView({ timer, now }: { timer: Timer; now: number }) {
             }}
             tone="secondary"
           >
-            <Pause aria-hidden="true" className="size-4" fill="currentColor" /> Pause
+            <Pause aria-hidden="true" className="icon-swap size-4" fill="currentColor" /> Pause
           </PressButton>
         )}
         <PressButton

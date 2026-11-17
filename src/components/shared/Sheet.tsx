@@ -17,7 +17,7 @@ interface SheetProps {
 
 /**
  * A white sheet: a bottom sheet with 32 px top corners on a phone,
- * a centred 480 px dialog on a wide screen. It opens in 350 ms.
+ * a centred 480 px dialog on a wide screen. It opens in 300 ms.
  */
 export function Sheet({
   open,
@@ -35,7 +35,7 @@ export function Sheet({
         <Dialog.Popup
           className={cn(
             'glass-sheet inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col overflow-y-auto rounded-t-sheet px-4 pt-4 pb-sheet text-hub-text outline-none',
-            'transition-[translate,scale,opacity] duration-350 ease-sheet',
+            'transition-[translate,scale,opacity] duration-300 ease-sheet',
             'data-ending-style:translate-y-full data-starting-style:translate-y-full',
             'md:inset-x-auto md:top-1/2 md:bottom-auto md:left-1/2 md:w-full md:max-w-120 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-sheet md:p-6',
             'md:data-ending-style:-translate-y-1/2 md:data-ending-style:scale-95 md:data-ending-style:opacity-0 md:data-starting-style:-translate-y-1/2 md:data-starting-style:scale-95 md:data-starting-style:opacity-0',

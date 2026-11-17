@@ -15,7 +15,7 @@ export const RIPPLE = { duration: 0.38, ease: 'easeOut' } as const;
 /** "+1" rises above the button that added it and fades. */
 export const FLOAT_UP = { duration: 0.6, ease: [0.16, 1, 0.3, 1] } as const;
 /** Card to expanded view: the shared elements. */
-export const EXPAND_OPEN = { type: 'spring', visualDuration: 0.35, bounce: 0.12 } as const;
+export const EXPAND_OPEN = { type: 'spring', visualDuration: 0.3, bounce: 0.12 } as const;
 /** Expanded view to card. No overshoot into the grid. */
 export const EXPAND_CLOSE = { type: 'spring', visualDuration: 0.3, bounce: 0 } as const;
 /** A swipe-down that stops before the close threshold. */

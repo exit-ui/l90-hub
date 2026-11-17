@@ -299,7 +299,7 @@ The user said the phone view was too big and that the tab bar sat on the Safari 
 |---|---|---|
 | `SPRING` | spring, stiffness 520, damping 38, mass 0.9 | small UI: active pill, segment indicator |
 | `CHECK_SPRING` | spring, stiffness 700, damping 32, mass 0.6 | the check fill |
-| `EXPAND_OPEN` | spring, `visualDuration: 0.35`, `bounce: 0.12` | card → expanded view (shared elements) |
+| `EXPAND_OPEN` | spring, `visualDuration: 0.3`, `bounce: 0.12` | card → expanded view (shared elements) |
 | `EXPAND_CLOSE` | spring, `visualDuration: 0.3`, `bounce: 0` | expanded view → card (no overshoot into the grid) |
 | `DRAG_RETURN` | spring, `visualDuration: 0.25`, `bounce: 0.2` | swipe-down released below the close threshold |
 | `DIGIT_SPRING` | spring, `visualDuration: 0.32`, `bounce: 0.1` | each digit column of the number roll (9.4) |
@@ -385,7 +385,7 @@ Motion+ is a paid, licensed product (one-time purchase, private repo). The user 
 
 - Shared (`layoutId`): `card-<id>` (the surface: grid card ↔ expanded panel), `title-<id>` (pillar name; for the chart: the card title "Progress"), `number-<id>` (the big number; the chart card has none), `bar-<id>` (the progress bar; the chart card has none). No icon is shared (the icon chip of a tick card fades with the other content). The Sign-off card shares only `card-signoff` and `title-signoff`; its ring is not shared.
 - The card's grid cell keeps its exact size while the view is open: the cell renders a placeholder with the card's measured height and the material at opacity 0. No other card moves.
-- Open (`EXPAND_OPEN`): frame 0 the overlay starts its fade (`OVERLAY_FADE`), the card's non-shared content fades out (`CONTENT_OUT`), the shared elements fly to their expanded positions, radius 24 → 32. From 120 ms the expanded content fades in (`CONTENT_IN`) and the ticks stagger in (`STAGGER`: opacity 0 → 1, y 8 → 0). The container reaches its target by 350 ms.
+- Open (`EXPAND_OPEN`): frame 0 the overlay starts its fade (`OVERLAY_FADE`), the card's non-shared content fades out (`CONTENT_OUT`), the shared elements fly to their expanded positions, radius 24 → 32. From 120 ms the expanded content fades in (`CONTENT_IN`) and the ticks stagger in (`STAGGER`: opacity 0 → 1, y 8 → 0). The container reaches its target by 300 ms.
 - Close (`EXPAND_CLOSE`): expanded content fades out (`CONTENT_OUT`), the shared elements fly back, radius 32 → 24, the overlay fades out, the card's own content fades in. The container reaches the card by 300 ms. Then the placeholder is replaced by the real card (no flash).
 - The shared title and number change size (for example 40 → 64 px) through the layout scale, with 9.2's inline-block rule. The rendered font size switches at the start of the animation, not at the end.
 - Deep link or reload on an expanded route (no card rect to fly from, or the card is out of view): no shared flight; the panel fades in with `opacity 0 → 1` and `scale 0.98 → 1` in `EXPAND_OPEN`.
@@ -565,7 +565,7 @@ Expandable cards (new)
 71. On open, focus moves to the view title; Tab stays inside the view; on close, focus returns to the card's open target.
 72. The panel has `role="dialog"`, `aria-modal="true"` and an accessible name; the module header has `aria-expanded`.
 73. Tapping Close during the open animation reverses from the current frame; tapping the card during the close animation re-opens from the current frame.
-74. The open container reaches its target in ≤ 350 ms and the close in ≤ 300 ms (Performance panel).
+74. The open container reaches its target in ≤ 300 ms and the close in ≤ 300 ms (Performance panel).
 75. At < 768 px the view covers the tab bar with 32 px top corners; at ≥ 768 px it is a centred panel ≤ 720 px wide with 32 px corners.
 
 Round 3 (user feedback)
@@ -668,4 +668,6 @@ The v4 mock-up is the source. The previous version is the git tag `pre-v4`; the 
 152. A running timer shows a ring and the clock with Pause or Resume, "Finish · N min" (the whole minutes so far; off under one minute) and "Cancel timer" (a second tap throws it away). The screen stays on while it runs, where the browser allows it. While a timer is on, a small chip sits at the top centre of every page: the ring and the clock (a pause mark when paused; white with "Done" when finished). It has its own row above the page title, so it never covers it, and it sticks to the top while the page scrolls. A tap opens the timer.
 153. A finished timer waits for a tap: the app cannot buzz or notify while the phone is locked, so the bar says "Done, tap to collect". The sheet then shows the minutes, the XP and any new record, with "Mark the task done" and "Log the time only". The minutes are credited to the day the timer started, even after midnight. A task that is already ticked, or no longer on that day's list, is never toggled. A gym or learning task logs the timed minutes as its session instead of an hour; a reading task adds one chapter, as a normal tick does.
 154. Focus minutes are stored on the day (`focus`, by task). Each minute is 1 XP on top of the task and its session. Progress shows "Focus time": this week with the change on last week at the same weekday (shown once this week has a minute), the last 7 days (the best day in a lighter colour), and Today, Best day and Streak. A session that takes the day or the week past the best earlier one says "New best day" or "New best week". Competition is against yourself; the hub has no shared data.
+155. The ends of the ruler fade out (a mask), so the ticks do not stop at a hard edge. An icon that replaces another (Pause and Resume, the check on the timer chip) turns in over 180 ms; it stops under reduced motion.
+156. The sheets and the grow of a view reach their target in 300 ms (was 350 ms): interface motion stays under 300 ms.
 

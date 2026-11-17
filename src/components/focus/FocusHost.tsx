@@ -37,14 +37,14 @@ function BarBody({ timer }: { timer: Timer }) {
       type="button"
     >
       {phase === 'finished' ? (
-        <Check aria-hidden="true" className="size-4" strokeWidth={3.2} />
+        <Check aria-hidden="true" className="icon-swap size-4" strokeWidth={3.2} />
       ) : (
         <TimerRing className="size-4 shrink-0" fraction={1 - left / total} thickness={14} />
       )}
       <span aria-hidden="true" className="num type-label font-bold">
         {phase === 'finished' ? 'Done' : formatClock(left)}
       </span>
-      {phase === 'paused' ? <Pause aria-hidden="true" className="size-3 text-white/80" fill="currentColor" /> : null}
+      {phase === 'paused' ? <Pause aria-hidden="true" className="icon-swap size-3 text-white/80" fill="currentColor" /> : null}
     </button>
   );
 }
