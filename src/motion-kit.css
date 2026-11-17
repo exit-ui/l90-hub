@@ -1,0 +1,211 @@
+/* ==========================================================================
+   Motion kit: a small, portable set of motion tokens and recipes.
+   It depends on nothing else: copy this file into any project and import it once.
+   The rules behind it are in docs/ui-motion-standard.md; src/lib/motionKit.test.ts enforces them.
+
+   How to choose a recipe: ask how often the action happens.
+     Many times a day (a +1, a key press, a tab)      -> instant or quick. No travel, no particles.
+     A few times a day (a tick, a sheet, a page)       -> base or slow. One move, at most 300 ms.
+     Rare (a finished day, a record, a finished timer) -> ceremony. Push it past real.
+   Only `transform` and `opacity` move, so every recipe runs on the graphics chip.
+   ========================================================================== */
+
+:root {
+  /* How long. The longest value for UI that is used every day is --mk-dur-slow. */
+  --mk-dur-instant: 90ms;
+  --mk-dur-quick: 150ms;
+  --mk-dur-base: 220ms;
+  --mk-dur-slow: 300ms;
+  --mk-dur-ceremony: 700ms;
+
+  /* How it moves. Never `linear`, except for a clock that runs at a constant rate. */
+  --mk-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1); /* arrives: quick start, soft stop */
+  --mk-ease-in: cubic-bezier(0.4, 0, 1, 1); /* leaves: slow start, quick end */
+  --mk-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* crosses the screen */
+  --mk-ease-overshoot: cubic-bezier(0.2, 0.9, 0.3, 1.35); /* has weight: passes the end, comes back */
+}
+
+/* ---- Press: small controls squash, cards tilt ---------------------------------------------- */
+
+/* Squash and stretch. The press is quick and flat; the release overshoots, so the control feels like it has weight.
+   For small controls only (a round button, a pill). A wide card would distort its text: use mk-tilt. */
+.mk-press {
+  transition: transform var(--mk-dur-base) var(--mk-ease-overshoot);
+}
+.mk-press:active {
+  transform: scale(1.05, 0.9);
+  transition-duration: var(--mk-dur-instant);
+  transition-timing-function: var(--mk-ease-out);
+}
+
+/* Solid drawing. A card tips away from the finger in perspective, as an object with depth would. It scales uniformly. */
+.mk-tilt {
+  transition: transform var(--mk-dur-base) var(--mk-ease-overshoot);
+}
+.mk-tilt:active {
+  transform: perspective(700px) rotateX(3deg) scale(0.985);
+  transition-duration: var(--mk-dur-instant);
+  transition-timing-function: var(--mk-ease-out);
+}
+
+/* ---- Arrive, leave, settle ---------------------------------------------------------------- */
+
+/* Squash and stretch on landing: it stretches as it drops, squashes on impact, then settles. */
+@keyframes mk-pop {
+  0% {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(0.92, 1.12);
+    opacity: 1;
+  }
+  62% {
+    transform: scale(1.1, 0.9);
+  }
+  82% {
+    transform: scale(0.97, 1.03);
+  }
+  100% {
+    transform: none;
+  }
+}
+.mk-pop {
+  animation: mk-pop var(--mk-dur-slow) var(--mk-ease-out) both;
+}
+
+/* Anticipation, then an arc. A short lean back (the first 16 %), then it leaves on a curve: it rises, then falls away.
+   It starts to move within 50 ms, so the tap still feels answered. Use it with a removal timer of --mk-dur-slow. */
+@keyframes mk-windup-out {
+  0% {
+    transform: none;
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  16% {
+    transform: translate(8px, 2px) scale(0.985);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  58% {
+    transform: translate(-46%, -18px) rotate(-2.5deg) scale(0.97);
+    opacity: 0.85;
+    animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+  }
+  100% {
+    transform: translate(-112%, -8px) rotate(-5deg) scale(0.94);
+    opacity: 0;
+  }
+}
+.mk-windup-out {
+  animation: mk-windup-out var(--mk-dur-slow) linear forwards;
+}
+
+/* The arrival on a curve from the right: it overshoots a little, then settles (follow-through). */
+@keyframes mk-arc-in {
+  0% {
+    transform: translate(40px, 16px) scale(0.95);
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  58% {
+    transform: translate(-4px, -6px) scale(1.012);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1);
+  }
+  82% {
+    transform: translate(1px, 1px) scale(0.998);
+    animation-timing-function: ease-out;
+  }
+  100% {
+    transform: none;
+  }
+}
+.mk-arc-in {
+  animation: mk-arc-in var(--mk-dur-slow) linear backwards;
+}
+
+/* Follow-through. The parts of a card keep moving after the card has stopped: each rises into place a little later.
+   Set --mk-i (0, 1, 2 ...) on each part. */
+@keyframes mk-settle {
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+.mk-settle {
+  animation: mk-settle var(--mk-dur-base) var(--mk-ease-out) both;
+  animation-delay: calc(110ms + var(--mk-i, 0) * 45ms);
+}
+
+/* ---- Feedback ---------------------------------------------------------------------------- */
+
+/* Exaggerated feedback for a refusal: a shake that decays. Put it on the box that holds the wrong value. */
+@keyframes mk-shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  15% {
+    transform: translateX(-7px);
+  }
+  30% {
+    transform: translateX(6px);
+  }
+  45% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-1.5px);
+  }
+}
+.mk-shake {
+  animation: mk-shake var(--mk-dur-slow) var(--mk-ease-out) both;
+}
+
+/* For a rare moment only: a badge that spins in on its axis in perspective, past full size, and lands. */
+@keyframes mk-flip {
+  0% {
+    transform: perspective(700px) rotateY(0deg) scale(0.5);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  72% {
+    transform: perspective(700px) rotateY(380deg) scale(1.14);
+  }
+  100% {
+    transform: perspective(700px) rotateY(360deg) scale(1);
+  }
+}
+.mk-flip {
+  animation: mk-flip var(--mk-dur-ceremony) var(--mk-ease-out) both;
+}
+
+/* ---- Reduced motion: every recipe above stops. The end state is the plain state. ---------------- */
+@media (prefers-reduced-motion: reduce) {
+  .mk-pop,
+  .mk-windup-out,
+  .mk-arc-in,
+  .mk-settle,
+  .mk-shake,
+  .mk-flip {
+    animation: none !important;
+  }
+  .mk-press,
+  .mk-tilt {
+    transition: none;
+  }
+  .mk-press:active,
+  .mk-tilt:active {
+    transform: none;
+  }
+}

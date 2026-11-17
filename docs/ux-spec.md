@@ -671,3 +671,20 @@ The v4 mock-up is the source. The previous version is the git tag `pre-v4`; the 
 155. The ends of the ruler fade out (a mask), so the ticks do not stop at a hard edge. An icon that replaces another (Pause and Resume, the check on the timer chip) turns in over 180 ms; it stops under reduced motion.
 156. The sheets and the grow of a view reach their target in 300 ms (was 350 ms): interface motion stays under 300 ms.
 
+### Round 12: the motion standard
+The rules are in docs/ui-motion-standard.md; the recipes are in src/motion-kit.css; src/lib/motionKit.test.ts enforces them.
+157. Every motion has a tier by how often it happens: constant (90 to 150 ms, no travel), daily (up to 300 ms, one move) and rare (up to 700 ms, pushed past real). Durations and curves are tokens; no component holds a raw number.
+158. The Up next card leans back for 50 ms, then leaves on a curve (rising, then falling away) in 300 ms. The next card arrives on a curve from the right, overshoots a little and settles; its three parts (the label, the task, the buttons) rise into place 45 ms apart after the card has stopped.
+159. The check circle and the timer buttons flatten and widen under the finger and overshoot on release. The pillar tiles tip away in perspective under the finger. A wide card never squashes.
+160. A finished timer lands the "Done" chip with a stretch and a squash and spins the check badge in perspective. The running ring lands the same way when the timer starts.
+161. A field with a wrong value shakes (300 ms, decaying) and keeps its focus. The shake plays again on a new failed submit even when the error text is the same.
+162. In a run of +1 DM taps (each within 4 s of the last), only the first, and the tap that reaches the target, flash the glow. The other taps answer with the number, the segment and the haptic.
+163. A test reads the kit: only transform and opacity animate; every recipe stops under reduced motion; every duration is a token and at most 300 ms (the flip, a rare moment, may use 700 ms); `motion.ts` equals the tokens.
+
+### Round 13: the v5 build (Progress in three chunks, depth, shared weeks)
+164. Progress has three tabs: Pillars, Focus and Days (#/progress, #/progress/focus, #/progress/days). Pillars keeps the pillar cards, All ticks, the chart, the mission numbers and the 90-day grid. Each tab holds a chunk a person can take in at once.
+165. Focus holds three things. "Focus time": this week from Monday to Sunday, each day racing the same day of last week (the hatched ghost bar), this week so far against last week at the same point, and Today, Best day and Streak. "Records": best day, best week and longest streak, with "New" on a record that was beaten today or this week (a first record is not "New", and a tie does not beat one). One line to share.
+166. "Share my week" opens the phone's share sheet. Where there is none, "Copy my week" copies the line, shows "Copied" for 1.8 s and the icon turns in. The line is plain text: "L90 focus this week: 1h 20m (-47% on last week by now) · best day 1h 30m · 3-day streak". The app sends nothing by itself.
+167. Depth on dark: the white controls of the dark theme (the check on Up next, the +1 pill) are the lightest layer, with a bright top edge and a deep drop (class `raised`). Cards are the middle layer; the page is the lowest.
+168. The DM segments and the centre button blend their greens in OKLCH. The segment pop is 300 ms.
+

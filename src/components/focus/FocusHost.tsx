@@ -31,7 +31,7 @@ function BarBody({ timer }: { timer: Timer }) {
       aria-label={`${splitTask(timer.task).action}. ${label}`}
       className={cn(
         'hit-area pointer-events-auto flex h-8 cursor-pointer items-center gap-2 rounded-full pr-3.5 pl-2.5 shadow-md',
-        phase === 'finished' ? 'bg-white text-[#0a0b10]' : cn('pillar-card text-white', `pillar-${pillar}`),
+        phase === 'finished' ? 'mk-pop bg-white text-[#0a0b10]' : cn('pillar-card text-white', `pillar-${pillar}`),
       )}
       onClick={() => openFocus(timer.task, timer.date)}
       type="button"

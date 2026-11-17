@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Motion kit: before and after</title>
+    <!-- The whole kit. This page imports nothing else, which proves the file is portable. -->
+    <link rel="stylesheet" href="../src/motion-kit.css" />
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 20px 16px 48px; background: #0b0d12; color: #eef0f4; font: 15px/1.45 system-ui, -apple-system, sans-serif; }
+      h1 { font-size: 20px; margin: 0 0 4px; }
+      p.lead { margin: 0 0 20px; color: #9aa3b2; max-width: 60ch; }
+      section { margin: 0 0 16px; padding: 14px; border-radius: 18px; background: #141821; border: 1px solid #ffffff14; }
+      h2 { font-size: 14px; margin: 0 0 2px; }
+      .rule { margin: 0 0 12px; color: #9aa3b2; font-size: 13px; }
+      .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .pane { min-height: 130px; border-radius: 14px; background: #0f1218; border: 1px solid #ffffff10; display: grid; place-items: center; position: relative; overflow: hidden; }
+      .pane > small { position: absolute; top: 8px; left: 10px; color: #7f8896; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+      button.go { margin-top: 10px; font: inherit; color: #eef0f4; background: #232a38; border: 0; border-radius: 999px; padding: 9px 16px; min-height: 44px; cursor: pointer; }
+      .dot { width: 54px; height: 54px; border-radius: 16px; background: linear-gradient(140deg, #f59e0b, #ea580c); }
+      .chip { width: 64px; height: 64px; border-radius: 50%; background: #fff; color: #0a0b10; display: grid; place-items: center; font-weight: 700; }
+      .card { width: 150px; height: 96px; border-radius: 18px; padding: 12px; background: linear-gradient(140deg, #0b2e1b, #187d49); }
+      .card b { display: block; }
+      .card .a, .card .b { display: block; font-size: 12px; opacity: .9; }
+      .field { width: 150px; padding: 10px 12px; border-radius: 12px; background: #1b2030; box-shadow: inset 0 0 0 1.5px #ef4444; font-size: 13px; }
+      .btn { width: 92px; height: 92px; border-radius: 50%; background: #fff; color: #0a0b10; border: 0; font: inherit; font-weight: 700; cursor: pointer; }
+      .tile { width: 130px; height: 90px; border-radius: 18px; background: linear-gradient(140deg, #1e1b4b, #4338ca); padding: 12px; border: 0; color: #fff; font: inherit; text-align: left; cursor: pointer; }
+      .linear .dot { animation: slide 1s linear infinite alternate; }
+      .eased .dot { animation: slide 1s var(--mk-ease-in-out) infinite alternate; }
+      @keyframes slide { from { transform: translateX(-46px); } to { transform: translateX(46px); } }
+      @media (prefers-reduced-motion: reduce) { .linear .dot, .eased .dot { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <h1>Motion kit: before and after</h1>
+    <p class="lead">Each pair shows the plain version on the left and the kit's recipe on the right. Tap Replay. Press and hold the round button and the tile to feel the press.</p>
+
+    <section>
+      <h2>Squash and stretch (mk-press, mk-pop)</h2>
+      <p class="rule">Things squish on impact. The press is flat and quick; the release overshoots. A landing stretches, squashes, then settles.</p>
+      <div class="pair">
+        <div class="pane"><small>Before</small><button class="btn" style="transition: transform 100ms ease-out" onpointerdown="this.style.transform='scale(.96)'" onpointerup="this.style.transform=''" onpointerleave="this.style.transform=''">Tap</button></div>
+        <div class="pane"><small>After</small><button class="btn mk-press">Tap</button></div>
+      </div>
+      <div class="pair" style="margin-top:10px">
+        <div class="pane"><small>Before</small><div class="chip" data-replay="plain">✓</div></div>
+        <div class="pane"><small>After</small><div class="chip" data-replay="mk-pop">✓</div></div>
+      </div>
+      <button class="go" data-target="pop">Replay</button>
+    </section>
+
+    <section>
+      <h2>Anticipation, arcs, follow-through (mk-windup-out, mk-arc-in, mk-settle)</h2>
+      <p class="rule">A short lean back, then a curved exit. The next card arrives on a curve and overshoots a little; its words land after it stops. Under 300 ms.</p>
+      <div class="pair">
+        <div class="pane"><small>Before</small><div class="card" id="card-before"><b>Up next</b><span class="a">Read 1 chapter</span></div></div>
+        <div class="pane"><small>After</small><div class="card" id="card-after"><b class="mk-settle" style="--mk-i:0">Up next</b><span class="a mk-settle" style="--mk-i:1">Read 1 chapter</span><span class="b mk-settle" style="--mk-i:2">On the bus home</span></div></div>
+      </div>
+      <button class="go" id="replay-card">Replay</button>
+    </section>
+
+    <section>
+      <h2>Slow in, slow out</h2>
+      <p class="rule">Speed up and slow down. Linear is for a clock only.</p>
+      <div class="pair">
+        <div class="pane linear"><small>Linear</small><div class="dot"></div></div>
+        <div class="pane eased"><small>Ease in-out</small><div class="dot"></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Exaggerated feedback (mk-shake)</h2>
+      <p class="rule">A refusal shakes and decays. It never remounts the field, so the keyboard stays.</p>
+      <div class="pair">
+        <div class="pane"><small>Before</small><div class="field">Wrong value</div></div>
+        <div class="pane"><small>After</small><div class="field" id="shake">Wrong value</div></div>
+      </div>
+      <button class="go" id="replay-shake">Replay</button>
+    </section>
+
+    <section>
+      <h2>Solid drawing (mk-tilt, mk-flip)</h2>
+      <p class="rule">A card tips in perspective under the finger. A rare badge spins in on its axis.</p>
+      <div class="pair">
+        <div class="pane"><small>Before</small><button class="tile" style="transition: transform 100ms ease-out" onpointerdown="this.style.transform='scale(.96)'" onpointerup="this.style.transform=''" onpointerleave="this.style.transform=''">Fitness</button></div>
+        <div class="pane"><small>After</small><button class="tile mk-tilt">Fitness</button></div>
+      </div>
+      <div class="pair" style="margin-top:10px">
+        <div class="pane"><small>Before</small><div class="chip">✓</div></div>
+        <div class="pane"><small>After</small><div class="chip" id="flip">✓</div></div>
+      </div>
+      <button class="go" id="replay-flip">Replay</button>
+    </section>
+
+    <script>
+      // Replay by toggling the class off and on. The page itself never uses a timer for motion.
+      const replay = (element, name) => {
+        element.classList.remove(name);
+        void element.offsetWidth;
+        element.classList.add(name);
+      };
+      document.querySelector('[data-target="pop"]').addEventListener('click', () => {
+        const chip = document.querySelector('[data-replay="mk-pop"]');
+        replay(chip, 'mk-pop');
+      });
+      document.getElementById('replay-shake').addEventListener('click', () => replay(document.getElementById('shake'), 'mk-shake'));
+      document.getElementById('replay-flip').addEventListener('click', () => replay(document.getElementById('flip'), 'mk-flip'));
+      document.getElementById('replay-card').addEventListener('click', () => {
+        const before = document.getElementById('card-before');
+        const after = document.getElementById('card-after');
+        // The plain version: a straight slide out and a straight slide in.
+        before.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateX(-60px)', opacity: 0 }], { duration: 300, fill: 'forwards' })
+          .finished.then(() => before.animate([{ transform: 'translateX(40px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300 }));
+        replay(after, 'mk-windup-out');
+        after.addEventListener('animationend', () => {
+          after.classList.remove('mk-windup-out');
+          after.querySelectorAll('.mk-settle').forEach((part) => replay(part, 'mk-settle'));
+          replay(after, 'mk-arc-in');
+        }, { once: true });
+      });
+    </script>
+  </body>
+</html>

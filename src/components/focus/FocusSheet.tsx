@@ -148,7 +148,7 @@ function RunningView({ timer, now }: { timer: Timer; now: number }) {
     <div className="grid gap-3">
       <section className={cn('pillar-card grid gap-4 p-4', `pillar-${pillar}`)}>
         <TaskHeader task={timer.task} />
-        <TimerRing className="mx-auto size-56" fraction={1 - left / total}>
+        <TimerRing className="mk-pop mx-auto size-56" fraction={1 - left / total}>
           <p aria-hidden="true" className="num text-[52px] leading-14 font-bold tracking-tight text-white">
             {formatClock(left)}
           </p>
@@ -233,7 +233,7 @@ function FinishedView({ timer }: { timer: Timer }) {
   return (
     <div className="grid gap-3">
       <section className={cn('pillar-card grid justify-items-center gap-3 p-5 text-center', `pillar-${pillar}`)}>
-        <span className="relative flex size-16 items-center justify-center rounded-full bg-white text-[#0a0b10]">
+        <span className="mk-flip relative flex size-16 items-center justify-center rounded-full bg-white text-[#0a0b10]">
           <Burst count={14} distance={64} duration={0.9} size={7} />
           <Check aria-hidden="true" className="size-8" strokeWidth={3.2} />
         </span>

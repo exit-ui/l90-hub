@@ -95,7 +95,7 @@ export const DmHero = memo(function DmHero({ date, onOpen }: { date: DateKey; on
         <FloatUp bubbles={bubbles} className="-top-2" />
         <PressButton
           aria-label="Add 1 DM"
-          className="h-11.5 flex-1 bg-white text-[#0a0b10] hover:bg-white/90 sm:min-h-11.5"
+          className="raised h-11.5 flex-1 bg-white text-[#0a0b10] hover:bg-white/90 sm:min-h-11.5"
           onClick={() => {
             add(1);
             show('+1');

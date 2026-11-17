@@ -5,6 +5,7 @@ import {
   type FocusEvent,
   type ReactNode,
   useCallback,
+  useEffect,
   useId,
   useLayoutEffect,
   useRef,
@@ -75,6 +76,8 @@ interface FieldProps {
   hint?: string;
   /** What is wrong and how to correct it. */
   error?: string;
+  /** A count of failed submits. A new number shakes the field again, even when the error text is the same. */
+  attempt?: number;
   /** Shown on the right of the label, for example the "Saved" tick. */
   aside?: ReactNode;
   children: ReactNode;
@@ -82,10 +85,25 @@ interface FieldProps {
 }
 
 /** A white field card: the label and the control inside, an optional hint below, and an error with an icon. */
-export function Field({ label, htmlFor, hint, error, aside, children, className }: FieldProps) {
+export function Field({ label, htmlFor, hint, error, attempt = 0, aside, children, className }: FieldProps) {
+  const box = useRef<HTMLDivElement>(null);
+  // Exaggerated feedback: a wrong value shakes the field. The class is toggled, never the element remounted,
+  // so the field keeps its focus and the phone keeps its keyboard.
+  useEffect(() => {
+    const element = box.current;
+    if (!error || !element || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+    element.classList.remove('mk-shake');
+    void element.offsetWidth;
+    element.classList.add('mk-shake');
+    const done = () => element.classList.remove('mk-shake');
+    element.addEventListener('animationend', done, { once: true });
+    return () => element.removeEventListener('animationend', done);
+  }, [error, attempt]);
   return (
     <div className={cn('grid min-w-0 content-start gap-2', className)}>
-      <div className="field-box min-w-0">
+      <div className="field-box min-w-0" ref={box}>
         <div className="flex min-h-4 items-center justify-between gap-2">
           <label className="type-caption min-w-0 text-hub-label" htmlFor={htmlFor}>
             {label}
@@ -153,6 +171,8 @@ interface TextFieldProps extends InputProps {
   onChange?: (value: string) => void;
   hint?: string;
   error?: string;
+  /** See Field: a count of failed submits, so the same error shakes the field again. */
+  attempt?: number;
   /** The field saves as the user types: show "Saved" after the blur. */
   autosave?: boolean;
   fieldClassName?: string;
@@ -165,6 +185,7 @@ export function TextField({
   onChange,
   hint,
   error,
+  attempt,
   autosave = false,
   className,
   fieldClassName,
@@ -178,6 +199,7 @@ export function TextField({
     <Field
       aside={<SavedTick show={saved.shown} />}
       className={fieldClassName}
+      attempt={attempt}
       error={error}
       hint={hint}
       htmlFor={id}

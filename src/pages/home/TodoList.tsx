@@ -1,12 +1,12 @@
 import { ArrowRight, Check } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { memo, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, memo, useEffect, useRef, useState } from 'react';
 import { TimerButton } from '@/components/focus/TimerButton';
 import { Burst } from '@/components/shared/Burst';
 import { PillarGlyph } from '@/components/shared/PillarGlyph';
 import { doneHaptic, haptic } from '@/lib/haptics';
 import type { ModuleView } from '@/lib/moduleView';
-import { CHECK_POP, FADE } from '@/lib/motion';
+import { CHECK_POP, DURATION, FADE } from '@/lib/motion';
 import type { PillarId } from '@/lib/pillars';
 import { pulse } from '@/lib/pulse';
 import { routeHref } from '@/lib/routes';
@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { isSampleMode } from '@/store/sample';
 
 /** How long a ticked row or card stays, checked, before it leaves. The store is written at once. */
-const LEAVE_MS = 300;
+const LEAVE_MS = DURATION.slow * 1000;
 
 interface TodoItem {
   task: string;
@@ -163,20 +163,20 @@ function TodoListBase({ modules, onToggle, cardsDue, signedOff, onSignOff, onOpe
           {next ? (
             <section
               aria-label="Up next"
-              className={cn('pillar-card flex h-47 flex-col justify-between p-4', `pillar-${next.pillar}`, leavingNext ? 'un-out' : 'un-in')}
+              className={cn('pillar-card flex h-47 flex-col justify-between p-4', `pillar-${next.pillar}`, leavingNext ? 'mk-windup-out' : 'mk-arc-in')}
               key={next.task}
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="mk-settle flex items-center justify-between gap-2" style={{ '--mk-i': 0 } as CSSProperties}>
                 <span className="type-label font-semibold text-white">Up next</span>
                 <span className="flex size-9 items-center justify-center rounded-xl bg-white/15">
                   <PillarGlyph delayMs={300} id={next.pillar} play={1} size={22} />
                 </span>
               </div>
-              <div className="min-w-0">
+              <div className="mk-settle min-w-0" style={{ '--mk-i': 1 } as CSSProperties}>
                 <p className="line-clamp-3 text-[21px] leading-6.5 font-bold tracking-tight text-white">{next.action}</p>
                 {next.cue ? <p className="type-label mt-1 truncate text-white/80">{next.cue}</p> : null}
               </div>
-              <div className="relative flex items-center justify-between">
+              <div className="mk-settle relative flex items-center justify-between" style={{ '--mk-i': 2 } as CSSProperties}>
                 <TimerButton task={next.task} variant="card" />
                 {leavingNext ? (
                   <span aria-hidden="true" className="pointer-events-none absolute right-6 bottom-6">
@@ -185,7 +185,7 @@ function TodoListBase({ modules, onToggle, cardsDue, signedOff, onSignOff, onOpe
                 ) : null}
                 <button
                   aria-label={`${next.task}. Mark as done.`}
-                  className="press flex size-12 cursor-pointer touch-manipulation items-center justify-center rounded-full bg-white text-[#0a0b10]"
+                  className="mk-press raised flex size-12 cursor-pointer touch-manipulation items-center justify-center rounded-full bg-white text-[#0a0b10]"
                   onClick={(event) => tick(next, 0, event.detail === 0)}
                   type="button"
                 >
@@ -194,7 +194,7 @@ function TodoListBase({ modules, onToggle, cardsDue, signedOff, onSignOff, onOpe
               </div>
             </section>
           ) : allClear ? (
-            <section aria-label="All clear" className="pillar-card pillar-outreach un-in flex h-47 flex-col justify-between p-4">
+            <section aria-label="All clear" className="pillar-card pillar-outreach mk-arc-in flex h-47 flex-col justify-between p-4">
               <span className="type-label font-semibold text-white">{signedOff ? 'Day signed off' : 'All clear'}</span>
               <div>
                 <p className="text-2xl leading-7 font-bold tracking-tight text-white">{signedOff ? 'See you tomorrow' : 'Every tick is done'}</p>

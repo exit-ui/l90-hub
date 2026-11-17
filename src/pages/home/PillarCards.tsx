@@ -27,7 +27,7 @@ function PillarCardButton({ card, onOpen, index }: { card: PillarCard; onOpen: (
   return (
     <button
       aria-label={`${card.label} ${card.change?.text ?? ''} Open ${card.name}.`.replace(/\s+/g, ' ')}
-      className={`pillar-card pillar-${card.id} press flex h-44 w-37 shrink-0 cursor-pointer snap-start flex-col justify-between p-4 text-left lg:w-full`}
+      className={`pillar-card pillar-${card.id} mk-tilt flex h-44 w-37 shrink-0 cursor-pointer snap-start flex-col justify-between p-4 text-left lg:w-full`}
       data-open-target={card.id}
       onClick={() => onOpen(card.id)}
       type="button"

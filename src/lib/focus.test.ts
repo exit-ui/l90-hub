@@ -7,6 +7,8 @@ import {
   defaultMinutes,
   focusChange,
   focusRecords,
+  focusRecordsView,
+  focusWeekColumns,
   focusSeries,
   focusStats,
   formatClock,
@@ -14,6 +16,7 @@ import {
   pauseTimer,
   remainingMs,
   resumeTimer,
+  shareWeekText,
   startTimer,
   stopTimerEarly,
   timerPhase,
@@ -287,3 +290,54 @@ describe('XP for focus', () => {
     expect(totalXp(withFocus) - totalXp({ ...base, days: { '2026-11-16': day({}) } })).toBe(42 * XP_VALUES.focusMinute);
   });
 });
+
+describe('the week race, the records and the line to share', () => {
+  const today = '2026-11-18';
+  const days = {
+    '2026-11-09': day({ a: 40 }),
+    '2026-11-10': day({ a: 60, b: 30 }),
+    '2026-11-11': day({ a: 20 }),
+    '2026-11-16': day({ a: 20 }),
+    '2026-11-17': day({ a: 30 }),
+    '2026-11-18': day({ a: 15, b: 15 }),
+  };
+
+  it('lines this week up against last week, and leaves days to come empty', () => {
+    const columns = focusWeekColumns(days, today);
+    expect(columns).toHaveLength(7);
+    expect(columns[0]).toEqual({ date: '2026-11-16', minutes: 20, last: 40 });
+    expect(columns[1]).toEqual({ date: '2026-11-17', minutes: 30, last: 90 });
+    expect(columns[2]).toEqual({ date: '2026-11-18', minutes: 30, last: 20 });
+    expect(columns[3]?.minutes).toBeNull();
+    expect(columns[6]?.date).toBe('2026-11-22');
+  });
+
+  it('finds the best day, the best week and the longest streak', () => {
+    const view = focusRecordsView(days, today);
+    expect(view.bestDay).toEqual({ date: '2026-11-10', minutes: 90 });
+    expect(view.bestWeek).toEqual({ weekStart: '2026-11-09', minutes: 150 });
+    expect(view.longestStreak).toBe(3);
+    expect(view.freshDay).toBe(false);
+    expect(view.freshWeek).toBe(false);
+  });
+
+  it('calls a record fresh only when it beats an earlier one', () => {
+    const first = { '2026-11-18': day({ a: 50 }) };
+    expect(focusRecordsView(first, today)).toMatchObject({ freshDay: false, freshWeek: false });
+    const beaten = { ...days, '2026-11-18': day({ a: 100 }) };
+    const view = focusRecordsView(beaten, today);
+    expect(view.bestDay).toEqual({ date: today, minutes: 100 });
+    expect(view.freshDay).toBe(true);
+    expect(view.freshWeek).toBe(false);
+    const big = { ...beaten, '2026-11-17': day({ a: 100 }), '2026-11-16': day({ a: 100 }) };
+    expect(focusRecordsView(big, today).freshWeek).toBe(true);
+  });
+
+  it('writes one plain line for a friend', () => {
+    expect(shareWeekText(days, today)).toBe('L90 focus this week: 1h 20m (-47% on last week by now) · best day 1h 30m · 3-day streak');
+    expect(shareWeekText({}, today)).toBe('L90 focus this week: 0m');
+    const up = { '2026-11-09': day({ a: 10 }), '2026-11-16': day({ a: 30 }) };
+    expect(shareWeekText(up, '2026-11-16')).toContain('(+200% on last week by now)');
+  });
+});
+

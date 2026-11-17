@@ -234,3 +234,88 @@ export function focusRecords(days: Days, date: DateKey, minutes: number): FocusR
     bestWeek: bestOtherWeek > 0 && weekBefore <= bestOtherWeek && weekBefore + minutes > bestOtherWeek,
   };
 }
+
+export interface WeekColumn {
+  date: DateKey;
+  /** This week's minutes. Null for a day that has not come yet. */
+  minutes: number | null;
+  /** The minutes of the same weekday last week. */
+  last: number;
+}
+
+/** The seven days of this week (Monday to Sunday), each with last week's same day to race against. */
+export function focusWeekColumns(days: Days, today: DateKey): WeekColumn[] {
+  return weekOf(today).map((date) => ({
+    date,
+    minutes: date > today ? null : focusOf(days[date]),
+    last: focusOf(days[addDays(date, -7)]),
+  }));
+}
+
+export interface FocusRecordsView {
+  bestDay: { minutes: number; date: DateKey } | null;
+  bestWeek: { minutes: number; weekStart: DateKey } | null;
+  /** The longest run of days in a row with focus. */
+  longestStreak: number;
+  /** The best day is today, and it beat an earlier one. */
+  freshDay: boolean;
+  /** The best week is this week, and it beat an earlier one. */
+  freshWeek: boolean;
+}
+
+/** The records to beat: best day, best week, longest streak. A record is "fresh" only when it beat an earlier one. */
+export function focusRecordsView(days: Days, today: DateKey): FocusRecordsView {
+  const stats = focusStats(days, today);
+  const weeks = new Map<DateKey, number>();
+  const dates: DateKey[] = [];
+  for (const [date, record] of Object.entries(days)) {
+    const minutes = focusOf(record);
+    if (minutes <= 0) {
+      continue;
+    }
+    dates.push(date);
+    const monday = mondayOf(date);
+    weeks.set(monday, (weeks.get(monday) ?? 0) + minutes);
+  }
+  let bestWeek: FocusRecordsView['bestWeek'] = null;
+  for (const [weekStart, minutes] of weeks) {
+    if (bestWeek === null || minutes > bestWeek.minutes || (minutes === bestWeek.minutes && weekStart > bestWeek.weekStart)) {
+      bestWeek = { minutes, weekStart };
+    }
+  }
+  dates.sort();
+  let longest = 0;
+  let run = 0;
+  let previous: DateKey | null = null;
+  for (const date of dates) {
+    run = previous !== null && addDays(previous, 1) === date ? run + 1 : 1;
+    longest = Math.max(longest, run);
+    previous = date;
+  }
+  const thisMonday = mondayOf(today);
+  const otherWeekBest = Math.max(0, ...[...weeks].filter(([weekStart]) => weekStart !== thisMonday).map(([, minutes]) => minutes));
+  return {
+    bestDay: stats.bestDay,
+    bestWeek,
+    longestStreak: longest,
+    freshDay: stats.bestDay !== null && stats.bestDay.date === today && stats.bestOther > 0 && stats.today > stats.bestOther,
+    freshWeek: bestWeek !== null && bestWeek.weekStart === thisMonday && otherWeekBest > 0 && bestWeek.minutes > otherWeekBest,
+  };
+}
+
+/** The line a person sends to a friend to compare weeks. Plain text: it pastes into any chat. */
+export function shareWeekText(days: Days, today: DateKey): string {
+  const stats = focusStats(days, today);
+  const parts = [`L90 focus this week: ${formatMinutes(stats.week)}`];
+  const change = stats.week > 0 ? focusChange(stats.week, stats.lastWeekSoFar) : null;
+  if (change !== null) {
+    parts[0] += ` (${change >= 0 ? '+' : '-'}${Math.abs(change)}% on last week by now)`;
+  }
+  if (stats.bestDay) {
+    parts.push(`best day ${formatMinutes(stats.bestDay.minutes)}`);
+  }
+  if (stats.streak > 0) {
+    parts.push(`${stats.streak}-day streak`);
+  }
+  return parts.join(' · ');
+}

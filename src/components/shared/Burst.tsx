@@ -21,7 +21,7 @@ interface BurstProps {
  * and give it a new `key` to play it again. A CSS animation of transform and opacity only, so the
  * phone's graphics chip runs it and the tap itself costs almost nothing. Reduced motion hides it (index.css).
  */
-export function Burst({ count = 8, distance = 26, size = 5, duration = 0.5, className }: BurstProps) {
+export function Burst({ count = 8, distance = 26, size = 5, duration = 0.4, className }: BurstProps) {
   return (
     <span aria-hidden="true" className={cn('burst pointer-events-none absolute inset-0 flex items-center justify-center', className)}>
       {Array.from({ length: count }, (_, index) => {

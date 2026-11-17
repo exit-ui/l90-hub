@@ -68,6 +68,7 @@ export function Journal() {
   const [result, setResult] = useState('');
   const [followedRules, setFollowedRules] = useState(true);
   const [note, setNote] = useState('');
+  const [attempt, setAttempt] = useState(0);
   const [dateError, setDateError] = useState('');
   const [instrumentError, setInstrumentError] = useState('');
   const [resultError, setResultError] = useState('');
@@ -88,6 +89,7 @@ export function Journal() {
     setInstrumentError(nextInstrumentError);
     setResultError(nextResultError);
     if (resultR === null || nextDateError !== '' || nextInstrumentError !== '') {
+      setAttempt((count) => count + 1);
       return;
     }
     addTrade({
@@ -108,10 +110,12 @@ export function Journal() {
       <Card>
         <CardTitle>Add a trade</CardTitle>
         <form className="mt-4 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 lg:grid-cols-4" noValidate onSubmit={submit}>
-          <TextField error={dateError} label="Date" onChange={setDate} type="date" value={date} />
+          <TextField attempt={attempt}
+            error={dateError} label="Date" onChange={setDate} type="date" value={date} />
           <SelectField label="Market" onChange={setMarket} options={MARKETS} value={market} />
           <TextField
             autoCapitalize="characters"
+            attempt={attempt}
             error={instrumentError}
             label="Instrument"
             onChange={setInstrument}
@@ -124,6 +128,7 @@ export function Journal() {
             value={direction}
           />
           <TextField
+            attempt={attempt}
             error={resultError}
             hint="A loss is a negative number. 1R is the risk on one trade."
             label="Result in R"

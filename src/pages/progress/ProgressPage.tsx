@@ -14,7 +14,7 @@ import { PILLAR_LABELS } from '@/lib/pillars';
 import { ExpandedLayer, type ViewEntry } from '@/pages/home/expand/ExpandedLayer';
 import { ViewTitle } from '@/pages/home/expand/views';
 import { AllTicksCard } from './AllTicksCard';
-import { FocusCard } from './FocusCard';
+import { FocusTab } from './FocusTab';
 import { PillarAnalytics } from './PillarAnalytics';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { PillTabs } from '@/components/shared/PillTabs';
@@ -34,6 +34,7 @@ import { MissionStats } from '@/components/shared/MissionStats';
 import { DaysTab } from './DaysTab';
 
 const DAYS_TAB = 'days';
+const FOCUS_TAB = 'focus';
 const OVERVIEW_TAB = 'overview';
 
 /** The heatmap colour of each day status. A missed day is grey, never red. */
@@ -205,7 +206,6 @@ const OverviewTab = memo(function OverviewTab({
     <div className="grid gap-5 sm:gap-8 md:gap-12">
       <PillarGrid onOpen={onOpen} today={today} />
       <AllTicksCard today={today} />
-      <FocusCard today={today} />
       {heavyReady ? (
         <>
           <ProgressChart today={today} variant="full" />
@@ -250,7 +250,7 @@ export function ProgressPage() {
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   }, []);
   const titleId = pillar ? `analytics-title-${pillar}` : '';
-  const tab = first === DAYS_TAB ? DAYS_TAB : OVERVIEW_TAB;
+  const tab = first === DAYS_TAB ? DAYS_TAB : first === FOCUS_TAB ? FOCUS_TAB : OVERVIEW_TAB;
   const daySegment = tab === DAYS_TAB ? route.segments[1] : undefined;
   const startDate = useHub((state) => state.startDate);
   const clock = missionClock(today, startDate);
@@ -267,13 +267,14 @@ export function ProgressPage() {
       <PageHeader eyebrow={caption} title="Progress" />
       <PillTabs
         label="Progress sections"
-        onChange={(next) => (next === DAYS_TAB ? navigate('progress', DAYS_TAB) : navigate('progress'))}
+        onChange={(next) => (next === DAYS_TAB || next === FOCUS_TAB ? navigate('progress', next) : navigate('progress'))}
         tabs={[
           {
             id: OVERVIEW_TAB,
             label: 'Pillars',
             content: <OverviewTab onOpen={openPillar} today={today} />,
           },
+          { id: FOCUS_TAB, label: 'Focus', content: <FocusTab today={today} /> },
           { id: DAYS_TAB, label: 'Days', content: <DaysTab segment={daySegment} /> },
         ]}
         value={tab}

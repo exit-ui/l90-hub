@@ -23,7 +23,7 @@ export const TimerButton = memo(function TimerButton({ task, variant }: TimerBut
     <button
       aria-label={label}
       className={cn(
-        'press relative flex shrink-0 cursor-pointer touch-manipulation items-center justify-center rounded-full',
+        'mk-press relative flex shrink-0 cursor-pointer touch-manipulation items-center justify-center rounded-full',
         variant === 'card' ? 'size-12 bg-white/15 text-white' : 'size-11 text-hub-label hover:text-hub-text',
       )}
       onClick={() => openFocus(task, todayKey())}

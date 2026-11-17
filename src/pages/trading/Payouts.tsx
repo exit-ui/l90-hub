@@ -28,6 +28,7 @@ export function Payouts() {
   const [date, setDate] = useState(today);
   const [firm, setFirm] = useState('');
   const [amount, setAmount] = useState('');
+  const [attempt, setAttempt] = useState(0);
   const [dateError, setDateError] = useState('');
   const [firmError, setFirmError] = useState('');
   const [amountError, setAmountError] = useState('');
@@ -50,6 +51,7 @@ export function Payouts() {
     setFirmError(nextFirmError);
     setAmountError(nextAmountError);
     if (amountGbp === null || nextDateError !== '' || nextFirmError !== '' || nextAmountError !== '') {
+      setAttempt((count) => count + 1);
       return;
     }
     addPayout({ date, firm: cleanFirm, amountGbp });
@@ -71,9 +73,12 @@ export function Payouts() {
       <Card className="lg:col-span-8">
         <CardTitle>Add a payout</CardTitle>
         <form className="mt-4 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 lg:grid-cols-3" noValidate onSubmit={submit}>
-          <TextField error={dateError} label="Date" onChange={setDate} type="date" value={date} />
-          <TextField error={firmError} label="Firm" onChange={setFirm} value={firm} />
+          <TextField attempt={attempt}
+            error={dateError} label="Date" onChange={setDate} type="date" value={date} />
+          <TextField attempt={attempt}
+            error={firmError} label="Firm" onChange={setFirm} value={firm} />
           <TextField
+            attempt={attempt}
             error={amountError}
             inputMode="decimal"
             label="Amount in GBP"

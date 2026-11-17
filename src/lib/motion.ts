@@ -4,6 +4,13 @@
  * except the sign-off count sequence (700 ms or less).
  */
 
+/**
+ * The durations of the motion kit (src/motion-kit.css), in seconds. A test keeps them equal to the CSS tokens.
+ * instant: a press. quick: a tooltip, a toggle. base: a release, a row. slow: a sheet or view, the ceiling for
+ * UI used every day. ceremony: rare moments only.
+ */
+export const DURATION = { instant: 0.09, quick: 0.15, base: 0.22, slow: 0.3, ceremony: 0.7 } as const;
+
 /** Small UI: the active pill, the segment indicator. */
 export const SPRING = { type: 'spring', stiffness: 520, damping: 38, mass: 0.9 } as const;
 /** The check fill. */
@@ -11,7 +18,7 @@ export const CHECK_SPRING = { type: 'spring', stiffness: 700, damping: 32, mass:
 /** A tick: the check pops past full size and settles. */
 export const CHECK_POP = { type: 'spring', visualDuration: 0.28, bounce: 0.45 } as const;
 /** A tick: one green ring grows out of the check and fades. */
-export const RIPPLE = { duration: 0.38, ease: 'easeOut' } as const;
+export const RIPPLE = { duration: 0.3, ease: 'easeOut' } as const;
 /** "+1" rises above the button that added it and fades. */
 export const FLOAT_UP = { duration: 0.6, ease: [0.16, 1, 0.3, 1] } as const;
 /** Card to expanded view: the shared elements. */
